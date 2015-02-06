@@ -428,7 +428,7 @@ def doc_view(id):
 
     doc = doc.render_html()
 
-    return render_template('tokenized.html', doc=doc, kw='main')
+    return render_template('tokenized.html', doc=doc, kw='doc')
 
 
 @app.route('/unverified', methods=['GET', 'POST'])
