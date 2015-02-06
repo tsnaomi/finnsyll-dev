@@ -1,5 +1,10 @@
 # coding=utf-8
-from finnish_functions import *  # TODO
+from finnish_functions import (
+    split_syllable,
+    Stress,
+    SYLLABLE_SEPARATOR,
+    Weight,
+    )
 from finnish_syllables import initialize_presyllabified, make_syllables
 from finnish_weight import make_weights
 from finnish_sonority import make_sonorities
@@ -200,7 +205,7 @@ def split_preannotated_compounds(words):
 
         if words[i].lower() in compound_dict:
 
-           result += compound_dict[words[i].lower()]  # TODO
+            result += compound_dict[words[i].lower()]  # TODO
 
         else:
 
@@ -230,18 +235,27 @@ def make_annotation(word):
 # print a representation of an annotation for a word
 def print_annotation(word_annotation):
     x = annotation_string(word_annotation)
-    print x.encode('utf-8')
-    print pattern_string(word_annotation)
+    print x.encode('utf-8')  # ´ka.la.
+    print pattern_string(word_annotation)  # Weight: LL Stress: PU Sonority: AA
     print
+
+    # try:
+    #     result = annotation_string(word_annotation).encode('utf-8')
+    #     result += pattern_string(word_annotation)
+
+    #     return result
+
+    # except Exception as e:
+    #     print e
 
 
 # annotate and print the annotation for a word
 def mark(word):
 
-    print_annotation(make_annotation(word))
+    return print_annotation(make_annotation(word))
 
 
-def annotation_string(word_annotation):
+def annotation_string(word_annotation):  # JOSH
 
     result = u''
 
@@ -264,6 +278,18 @@ def annotation_string(word_annotation):
         result += '\n'
 
     return result[:-1]  # remove final newline
+
+
+def syllable_annotation(word):  # NAOMI
+    # import pdb; pdb.set_trace()
+    word_annotation = make_annotation(word)
+
+    result = u''
+
+    for syll in word_annotation.syllables:
+        result += syll + SYLLABLE_SEPARATOR
+
+    return result[:-1]
 
 
 # return a string representing the weight pattern
@@ -321,4 +347,5 @@ def pattern_string(word_annotation):
 if __name__ == '__main__':
     import sys
     word = sys.argv[1]
-    mark(word)
+    # mark(word)
+    print syllable_annotation(word)

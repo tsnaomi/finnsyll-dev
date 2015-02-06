@@ -1,3 +1,8 @@
 *.pyc
 
 research/
+
+syllabifier/finnsyll/migrations/
+syllabifier/finnsyll/finnsyll_config.py
+syllabifier/finnsyll/start.py
+syllabifier/finnsyll/start.txt
