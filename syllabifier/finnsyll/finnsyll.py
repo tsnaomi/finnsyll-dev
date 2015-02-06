@@ -178,6 +178,9 @@ class Document(db.Model):
         for token in tokens:
             token.correct(syll=token.test_syll)
 
+        self.reviewed = True
+        db.session.commit()
+
     def render_html(self):
         '''Return text as an html string to be rendered on the frontend.
 
@@ -378,6 +381,7 @@ def redirect_url(default='main_view'):
 
 
 def apply_form(http_form):
+    # Apply changes to Token instance based on POST request
     try:
         orth = http_form['orth']
         syll = http_form['syll']
@@ -416,7 +420,17 @@ def doc_view(id):
 
     doc = doc.render_html()
 
-    return render_template('tokenized.html', doc=doc, kw='doc')
+    return render_template('tokenized.html', doc=doc)
+
+
+@app.route('/approve/approve/approve/doc/<id>', methods=['POST', ])
+@login_required
+def approve_doc_view(id):
+    '''Detail view of specified doc, consisting of editable Tokens.'''
+    doc = Token.query.get_or_404(id)
+    doc.verify_all_unverified_tokens()
+
+    return redirect(url_for('main_view'))
 
 
 @app.route('/unverified', methods=['GET', 'POST'])
