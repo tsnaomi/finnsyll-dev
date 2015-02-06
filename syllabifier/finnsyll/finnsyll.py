@@ -127,7 +127,7 @@ class Document(db.Model):
     # a list of IDs for each word as they appear in the text
     pickled_IDs = db.Column(db.PickleType, default=[])
 
-    # # the text as a pickled list, incl. Token IDs and punctuation strings
+    # the text as a pickled list, incl. Token IDs and punctuation strings
     pickled_text = db.Column(db.PickleType, default=[])
 
     # a boolean indicating if all of the document's words have been reviewed
