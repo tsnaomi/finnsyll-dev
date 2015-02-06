@@ -170,7 +170,7 @@ class Document(db.Model):
 
         This html string includes a modal for each word in the text. Each modal
         contains a form that will allow Arto to edit the word's Token, i.e.,
-        Token.syll, Token.alt_syll, and Token.is_coumpound.
+        Token.syll, Token.alt_syll, and Token.is_compound.
         '''
         html = '<div class="text">'
         modals = ''
@@ -435,7 +435,7 @@ def good_view():
 
 @app.route('/enter', methods=['GET', 'POST'])
 def login_view():
-    '''Sign-in current user.'''
+    '''Sign in current user.'''
     if session.get('current_user'):
         return redirect(url_for('main_view'))
 
@@ -458,7 +458,7 @@ def login_view():
 
 @app.route('/leave')
 def logout_view():
-    '''Sign-out current user.'''
+    '''Sign out current user.'''
     session.pop('current_user', None)
     return redirect(url_for('main_view'))
 
