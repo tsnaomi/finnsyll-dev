@@ -12,7 +12,7 @@
     <body>
 
         <div class='navbar'>
-            <a href="{{ url_for('main_view') }}" class="{% if kw == 'unverified' %}highlight{% endif %}">Unverified Syllabifications</a> &nbsp;|&nbsp;
+            <a href="{{ url_for('main_view') }}" class="{% if kw == 'main' %}highlight{% endif %}">Unverified Syllabifications</a> &nbsp;|&nbsp;
             <a href="{{ url_for('good_view') }}" class="{% if kw == 'good' %}highlight{% endif %}">Good Syllabifications</a> &nbsp;|&nbsp;
             <a href="{{ url_for('bad_view') }}" class="{% if kw == 'bad' %}highlight{% endif %}">Bad Syllabifications</a> &nbsp;|&nbsp;
             <a href="{{ url_for('logout_view') }}">Sign Out</a>

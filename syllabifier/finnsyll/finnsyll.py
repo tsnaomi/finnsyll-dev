@@ -1,4 +1,5 @@
 from flask import (
+    abort,
     flash,
     Flask,
     redirect,
@@ -165,6 +166,18 @@ class Document(db.Model):
 
         return query
 
+    def verify_all_unverified_tokens(self):
+        '''For all of the text's unverified Tokens, set syll equal to test_syll.
+
+        This function is intended for when all uverified Tokens have been
+        correctly syllabified in test_syll. Proceed with caution.
+        '''
+        tokens = self.query_tokens()
+        tokens = tokens.filter(is_gold=None)
+
+        for token in tokens:
+            token.correct(syll=token.test_syll)
+
     def render_html(self):
         '''Return text as an html string to be rendered on the frontend.
 
@@ -241,7 +254,9 @@ class Document(db.Model):
                         <input
                             type='hidden' name='_csrf_token'
                             value='{{ csrf_token() }}'>
-                        <p class='orth'>%s</p>
+                        <input
+                            type='text' name='orth' class='orth'
+                            value='%a' disabled='True' >
                         <p class='test_syll %s'>%s</p>
                         <input
                             type='text' name='syll'
@@ -338,12 +353,16 @@ def verify_all_unverified_tokens():
     '''For all unverified Tokens, set syll equal to test_syll.
 
     This function is intended for when all uverified Tokens have been correctly
-    syllabified in test_syll.
+    syllabified in test_syll. Proceed with caution.
     '''
     tokens = get_unverified_tokens()
 
     for token in tokens:
         token.correct(syll=token.test_syll)
+
+
+def get_unreviewed_documents():
+    return Document.query.filter_by(reviewed=False)
 
 
 # Views -----------------------------------------------------------------------
@@ -370,17 +389,12 @@ def redirect_url(default='main_view'):
     return request.referrer or url_for(default)
 
 
-@app.route('/', methods=['GET', 'POST'])
-@login_required
-def main_view():
-    '''List all unverified Tokens and process corrections.'''
-    tokens = get_unverified_tokens()
-
-    if request.method == 'POST':
-        orth = request.form['orth']
-        syll = request.form['syll']
-        alt_syll = request.form['alt_syll'] or ''
-        is_compound = bool(request.form['is_compound'])
+def apply_form(http_form):
+    try:
+        orth = http_form['orth']
+        syll = http_form['syll']
+        alt_syll = http_form['alt_syll'] or ''
+        is_compound = bool(http_form['is_compound'])
         token = find_token(orth)
         token.correct(
             syll=syll,
@@ -388,7 +402,45 @@ def main_view():
             is_compound=is_compound
             )
 
-    return render_template('tokens.html', tokens=tokens, kw='main')
+    except (KeyError, LookupError):
+        pass
+
+
+@app.route('/', methods=['GET', 'POST'])
+@login_required
+def main_view():
+    '''Main page with links to unverified texts.'''
+    docs = get_unreviewed_documents()
+    return render_template('main.html', docs=docs, kw='main')
+
+
+@app.route('/doc/<id>', methods=['GET', 'POST'])
+@login_required
+def doc_view(id):
+    '''Detail view of specified doc, consisting of editable Tokens.'''
+    doc = Token.query.get_or_404(id)
+
+    if doc.reviewed:
+        abort(404)
+
+    if request.method == 'POST':
+        apply_form(request.form)
+
+    doc = doc.render_html()
+
+    return render_template('tokenized.html', doc=doc, kw='main')
+
+
+@app.route('/unverified', methods=['GET', 'POST'])
+@login_required
+def unverified_view():
+    '''List all unverified Tokens and process corrections.'''
+    tokens = get_unverified_tokens()
+
+    if request.method == 'POST':
+        apply_form(request.form)
+
+    return render_template('tokens.html', tokens=tokens, kw='unverified')
 
 
 @app.route('/bad', methods=['GET', 'POST'])
@@ -398,16 +450,7 @@ def bad_view():
     tokens = get_bad_tokens()
 
     if request.method == 'POST':
-        orth = request.form['orth']
-        syll = request.form['syll']
-        alt_syll = request.form['alt_syll'] or ''
-        is_compound = bool(request.form['is_compound'])
-        token = find_token(orth)
-        token.correct(
-            syll=syll,
-            alt_syll=alt_syll,
-            is_compound=is_compound
-            )
+        apply_form(request.form)
 
     return render_template('tokens.html', tokens=tokens, kw='bad')
 
@@ -419,16 +462,7 @@ def good_view():
     tokens = get_good_tokens()
 
     if request.method == 'POST':
-        orth = request.form['orth']
-        syll = request.form['syll']
-        alt_syll = request.form['alt_syll'] or ''
-        is_compound = bool(request.form['is_compound'])
-        token = find_token(orth)
-        token.correct(
-            syll=syll,
-            alt_syll=alt_syll,
-            is_compound=is_compound
-            )
+        apply_form(request.form)
 
     return render_template('tokens.html', tokens=tokens, kw='good')
 
