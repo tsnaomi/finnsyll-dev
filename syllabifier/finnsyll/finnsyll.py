@@ -100,7 +100,7 @@ class Token(db.Model):
         return is_gold
 
     def syllabify(self):
-        '''Algorithmically syllabify token based on its orthography.'''
+        '''Algorithmically syllabify Token based on its orthography.'''
         pass
         # programmtically syllabify
         # self.test_syll = test_syllabification
@@ -109,7 +109,7 @@ class Token(db.Model):
         # self.update_gold()
 
     def correct(self, syll, alt_syll='', is_compound=False):
-        '''Input correct syllabification and/or alternative syllabfication.'''
+        '''Store correct syllabification and/or alternative syllabfication.'''
         self.syll = syll
         self.alt_syll = alt_syll
         self.is_compound = is_compound
@@ -166,6 +166,12 @@ class Document(db.Model):
         return query
 
     def render_html(self):
+        '''Return text as an html string to be rendered on the frontend.
+
+        This html string includes a modal for each word in the text. Each modal
+        contains a form that will allow Arto to edit the word's Token, i.e.,
+        Token.syll, Token.alt_syll, and Token.is_coumpound.
+        '''
         html = '<div class="text">'
         modals = ''
 
@@ -295,22 +301,22 @@ def find_token(orth):
 
 
 def get_bad_tokens():
-    '''Return all of the tokens that are incorrectly syllabified.'''
+    '''Return all of the Tokens that are incorrectly syllabified.'''
     return Token.query.filter_by(is_gold=False).order_by(Token.orth)
 
 
 def get_good_tokens():
-    '''Return all of the tokens that are correctly syllabified.'''
+    '''Return all of the Tokens that are correctly syllabified.'''
     return Token.query.filter_by(is_gold=True).order_by(Token.orth)
 
 
 def get_unverified_tokens():
-    '''Return tokens with uncertain syllabifications.'''
+    '''Return Tokens with uncertain syllabifications.'''
     return Token.query.filter_by(is_gold=None)
 
 
 def review_tokens():
-    '''Compare test_syll and syll for all tokens; update is_gold.'''
+    '''Compare test_syll and syll for all Tokens; update is_gold.'''
     tokens = Token.query.all()
 
     for token in tokens:
@@ -318,7 +324,10 @@ def review_tokens():
 
 
 def syllabify_tokens():
-    '''Algorithmically syllabify all tokens.'''
+    '''Algorithmically syllabify all Tokens.
+
+    This is done anytime a Token is instantiated. It *should* also be done
+    anytime the syllabifying algorithm is updated.'''
     tokens = Token.query.all()
 
     for token in tokens:
@@ -326,9 +335,9 @@ def syllabify_tokens():
 
 
 def verify_all_unverified_tokens():
-    '''For all unverified tokens, set syll equal to test_syll.
+    '''For all unverified Tokens, set syll equal to test_syll.
 
-    This function is intended for when all uverified tokens have been correctly
+    This function is intended for when all uverified Tokens have been correctly
     syllabified in test_syll.
     '''
     tokens = get_unverified_tokens()
@@ -357,14 +366,14 @@ def login_required(x):
 
 
 def redirect_url(default='main_view'):
-    # Redirect page to previous url or to main_vieww
+    # Redirect page to previous url or to main_view
     return request.referrer or url_for(default)
 
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def main_view():
-    '''List all unverified tokens and process corrections.'''
+    '''List all unverified Tokens and process corrections.'''
     tokens = get_unverified_tokens()
 
     if request.method == 'POST':
@@ -385,7 +394,7 @@ def main_view():
 @app.route('/bad', methods=['GET', 'POST'])
 @login_required
 def bad_view():
-    '''Liss all incorrectly syllabified tokens and process corrections.'''
+    '''List all incorrectly syllabified Tokens and process corrections.'''
     tokens = get_bad_tokens()
 
     if request.method == 'POST':
@@ -406,7 +415,7 @@ def bad_view():
 @app.route('/good', methods=['GET', 'POST'])
 @login_required
 def good_view():
-    '''List all correctly syllabified tokens and process corrections.'''
+    '''List all correctly syllabified Tokens and process corrections.'''
     tokens = get_good_tokens()
 
     if request.method == 'POST':
@@ -426,7 +435,7 @@ def good_view():
 
 @app.route('/enter', methods=['GET', 'POST'])
 def login_view():
-    '''Process user sign-in.'''
+    '''Sign-in current user.'''
     if session.get('current_user'):
         return redirect(url_for('main_view'))
 
