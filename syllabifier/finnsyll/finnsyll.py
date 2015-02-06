@@ -197,9 +197,21 @@ class Document(db.Model):
         contains a form that will allow Arto to edit the word's Token, i.e.,
         Token.syll, Token.alt_syll, and Token.is_compound.
         '''
-        html = '<div class="doc-text">'
-        modals = ''
 
+        def get_test_syll_class(token):
+            '''Return a is_gold css class for a given token.'''
+            if token.is_gold:
+                return 'good'
+
+            elif token.is_gold is False:
+                return 'bad'
+
+            else:
+                return 'unverified'
+
+        html = '<div class="doc-text">'
+
+        modals = ''
         modal_count = 0
 
         for t in self.pickled_text:
@@ -210,7 +222,11 @@ class Document(db.Model):
 
                 word = Token.query.get(t)
 
+                test_syll_class = get_test_syll_class(word)
+
                 html += ' <a href="#modal-%s" class="word' % modal_count
+
+                html += ' %s' % test_syll_class
 
                 if word.is_compound:
                     html += ' compound'
@@ -218,18 +234,9 @@ class Document(db.Model):
                 if word.alt_syll:
                     html += ' alt'
 
-                if word.is_gold:
-                    html += ' good'
-
-                elif word.is_gold is False:
-                    html += ' bad'
-
-                else:
-                    html += ' unverified'
-
                 html += '"" %s</a>' % t
 
-                modals += self._create_modal(t, modal_count)
+                modals += self._create_modal(t, modal_count, test_syll_class)
 
             else:
                 html += '<div class="punct">%s</div>' % t.test_syll
@@ -239,17 +246,8 @@ class Document(db.Model):
         return html
 
     @staticmethod
-    def _create_modal(self, token, modal_count):
+    def _create_modal(self, token, modal_count, test_syll_class):
         # http://codepen.io/maccadb7/pen/nbHEg?editors=110
-
-        if token.is_gold:
-            test_syll_class = ' good'
-
-        elif token.is_gold is False:
-            test_syll_class = ' bad'
-
-        else:
-            test_syll_class = ' unverified'
 
         modal = '''
             <!-- Modal %s -->
