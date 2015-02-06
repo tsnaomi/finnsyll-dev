@@ -349,16 +349,16 @@ def syllabify_tokens():
         token.syllabify()
 
 
-def verify_all_unverified_tokens():
-    '''For all unverified Tokens, set syll equal to test_syll.
+# def verify_all_unverified_tokens():
+#     '''For all unverified Tokens, set syll equal to test_syll.
 
-    This function is intended for when all uverified Tokens have been correctly
-    syllabified in test_syll. Proceed with caution.
-    '''
-    tokens = get_unverified_tokens()
+#     This function is intended for when all uverified Tokens have been
+#     correctly syllabified in test_syll. Proceed with caution.
+#     '''
+#     tokens = get_unverified_tokens()
 
-    for token in tokens:
-        token.correct(syll=token.test_syll)
+#     for token in tokens:
+#         token.correct(syll=token.test_syll)
 
 
 def get_unreviewed_documents():
