@@ -356,10 +356,11 @@ def get_unreviewed_documents():
     return Document.query.filter_by(reviewed=False)
 
 
-# Views -----------------------------------------------------------------------
+# View helpers ----------------------------------------------------------------
 
 @app.before_request
 def renew_session():
+    # Forgot why I did this... but I think it's important
     session.modified = True
 
 
@@ -397,6 +398,8 @@ def apply_form(http_form):
     except (KeyError, LookupError):
         pass
 
+
+# Views -----------------------------------------------------------------------
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required
