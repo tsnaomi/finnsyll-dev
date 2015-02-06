@@ -188,7 +188,7 @@ class Document(db.Model):
         contains a form that will allow Arto to edit the word's Token, i.e.,
         Token.syll, Token.alt_syll, and Token.is_compound.
         '''
-        html = '<div class="text">'
+        html = '<div class="doc-text">'
         modals = ''
 
         modal_count = 0
@@ -421,9 +421,10 @@ def doc_view(id):
     if request.method == 'POST':
         apply_form(request.form)
 
+    doc_id = doc.id
     doc = doc.render_html()
 
-    return render_template('tokenized.html', doc=doc)
+    return render_template('tokenized.html', doc=doc, doc_id=doc_id, kw='doc')
 
 
 @app.route('/approve/approve/approve/doc/<id>', methods=['POST', ])

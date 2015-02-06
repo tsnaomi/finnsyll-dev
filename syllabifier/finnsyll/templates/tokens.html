@@ -1,45 +1,27 @@
-<!DOCTYPE html>
+{% extends 'base.html' %}
 
-<html lang='en'>
+{% block body %}
 
-    <title>FinnSyll</title>
+<div class='table-header'>
+    <span class='okii'>Orthography *</span>
+    <span class='okii'>Test Syll *</span>
+    <span class='okii'>Correct Syll</span>
+    <span class='okii'>Alternative Syll</span>
+    <span class='chisaii'>Compound</span>
+</div>
 
-    <head>
-        <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
-        <link rel='stylesheet' type='text/css' href='http://fonts.googleapis.com/css?family=Pacifico|EB+Garamond'>
-    </head>
+<br>
 
-    <body>
+{% for token in tokens %}
+<form class='tokens' method='POST'>
+    <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+    <input type='text' name='orth' class='okii orth' value='{{ token.orth }}' disabled='True' >
+    <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' disabled='True' >
+    <input type='text' name='syll' class='okii' value='{% if token.syll != token.test_syll %}{{ token.syll }}{% endif %}'>
+    <input type='text' name='alt_syll' class='okii' value='{{ token.alt_syll }}'>
+    <input type='checkbox' name='is_compound' class='chisaii' value=1>
+    <input type='submit' class='OK' class='chisaii' value='OK!'>
+</form>
+{% endfor %}
 
-        <div class='navbar'>
-            <a href="{{ url_for('main_view') }}" class="{% if kw == 'unverified' %}highlight{% endif %}">Unverified Syllabifications</a> &nbsp;|&nbsp;
-            <a href="{{ url_for('good_view') }}" class="{% if kw == 'good' %}highlight{% endif %}">Good Syllabifications</a> &nbsp;|&nbsp;
-            <a href="{{ url_for('bad_view') }}" class="{% if kw == 'bad' %}highlight{% endif %}">Bad Syllabifications</a> &nbsp;|&nbsp;
-            <a href="{{ url_for('logout_view') }}">Sign Out</a>
-        </div>
-
-        <div class='table-header'>
-            <span class='okii'>Orthography *</span>
-            <span class='okii'>Test Syll *</span>
-            <span class='okii'>Correct Syll</span>
-            <span class='okii'>Alternative Syll</span>
-            <span class='chisaii'>Compound</span>
-        </div>
-
-        <br> <!-- {{ hello|safe }} -->
-
-        {% for token in tokens %}
-            <form class='tokens' method='POST'>
-                <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-                <input type='text' name='orth' class='okii orth' value='{{ token.orth }}' disabled='True' >
-                <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' disabled='True' >
-                <input type='text' name='syll' class='okii' value='{% if token.syll != token.test_syll %}{{ token.syll }}{% endif %}'>
-                <input type='text' name='alt_syll' class='okii' value='{{ token.alt_syll }}'>
-                <input type='checkbox' name='is_compound' class='chisaii' value=1>
-                <input type='submit' class='OK' class='chisaii' value='OK!'>
-            </form>
-        {% endfor %}
-
-    </body>
-
-</html>
+{% endblock %}

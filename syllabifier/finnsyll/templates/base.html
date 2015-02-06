@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<html lang='en'>
+
+    <title>FinnSyll</title>
+
+    <head>
+        <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
+        {% block head %}{% endblock %}
+    </head>
+
+    <body>
+
+        <div class='navbar'>
+            <a href="{{ url_for('main_view') }}" class="{% if kw == 'main' %}highlight{% endif %}">Main</a> &nbsp;|&nbsp;
+            <a href="{{ url_for('unverified_view') }}" class="{% if kw == 'unverified' %}highlight{% endif %}">Unverified</a> &nbsp;|&nbsp;
+            <a href="{{ url_for('good_view') }}" class="{% if kw == 'good' %}highlight{% endif %}">Good</a> &nbsp;|&nbsp;
+            <a href="{{ url_for('bad_view') }}" class="{% if kw == 'bad' %}highlight{% endif %}">Bad</a> &nbsp;|&nbsp;
+            <a href="{{ url_for('logout_view') }}">Sign Out</a>
+        </div>
+
+        <br>
+
+        {% block body %}{% endblock %}
+
+    </body>
+
+</html>
