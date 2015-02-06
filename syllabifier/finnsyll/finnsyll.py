@@ -426,7 +426,7 @@ def doc_view(id):
 @app.route('/approve/approve/approve/doc/<id>', methods=['POST', ])
 @login_required
 def approve_doc_view(id):
-    '''Detail view of specified doc, consisting of editable Tokens.'''
+    '''For all of the doc's unverified Tokens, set syll equal to test_syll.'''
     doc = Token.query.get_or_404(id)
     doc.verify_all_unverified_tokens()
 
