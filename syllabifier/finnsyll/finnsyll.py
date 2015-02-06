@@ -79,7 +79,7 @@ class Token(db.Model):
         self.orth = orth
 
         # populate self.test_syll
-        # self.syllabify()
+        # self.syllabify(update_gold=False)  # TODO -- uncomment
 
     def __repr__(self):
         return '\tWord: %s\n\tEstimated syll: %s\n\tCorrect syll: %s\n\t' % (
@@ -94,20 +94,23 @@ class Token(db.Model):
         Token.is_gold is True if the test syllabifcation matches the true
         syllabification. Otherwise, Token.is_fold is False.
         '''
-        is_gold = self.test_syll == self.syll
-        self.is_gold = is_gold
-        db.session.commit()
+        if self.test_syll and self.syll:
+            is_gold = self.test_syll == self.syll
+            self.is_gold = is_gold
+            db.session.commit()
 
-        return is_gold
+            return is_gold
 
-    def syllabify(self):
+        return False
+
+    def syllabify(self, update_gold=True):  # PLUG
         '''Algorithmically syllabify Token based on its orthography.'''
-        pass
-        # programmtically syllabify
+        # programmtically syllabify self.orth
         # self.test_syll = test_syllabification
         # db.session.commit()
 
-        # self.update_gold()
+        if update_gold:
+            self.update_gold()
 
     def correct(self, syll, alt_syll='', is_compound=False):
         '''Store correct syllabification and/or alternative syllabfication.'''
@@ -137,25 +140,31 @@ class Document(db.Model):
     def __init__(self, text):
         self.text = text
 
-        is_word = lambda w: isinstance(w, str)  # TODO
-
-        for w in self.text:
-            if is_word(w):
-                word = find_token(w)
-                if not w:
-                    word = Token(w)
-                    db.session.add(word)
-                    db.session.commit()
-                self.pickled_IDs.append(word.id)  # TODO -- ininstance(id, int)
-                self.pickled_text.append(word.id)
-            else:
-                self.pickled_text.append(w)
+        # populate self.pickled_IDs and self.pickled_text
+        # self.pickled_text()  # TODO -- uncomment
 
     def __repr__(self):
         return 'Text #%s' % self.id
 
     def __unicode__(self):
         return self.__repr__()
+
+    def pickle_text(self):  # PLUG  # MOCK  # TODO
+        is_word = lambda w: isinstance(w, str)
+
+        for w in self.text:
+            if is_word(w):
+                word = find_token(w)
+
+                if not w:
+                    word = Token(w)
+                    db.session.add(word)
+                    db.session.commit()
+                self.pickled_IDs.append(word.id)  # CHECK -- is this an int?
+                self.pickled_text.append(word.id)
+
+            else:
+                self.pickled_text.append(w)
 
     def query_tokens(self):
         '''Return query of Tokens, ordered as they appear in the text.'''
@@ -404,7 +413,7 @@ def apply_form(http_form):
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def main_view():
-    '''Main page with links to unverified texts.'''
+    '''List links to unverified texts (think: Table of Contents).'''
     docs = get_unreviewed_documents()
     return render_template('main.html', docs=docs, kw='main')
 
@@ -412,7 +421,7 @@ def main_view():
 @app.route('/doc/<id>', methods=['GET', 'POST'])
 @login_required
 def doc_view(id):
-    '''Detail view of specified doc, consisting of editable Tokens.'''
+    '''Present detail view of specified doc, composed of editable Tokens.'''
     doc = Token.query.get_or_404(id)
 
     if doc.reviewed:
