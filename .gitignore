@@ -6,3 +6,8 @@ syllabifier/finnsyll/migrations/
 syllabifier/finnsyll/finnsyll_config.py
 syllabifier/finnsyll/start.py
 syllabifier/finnsyll/start.txt
+
+syllabifier/syllabifier/
+syllabifier/fin.txt
+
+syllabifier/finnish_syllabifier.py
