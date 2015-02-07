@@ -15,6 +15,11 @@ from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
 
+from ..finnish_syllabifier import (
+    is_word,
+    split_by_punctuation,
+    )
+
 app = Flask(__name__, static_folder='static')
 app.config.from_pyfile('finnsyll_config.py')
 
@@ -71,6 +76,9 @@ class Token(db.Model):
 
     # a boolean indicating if the word is a compound
     is_compound = db.Column(db.Boolean, default=False)
+
+    # a boolean indicating if the word is a compound
+    is_stopword = db.Column(db.Boolean, default=False)
 
     # a boolean indicating if the algorithm has estimated correctly
     is_gold = db.Column(db.Boolean)
@@ -129,19 +137,16 @@ class Document(db.Model):
     text = db.Column(db.Text, nullable=False, unique=True)
 
     # a list of IDs for each word as they appear in the text
-    pickled_IDs = db.Column(db.PickleType, default=[])
+    token_IDs = db.Column(db.PickleType, default=[], editable=False)
 
     # the text as a pickled list, incl. Token IDs and punctuation strings
-    pickled_text = db.Column(db.PickleType, default=[])
+    pickled_text = db.Column(db.PickleType, default=[], editable=False)
 
     # a boolean indicating if all of the document's words have been reviewed
     reviewed = db.Column(db.Boolean, defualt=False)
 
-    def __init__(self, text):
-        self.text = text
-
-        # populate self.pickled_IDs and self.pickled_text
-        # self.pickled_text()  # TODO -- uncomment
+    def __init__(self, filename):
+        self.pickle(filename)
 
     def __repr__(self):
         return 'Text #%s' % self.id
@@ -149,28 +154,47 @@ class Document(db.Model):
     def __unicode__(self):
         return self.__repr__()
 
-    def pickle_text(self):  # PLUG  # MOCK  # TODO
-        is_word = lambda w: isinstance(w, str)
+    def pickle(self, filename):
+        '''Compile self.text, self.token_IDs, and self.picked_text.'''
+        try:
+            filename = 'fin.txt'
 
-        for w in self.text:
-            if is_word(w):
-                word = find_token(w)
+            f = open(filename, 'r')
+            text = f.readlines()
+            f.close()
 
-                if not w:
-                    word = Token(w)
-                    db.session.add(word)
-                    db.session.commit()
-                self.pickled_IDs.append(word.id)  # CHECK -- is this an int?
-                self.pickled_text.append(word.id)
+            self.text = text
 
-            else:
-                self.pickled_text.append(w)
+            for line in text:
+                line = line.split(' ')
+
+                for i in line:
+                    tokens = split_by_punctuation(i)
+
+                    for t in tokens:
+
+                        if is_word(t):
+                            word = find_token(t.lower())
+
+                            if not word:
+                                word = Token(word)
+                                db.session.add(word)
+                                db.session.commit()
+
+                            self.token_IDs.append(word.id)  # CHECK -- int?
+                            self.pickled_text.append(word.id)
+
+                        if t:
+                            self.pickled_text.append(t)
+
+        except IOError:
+            raise IOError('File %s could not be opened.' % filename)
 
     def query_tokens(self):
         '''Return query of Tokens, ordered as they appear in the text.'''
         query = Token.query
 
-        for ID in self.pickled_IDs:
+        for ID in self.token_IDs:
             query = query.union(Token.query.get(ID))
 
         return query
@@ -198,17 +222,6 @@ class Document(db.Model):
         Token.syll, Token.alt_syll, and Token.is_compound.
         '''
 
-        def get_test_syll_class(token):
-            '''Return a is_gold css class for a given token.'''
-            if token.is_gold:
-                return 'good'
-
-            elif token.is_gold is False:
-                return 'bad'
-
-            else:
-                return 'unverified'
-
         html = '<div class="doc-text">'
 
         modals = ''
@@ -222,7 +235,7 @@ class Document(db.Model):
 
                 word = Token.query.get(t)
 
-                test_syll_class = get_test_syll_class(word)
+                test_syll_class = self._get_test_syll_css_class(word)
 
                 html += ' <a href="#modal-%s" class="word' % modal_count
 
@@ -234,9 +247,12 @@ class Document(db.Model):
                 if word.alt_syll:
                     html += ' alt'
 
-                html += '"" %s</a>' % t
+                html += '"" %s </a>' % t
 
                 modals += self._create_modal(t, modal_count, test_syll_class)
+
+            elif t == '\n':
+                html += '<br>'
 
             else:
                 html += '<div class="punct">%s</div>' % t.test_syll
@@ -244,6 +260,18 @@ class Document(db.Model):
         html += '</div>' + modals
 
         return html
+
+    @staticmethod
+    def _get_test_syll_css_class(token):
+        # Return a is_gold css class for a given token.
+        if token.is_gold:
+            return 'good'
+
+        elif token.is_gold is False:
+            return 'bad'
+
+        else:
+            return 'unverified'
 
     @staticmethod
     def _create_modal(self, token, modal_count, test_syll_class):
