@@ -14,11 +14,8 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
-
-from ..finnish_syllabifier import (
-    is_word,
-    split_by_punctuation,
-    )
+from ..text import is_word, split_by_punctuation
+from ..finnish_syllabifier import syllabify
 
 app = Flask(__name__, static_folder='static')
 app.config.from_pyfile('finnsyll_config.py')
@@ -74,20 +71,42 @@ class Token(db.Model):
     # the word's part-of-speech
     pos = db.Column(db.String(10), default='')
 
+    # a list of the word's syllables
+    syllables = db.Column(db.PickleType, default=[])
+
+    # a list of the word's weights
+    weights = db.Column(db.PickleType, default=[])
+
+    # a list of the word's stresses
+    stress = db.Column(db.PickleType, default=[])
+
+    # a list of the word's alternative stresses
+    alt_stress = db.Column(db.PickleType, default=[])
+
+    # a list of the word's sonorities
+    sonorities = db.Column(db.PickleType, default=[])
+
     # a boolean indicating if the word is a compound
     is_compound = db.Column(db.Boolean, default=False)
 
-    # a boolean indicating if the word is a compound
+    # a boolean indicating if the word is a stopword -- only if the
+    # word's syllabification is lexically marked
     is_stopword = db.Column(db.Boolean, default=False)
 
     # a boolean indicating if the algorithm has estimated correctly
     is_gold = db.Column(db.Boolean)
 
-    def __init__(self, orth):
+    def __init__(self, orth, syll=None, alt_syll=None):
         self.orth = orth
 
+        if syll:
+            self.syll = syll
+
+        if alt_syll:
+            self.alt_syll = alt_syll
+
         # populate self.test_syll
-        # self.syllabify(update_gold=False)  # TODO -- uncomment
+        self.syllabify()
 
     def __repr__(self):
         return '\tWord: %s\n\tEstimated syll: %s\n\tCorrect syll: %s\n\t' % (
@@ -104,6 +123,10 @@ class Token(db.Model):
         '''
         if self.test_syll and self.syll:
             is_gold = self.test_syll == self.syll
+
+            if not is_gold and self.alt_syll:
+                is_gold = self.test_syll == self.alt_syll
+
             self.is_gold = is_gold
             db.session.commit()
 
@@ -111,13 +134,13 @@ class Token(db.Model):
 
         return False
 
-    def syllabify(self, update_gold=True):  # PLUG
+    def syllabify(self):  # PLUG
         '''Algorithmically syllabify Token based on its orthography.'''
-        # programmtically syllabify self.orth
-        # self.test_syll = test_syllabification
-        # db.session.commit()
+        # syllabifcations do not preserve capitalization
+        token = self.orth.lower()
+        self.test_syll = syllabify(token)
 
-        if update_gold:
+        if self.syll:
             self.update_gold()
 
     def correct(self, syll, alt_syll='', is_compound=False):
@@ -128,6 +151,14 @@ class Token(db.Model):
         db.session.commit()
 
         self.update_gold()
+
+    def syllable_count(self):
+        '''Return the number of syllables the word contains.'''
+        if self.is_gold:
+            if self.syllables:
+                return len(self.syllables)
+
+            return self.syll.count('.') + 1
 
 
 class Document(db.Model):
@@ -169,12 +200,12 @@ class Document(db.Model):
                 line = line.split(' ')
 
                 for i in line:
-                    tokens = split_by_punctuation(i)
+                    tokens = split_by_punctuation(i)  # TODO: keep compounds!!
 
                     for t in tokens:
 
                         if is_word(t):
-                            word = find_token(t.lower())
+                            word = find_token(t)
 
                             if not word:
                                 word = Token(word)
@@ -263,7 +294,7 @@ class Document(db.Model):
 
     @staticmethod
     def _get_test_syll_css_class(token):
-        # Return a is_gold css class for a given token.
+        # Return an is_gold css class for a given token.
         if token.is_gold:
             return 'good'
 
