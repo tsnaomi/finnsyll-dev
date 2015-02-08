@@ -11,7 +11,7 @@ from finnish_phonology import (
 from text import replace_umlauts
 
 
-def _same_syllabic_feature(ch1, ch2):
+def same_syllabic_feature(ch1, ch2):
     '''Return True if ch1 and ch2 are both vowels or both consonants.'''
     if ch1 == '.' or ch2 == '.':
         return False
@@ -31,7 +31,7 @@ def _split_consonants_and_vowels(word):
 
     for i, ch in enumerate(word):
 
-        if _same_syllabic_feature(prev[1], ch):
+        if same_syllabic_feature(prev[1], ch):
             WORD[prev[0]] += ch
 
         else:
