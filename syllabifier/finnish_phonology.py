@@ -1,5 +1,7 @@
 # coding=utf-8
 
+from text import replace_umlauts
+
 
 # Finnish phones --------------------------------------------------------------
 
@@ -72,7 +74,7 @@ def is_long(chars):  # assumes len(chars) == 2
 
 def split_syllable(syllable):
     '''Split syllable into a tuple of its parts: onset, nucleus, and coda.'''
-    syll = syllable.lower()
+    syll = replace_umlauts(syllable).lower()  # put_back?
     nucleus = ''.join([v for v in syll if v in VOWELS])
     onset, nucleus, coda = syll.partition(nucleus)
 
@@ -90,7 +92,7 @@ def is_consonantal_onset(chars):
 # Sonority functions ----------------------------------------------------------
 
 # Return the sonority of a syllable
-get_syllable_sonority = lambda vowel: vowel[0].upper if vowel else '?'  # HUH?
+annotate_sonority = lambda vowel: vowel[0].upper() if vowel else '?'  # HUH?
 
 
 def get_sonorities(syllables):  # PLUG
@@ -98,8 +100,10 @@ def get_sonorities(syllables):  # PLUG
 
     for syllable in syllables:
         nucleus = split_syllable(syllable)[1]
-        sonority = get_syllable_sonority(nucleus)
+        sonority = annotate_sonority(nucleus)
         sonorities.append(sonority)
+
+    return sonorities
 
 
 # Weight functions ------------------------------------------------------------

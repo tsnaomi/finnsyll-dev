@@ -252,7 +252,6 @@ class Document(db.Model):
         contains a form that will allow Arto to edit the word's Token, i.e.,
         Token.syll, Token.alt_syll, and Token.is_compound.
         '''
-
         html = '<div class="doc-text">'
 
         modals = ''
