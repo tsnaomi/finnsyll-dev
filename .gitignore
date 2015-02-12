@@ -2,10 +2,10 @@
 
 research/
 
-syllabifier/finnsyll/migrations/
-syllabifier/finnsyll/finnsyll_config.py
-syllabifier/finnsyll/start.py
-syllabifier/finnsyll/start.txt
+finnsyll/migrations/
+finnsyll/syllabifier/falk
 
-syllabifier/syllabifier/
-syllabifier/fin.txt
+finnsyll/fin.txt
+finnsyll/finnsyll_config.py
+finnsyll/start.py
+finnsyll/start.txt

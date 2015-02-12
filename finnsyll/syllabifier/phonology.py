@@ -1,51 +1,35 @@
 # coding=utf-8
 
-from text import replace_umlauts
-
 
 # Finnish phones --------------------------------------------------------------
 
 # Finnish vowels
-VOWELS = ['i', 'e', 'A', 'y', 'O', 'a', 'u', 'o']
-# VOWELS = ['i', 'e', 'ä', 'y', 'ö', 'a', 'u', 'o']
-# \"{a} = a with Umlaut (ä) (\xc3\xa4)
-# \"{o} = o with Umlaut (ö) (\xc3\xb6)
+VOWELS = [u'i', u'e', u'A', u'y', u'O', u'a', u'u', u'o']
+# ä is replaced by A
+# ö is replaced by O
 
 
 # Finnish diphthongs
 DIPHTHONGS = [
-    'ai', 'ei', 'oi', 'Ai', 'Oi', 'au', 'eu', 'ou', 'ey', 'Ay', 'Oy', 'ui',
-    'yi', 'iu', 'iy', 'ie', 'uo', 'yO']
-# DIPHTHONGS = [
-#     'ai', 'ei', 'oi', 'äi', 'öi', 'au', 'eu', 'ou', 'ey', 'äy', 'öy', 'ui',
-#     'yi', 'iu', 'iy', 'ie', 'uo', 'yö']
+    u'ai', u'ei', u'oi', u'Ai', u'Oi', u'au', u'eu', u'ou', u'ey', u'Ay',
+    u'Oy', u'ui', u'yi', u'iu', u'iy', u'ie', u'uo', u'yO']
 
 
 # Finnish consonants
 CONSONANTS = [
-    'b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'q', 'r', 's',
-    't', 'v', 'x', 'z', "'"]  # "'" is incl. for words like vaa'an
+    u'b', u'c', u'd', u'f', u'g', u'h', u'j', u'k', u'l', u'm', u'n', u'p',
+    u'q', u'r', u's', u't', u'v', u'x', u'z', u"'"]
 
 
 # Finnish consonant clusters (see Karlsson 1985, #4)
 CLUSTERS = [
-    'bl', 'br', 'dr', 'fl', 'fr', 'gl', 'gr', 'kl', 'kr', 'kv', 'pl', 'pr',
-    'cl', 'qv', 'schm']
+    u'bl', u'br', u'dr', u'fl', u'fr', u'gl', u'gr', u'kl', u'kr', u'kv',
+    u'pl', u'pr', u'cl', u'qv', u'schm']
+
 
 # Finnish stress (see Anttila 2008)
-SON_HIGH = ['i', 'e', 'u', 'y']
-SON_LOW = ['a', 'ä', 'o', 'ö']
-
-
-# UNICODE PLAYGROUND ----------------------------------------------------------
-
-# VOWELS = [unicode(v, 'utf-8') for v in VOWELS]
-# DIPHTHONGS = [unicode(d, 'utf-8') for d in DIPHTHONGS]
-# CONSONANTS = [unicode(c, 'utf-8') for c in CONSONANTS]
-# CLUSTERS = [unicode(c, 'utf-8') for c in CLUSTERS]
-# CLUSTER_LENGTHS = set(len(c) for c in CLUSTERS)
-# SON_HIGH = [unicode(v, 'utf-8') for v in SON_HIGH]
-# SON_LOW = [unicode(v, 'utf-8') for v in SON_LOW]
+SON_HIGH = [u'i', u'e', u'u', u'y']
+SON_LOW = [u'a', u'A', u'o', u'O']
 
 
 # Phonemic functions ----------------------------------------------------------
@@ -70,6 +54,67 @@ def is_long(chars):  # assumes len(chars) == 2
     return chars[0] == chars[1]
 
 
+def contains_diphthong(chars):
+    return any(i for i in DIPHTHONGS if i in chars)
+
+
+def contains_VV(chars):
+    VV_SEQUENCE = [  # no diphthongs and no long vowels
+        'iA', 'iO', 'ia', 'io', 'eA', 'eO', 'ea', 'eo', 'Ae', 'AO', 'Aa', 'Au',
+        'Ao', 'ye', 'yA', 'ya', 'yu', 'yo', 'Oe', 'OA', 'Oa', 'Ou', 'Oo', 'ae',
+        'aA', 'ay', 'aO', 'ao', 'ue', 'uA', 'uy', 'uO', 'ua', 'oe', 'oA', 'oy',
+        'oO', 'oa']
+
+    if not contains_VVV(chars):
+        VV = [i for i in VV_SEQUENCE if i in chars]
+
+        return VV[0] if VV else False
+
+    return False
+
+
+def contains_Vu_diphthong(chars):
+    if not contains_VVV(chars):
+        # includes genuine diphthongs
+        Vu_DIPHTHONGS = ['au', 'eu', 'ou', 'iu', 'Au', 'yu', 'Ou']
+
+        return any(i for i in Vu_DIPHTHONGS if i in chars)
+
+    return False
+
+
+def contains_Vy_diphthong(chars):
+    if not contains_VVV(chars):
+        # includes genuine diphthongs
+        Vy_DIPHTHONGS = ['ey', 'Ay', 'Oy', 'iy', 'ay', 'uy', 'oy']
+
+        return any(i for i in Vy_DIPHTHONGS if i in chars)
+
+    return False
+
+
+def contains_VVV(chars):
+    for i, c in enumerate(chars[:-2]):
+
+        if is_vowel(c):
+            return is_vowel(chars[i + 2])
+
+    return False
+
+
+def replace_umlauts(word, put_back=False):
+    '''If put_back is True, put in umlauts; else, take them out!'''
+    if put_back:
+        word = word.replace(u'A', u'ä').replace(u'A', u'\xc3\xa4')
+        word = word.replace(u'O', u'ö').replace(u'O', u'\xc3\xb6')
+
+    else:
+        word = word.replace(u'ä', u'A').replace(u'\xc3\xa4', u'A')
+        word = word.replace(u'ö', u'O').replace(u'\xc3\xb6', u'O')
+
+    return word
+
+
 # Phonotactic functions -------------------------------------------------------
 
 def split_syllable(syllable):
@@ -92,7 +137,7 @@ def is_consonantal_onset(chars):
 # Sonority functions ----------------------------------------------------------
 
 # Return the sonority of a syllable
-annotate_sonority = lambda vowel: vowel[0].upper() if vowel else '?'  # HUH?
+annotate_sonority = lambda vowel: vowel[0].upper() if vowel else '?'
 
 
 def get_sonorities(syllables):  # PLUG
@@ -216,13 +261,13 @@ def get_stress_pattern(weights):  # PLUG
 
 def _get_alternative_stress_pattern(weights, stress):  # PLUG
     # FINNSYLL: optionally stress a final heavy syllable... if the preceding
-    # syllable is light and stressed, makes its stress optional
-    if stress[0][-2] == UNSTRESSED:
-        stresses = SECONDARY
+    # syllable is light and stressed, make its stress optional
+    if stress[-2] == UNSTRESSED:
+        stress = SECONDARY
 
-    elif stresses[0][-2] == SECONDARY and not is_heavy(weights[-2]):
-        stresses[1][-1] = SECONDARY
-        stresses[1][-2] = UNSTRESSED
+    elif stress[-2] == SECONDARY and not is_heavy(weights[-2]):
+        stress[-1] = SECONDARY
+        stress[-2] = UNSTRESSED
 
     return stress
 

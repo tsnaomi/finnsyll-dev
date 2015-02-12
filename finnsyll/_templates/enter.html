@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+
+<html lang='en'>
+
+    <title>FinnSyll</title>
+
+    <head>
+        <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
+        <link rel='stylesheet' type='text/css' href='http://fonts.googleapis.com/css?family=Pacifico|EB+Garamond'>
+    </head>
+
+    <body>
+
+
+        <form class='entrance' method='POST'>
+            <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+            <br><input type='text' class='entrance-auth' name='username' placeholder='username'>
+            <br><input type='password' class='entrance-auth' name='password' placeholder='password'>
+            <br><input type='submit' class='entrance-submit' value='Sign In'>
+        </form>
+
+        {% for message in get_flashed_messages() %}
+        <div class='flash'>{{ message }}</div>
+        {% endfor %}
+
+    </body>
+
+</html>

@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from flask import (
     abort,
     flash,
@@ -14,10 +16,10 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
-from ..text import is_word, split_by_punctuation
-from ..finnish_syllabifier import syllabify
+from pickler import is_word, split_by_punctuation
+from syllabifier.v2 import syllabify
 
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__, static_folder='_static', template_folder='_templates')
 app.config.from_pyfile('finnsyll_config.py')
 
 db = SQLAlchemy(app)
@@ -57,19 +59,22 @@ class Token(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     # the word's orthography
-    orth = db.Column(db.String(40), nullable=False, unique=True)
+    orth = db.Column(
+        db.String(40, convert_unicode=True),
+        nullable=False,
+        unique=True)
 
     # the syllabification that is estimated programmatically
-    test_syll = db.Column(db.String(40), default='')
+    test_syll = db.Column(db.String(40, convert_unicode=True), default='')
 
     # the correct syllabification (hand-verified)
-    syll = db.Column(db.String(40), default='')
+    syll = db.Column(db.String(40, convert_unicode=True), default='')
 
     # an alternative syllabification (hand-verified)
-    alt_syll = db.Column(db.String(40), default='')
+    alt_syll = db.Column(db.String(40, convert_unicode=True), default='')
 
     # the word's part-of-speech
-    pos = db.Column(db.String(10), default='')
+    pos = db.Column(db.String(10, convert_unicode=True), default='')
 
     # a list of the word's syllables
     syllables = db.Column(db.PickleType, default=[])
@@ -105,6 +110,10 @@ class Token(db.Model):
         if alt_syll:
             self.alt_syll = alt_syll
 
+        # converts all strings to Unicode prior to syllabifications
+        db.session.add(self)
+        db.session.commit()
+
         # populate self.test_syll
         self.syllabify()
 
@@ -134,7 +143,7 @@ class Token(db.Model):
 
         return False
 
-    def syllabify(self):  # PLUG
+    def syllabify(self):
         '''Algorithmically syllabify Token based on its orthography.'''
         # syllabifcations do not preserve capitalization
         token = self.orth.lower()
@@ -165,19 +174,22 @@ class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     # the entire text of the document
-    text = db.Column(db.Text, nullable=False, unique=True)
+    text = db.Column(db.Text, unique=True)  # nullable=False
 
     # a list of IDs for each word as they appear in the text
-    token_IDs = db.Column(db.PickleType, default=[], editable=False)
+    token_IDs = db.Column(db.PickleType)
 
     # the text as a pickled list, incl. Token IDs and punctuation strings
-    pickled_text = db.Column(db.PickleType, default=[], editable=False)
+    pickled_text = db.Column(db.PickleType)
 
     # a boolean indicating if all of the document's words have been reviewed
-    reviewed = db.Column(db.Boolean, defualt=False)
+    reviewed = db.Column(db.Boolean, default=False)
 
     def __init__(self, filename):
-        self.pickle(filename)
+        text, token_IDs, pickled_text = self.pickle(filename)
+        self.text = text
+        self.token_IDs = token_IDs
+        self.pickled_text = pickled_text
 
     def __repr__(self):
         return 'Text #%s' % self.id
@@ -185,7 +197,8 @@ class Document(db.Model):
     def __unicode__(self):
         return self.__repr__()
 
-    def pickle(self, filename):
+    @staticmethod
+    def pickle(filename):
         '''Compile self.text, self.token_IDs, and self.picked_text.'''
         try:
             filename = 'fin.txt'
@@ -194,7 +207,8 @@ class Document(db.Model):
             text = f.readlines()
             f.close()
 
-            self.text = text
+            token_IDs = []
+            pickled_text = []
 
             for line in text:
                 line = line.split(' ')
@@ -208,15 +222,17 @@ class Document(db.Model):
                             word = find_token(t)
 
                             if not word:
-                                word = Token(word)
+                                word = Token(t)
                                 db.session.add(word)
                                 db.session.commit()
 
-                            self.token_IDs.append(word.id)  # CHECK -- int?
-                            self.pickled_text.append(word.id)
+                            token_IDs.append(word.id)
+                            pickled_text.append(word.id)
 
-                        if t:
-                            self.pickled_text.append(t)
+                        elif t:
+                            pickled_text.append(t)
+
+            return text, token_IDs, pickled_text
 
         except IOError:
             raise IOError('File %s could not be opened.' % filename)
@@ -252,9 +268,9 @@ class Document(db.Model):
         contains a form that will allow Arto to edit the word's Token, i.e.,
         Token.syll, Token.alt_syll, and Token.is_compound.
         '''
-        html = '<div class="doc-text">'
+        html = u'<div class="doc-text">'
 
-        modals = ''
+        modals = u''
         modal_count = 0
 
         for t in self.pickled_text:
@@ -265,55 +281,47 @@ class Document(db.Model):
 
                 word = Token.query.get(t)
 
-                test_syll_class = self._get_test_syll_css_class(word)
+                is_gold_class = self._get_is_gold_class(word)
 
-                html += ' <a href="#modal-%s" class="word' % modal_count
+                html += u' <a href="#modal-%s" class="word' % modal_count
 
-                html += ' %s' % test_syll_class
+                html += u' %s' % is_gold_class
 
                 if word.is_compound:
-                    html += ' compound'
+                    html += u' compound'
 
                 if word.alt_syll:
-                    html += ' alt'
+                    html += u' alt'
 
-                html += '"" %s </a>' % t
+                html += u'"> %s </a>' % word.test_syll
 
-                modals += self._create_modal(t, modal_count, test_syll_class)
+                modals += self._create_modal(word, modal_count, is_gold_class)
 
-            elif t == '\n':
-                html += '<br>'
+            elif t == u'\n':
+                html += u'<br>'
 
             else:
-                html += '<div class="punct">%s</div>' % t.test_syll
+                html += u'<span class="punct">%s</span>' % t
 
-        html += '</div>' + modals
+        html += u'</div>' + modals
 
         return html
 
     @staticmethod
-    def _get_test_syll_css_class(token):
+    def _get_is_gold_class(gold):
         # Return an is_gold css class for a given token.
-        if token.is_gold:
-            return 'good'
-
-        elif token.is_gold is False:
-            return 'bad'
-
-        else:
-            return 'unverified'
+        return 'good' if gold else 'unverified' if gold is None else 'bad'
 
     @staticmethod
-    def _create_modal(self, token, modal_count, test_syll_class):
+    def _create_modal(token, modal_count, is_gold_class):
         # http://codepen.io/maccadb7/pen/nbHEg?editors=110
-
-        modal = '''
+        modal = u'''
             <!-- Modal %s -->
             <div class="modal" id="modal-%s" aria-hidden="true">
               <div class="modal-dialog">
 
                 <div class="modal-header">
-                  <a href="#close" class="btn-close" aria-hidden="true">×</a>
+                  <a href="#close" class="btn-close" aria-hidden="true">x</a>
                 </div>
 
                 <div class="modal-body">
@@ -322,28 +330,30 @@ class Document(db.Model):
                         <input
                             type='hidden' name='_csrf_token'
                             value='{{ csrf_token() }}'>
+                        <span class='modal-label'>Orthography: </span>
                         <input
                             type='text' name='orth' class='orth'
-                            value='%a' disabled='True' >
-                        <p class='test_syll %s'>%s</p>
+                            value='%s' disabled='True' ><br>
+                        <span class='modal-label'>Test Syll: </span>
+                        <span class='test_syll %s'>%s</span><br>
+                        <span class='modal-label'>Correct Syll: </span>
                         <input
                             type='text' name='syll'
                             placeholder='correct syll'
-                            value='%s'>
+                            value='%s'><br>
+                        <span class='modal-label'>Alternative Syll: </span>
                         <input
                             type='text' name='alt_syll'
                             placeholder='alternative syll'
-                            value='%s'>
-                        <span class='compound-label'>Compound</span>
+                            value='%s'><br>
+                        <span class='modal-label'>Compound</span>
                         <span>
                             <input type='checkbox' name='is_compound' value=1>
-                        </span>
+                        </span><br><br>
                         <input
                             type='submit' class='OK' value='OK!'>
                     </form>
                 </div>
-
-
               </div>
             </div>
             <!-- /Modal -->
@@ -351,11 +361,12 @@ class Document(db.Model):
                 modal_count,
                 modal_count,
                 token.orth,
-                test_syll_class,
+                is_gold_class,
                 token.test_syll,
-                token.syll if token.syll != token.test_syll else '',
+                token.syll,
                 token.alt_syll,
             )
+        modal = modal.strip('\n')
 
         return modal
 
@@ -450,9 +461,9 @@ def apply_form(http_form):
     # Apply changes to Token instance based on POST request
     try:
         orth = http_form['orth']
-        syll = http_form['syll']
+        syll = http_form['syll'] or http_form['test_syll']
         alt_syll = http_form['alt_syll'] or ''
-        is_compound = bool(http_form['is_compound'])
+        is_compound = bool(http_form.getlist('is_compound'))
         token = find_token(orth)
         token.correct(
             syll=syll,
@@ -478,7 +489,7 @@ def main_view():
 @login_required
 def doc_view(id):
     '''Present detail view of specified doc, composed of editable Tokens.'''
-    doc = Token.query.get_or_404(id)
+    doc = Document.query.get_or_404(id)
 
     if doc.reviewed:
         abort(404)
@@ -489,7 +500,7 @@ def doc_view(id):
     doc_id = doc.id
     doc = doc.render_html()
 
-    return render_template('tokenized.html', doc=doc, doc_id=doc_id, kw='doc')
+    return render_template('doc.html', doc=doc, doc_id=doc_id, kw='doc')
 
 
 @app.route('/approve/approve/approve/doc/<id>', methods=['POST', ])
@@ -506,10 +517,10 @@ def approve_doc_view(id):
 @login_required
 def unverified_view():
     '''List all unverified Tokens and process corrections.'''
-    tokens = get_unverified_tokens()
-
     if request.method == 'POST':
         apply_form(request.form)
+
+    tokens = get_unverified_tokens()
 
     return render_template('tokens.html', tokens=tokens, kw='unverified')
 
@@ -518,10 +529,10 @@ def unverified_view():
 @login_required
 def bad_view():
     '''List all incorrectly syllabified Tokens and process corrections.'''
-    tokens = get_bad_tokens()
-
     if request.method == 'POST':
         apply_form(request.form)
+
+    tokens = get_bad_tokens()
 
     return render_template('tokens.html', tokens=tokens, kw='bad')
 
@@ -530,10 +541,10 @@ def bad_view():
 @login_required
 def good_view():
     '''List all correctly syllabified Tokens and process corrections.'''
-    tokens = get_good_tokens()
-
     if request.method == 'POST':
         apply_form(request.form)
+
+    tokens = get_good_tokens()
 
     return render_template('tokens.html', tokens=tokens, kw='good')
 

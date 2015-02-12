@@ -1,14 +1,14 @@
 # coding=utf-8
 
-from finnish_phonology import (
+from phonology import (
     CONSONANTS,
     is_consonant,
     is_consonantal_onset,
     is_diphthong,
     is_vowel,
+    replace_umlauts,
     VOWELS
     )
-from text import replace_umlauts
 
 
 def same_syllabic_feature(ch1, ch2):
@@ -235,17 +235,17 @@ if __name__ == '__main__':
     else:
         # test syllabifications -- from Arto's finnish_syllabification.txt
         words = [
-            ('kala', 'ka.la'),  # T-1
-            ('järjestäminenkö', 'jär.jes.tä.mi.nen.kö'),  # T-1, 1, 1, 1, 1
-            ('kärkkyä', 'kärk.ky.ä'),  # T-1, 2
-            ('värväytyä', 'vär.väy.ty.ä'),  # T-1, 1, 2
-            ('pamaushan', 'pa.ma.us.han'),  # T-1, 4, 1
-            ('värväyttää', 'vär.vä.yt.tää'),  # T-1, 4, 1
-            ('haluaisin', 'ha.lu.ai.sin'),  # T-1, 5
-            ('hyöyissä', 'hyö.yis.sä'),  # T-5, 1
-            ('saippuaa', 'saip.pu.aa'),  # T-1, 6
-            ('touon', 'tou.on'),  # T-7
+            (u'kala', u'ka.la'),  # T-1
+            (u'järjestäminenkö', u'jär.jes.tä.mi.nen.kö'),  # T-1, 1, 1, 1, 1
+            (u'kärkkyä', u'kärk.ky.ä'),  # T-1, 2
+            (u'värväytyä', u'vär.väy.ty.ä'),  # T-1, 1, 2
+            (u'pamaushan', u'pa.ma.us.han'),  # T-1, 4, 1
+            (u'värväyttää', u'vär.vä.yt.tää'),  # T-1, 4, 1
+            (u'haluaisin', u'ha.lu.ai.sin'),  # T-1, 5
+            (u'hyöyissä', u'hyö.yis.sä'),  # T-5, 1
+            (u'saippuaa', u'saip.pu.aa'),  # T-1, 6
+            (u'touon', u'tou.on'),  # T-7
             ]
 
         for word in words:
-            print 'TRY: %s\nYEA: %s\n\n' % (syllabify(word[0]), word[1])
+            print u'TRY: %s\nYEA: %s\n' % (syllabify(word[0]), word[1])
