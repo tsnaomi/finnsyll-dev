@@ -276,15 +276,10 @@ class Document(db.Model):
         for t in self.pickled_text:
 
             if isinstance(t, int):
-
                 modal_count += 1
-
                 word = Token.query.get(t)
-
                 is_gold_class = self._get_is_gold_class(word)
-
                 html += u' <a href="#modal-%s" class="word' % modal_count
-
                 html += u' %s' % is_gold_class
 
                 if word.is_compound:
@@ -294,7 +289,6 @@ class Document(db.Model):
                     html += u' alt'
 
                 html += u'"> %s </a>' % word.test_syll
-
                 modals += self._create_modal(word, modal_count, is_gold_class)
 
             elif t == u'\n':
