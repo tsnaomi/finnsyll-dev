@@ -27,11 +27,6 @@ CLUSTERS = [
     u'pl', u'pr', u'cl', u'qv', u'schm']
 
 
-# Finnish stress (see Anttila 2008)
-SON_HIGH = [u'i', u'e', u'u', u'y']
-SON_LOW = [u'a', u'A', u'o', u'O']
-
-
 # Phonemic functions ----------------------------------------------------------
 
 def is_vowel(ch):
@@ -194,81 +189,5 @@ def is_heavier(weight1, weight2):
     '''Return True if weight1 is heavier than weight2.'''
     return weight1 > weight2
 
-
-# Stress functions ------------------------------------------------------------
-
-UNSTRESSED = 0
-PRIMARY = 1
-SECONDARY = 2
-
-# Modelled after the CMU Pronouncing Dictionary
-annotate_stress = lambda s: 'U' if s == 0 else 'P' if s == 1 else 'S'
-
-
-def get_stress_pattern(weights):  # PLUG
-    '''Given a list of weights, return a list of corresponding stresses.'''
-    stress = []
-    alternative_stress = []
-
-    wl = len(weights)
-
-    if wl == 1 and not is_heavy(weights[0]):
-        stress.append(UNSTRESSED)
-
-    else:
-        stress.append(PRIMARY)
-
-    wl -= 1
-
-    for i in xrange(wl):
-        stress.append(UNSTRESSED)
-
-    # FINNSYLL: the first syllable is always stressed, and the following
-    # syllable is never stressed, so we start with the third syllable
-    i = 0
-
-    # Initially stressing odd syllables, i.e., even indices
-    stress_parity = 0
-
-    while i < wl:
-
-        # if it is an odd syllable and has the potential to receive stress
-        if i % 2 == stress_parity:
-
-            # # indice of following syllable
-            n = i + 1
-
-            # FINNSYLL: shift stress foward by one if the following syllable is
-            # already stressed (to avoid clash)... or if the following syllable
-            # is heavier and nonfinal
-            if is_heavier(weights[n], weights[i]) and n < wl:
-                stress[n] = SECONDARY
-
-                i = n
-                stress_parity = (stress_parity + 1) % 2
-
-            else:
-                stress[i] = SECONDARY
-
-        # FINNSYLL: to avoid clash, ignore the following syllable
-        i += 2
-
-    if len(weights) > 1 and is_heavy(weights[-1]):
-        alternative_stress = _get_alternative_stress_pattern(weights, stress)
-
-    return stress, alternative_stress
-
-
-def _get_alternative_stress_pattern(weights, stress):  # PLUG
-    # FINNSYLL: optionally stress a final heavy syllable... if the preceding
-    # syllable is light and stressed, make its stress optional
-    if stress[-2] == UNSTRESSED:
-        stress = SECONDARY
-
-    elif stress[-2] == SECONDARY and not is_heavy(weights[-2]):
-        stress[-1] = SECONDARY
-        stress[-2] = UNSTRESSED
-
-    return stress
 
 # -----------------------------------------------------------------------------

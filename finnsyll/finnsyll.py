@@ -82,12 +82,6 @@ class Token(db.Model):
     # a list of the word's weights
     weights = db.Column(db.PickleType, default=[])
 
-    # a list of the word's stresses
-    stress = db.Column(db.PickleType, default=[])
-
-    # a list of the word's alternative stresses
-    alt_stress = db.Column(db.PickleType, default=[])
-
     # a list of the word's sonorities
     sonorities = db.Column(db.PickleType, default=[])
 
