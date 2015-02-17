@@ -230,8 +230,7 @@ a.word:hover {
 }
 
 .doc-tokens > input[type=text],
-.doc-tokens > input[type=text]:focus,
-.doc-tokens > .test_syll {
+.doc-tokens > input[type=text]:focus {
     font-family: inherit;
     margin-left: 124px;
     padding: 4px;

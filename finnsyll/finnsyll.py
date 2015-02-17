@@ -322,9 +322,11 @@ class Document(db.Model):
                         <span class='modal-label'>Orthography: </span>
                         <input
                             type='text' name='orth' class='orth'
-                            value='%s' disabled='True' ><br>
+                            value='%s' readonly='True'><br>
                         <span class='modal-label'>Test Syll: </span>
-                        <span class='test_syll %s'>%s</span><br>
+                        <input
+                            type='text' name='test_syll' class='%s'
+                            value='%s' readonly='True'><br>
                         <span class='modal-label'>Correct Syll: </span>
                         <input
                             type='text' name='syll'
@@ -478,11 +480,10 @@ def main_view():
 @login_required
 def doc_view(id):
     '''Present detail view of specified doc, composed of editable Tokens.'''
-    doc = Document.query.get_or_404(id)
-
     if request.method == 'POST':
         apply_form(request.form)
 
+    doc = Document.query.get_or_404(id)
     TEXT = doc.render_html()
 
     return render_template('doc.html', doc=doc, TEXT=TEXT, kw='doc')
