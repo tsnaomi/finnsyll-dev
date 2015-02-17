@@ -1,7 +1,6 @@
 # coding=utf-8
 
 from flask import (
-    abort,
     flash,
     Flask,
     redirect,
@@ -481,16 +480,12 @@ def doc_view(id):
     '''Present detail view of specified doc, composed of editable Tokens.'''
     doc = Document.query.get_or_404(id)
 
-    # if doc.reviewed:
-    #     abort(404)
-
     if request.method == 'POST':
         apply_form(request.form)
 
-    doc_id = doc.id
-    doc = doc.render_html()
+    TEXT = doc.render_html()
 
-    return render_template('doc.html', doc=doc, doc_id=doc_id, kw='doc')
+    return render_template('doc.html', doc=doc, TEXT=TEXT, kw='doc')
 
 
 @app.route('/approve/approve/approve/doc/<id>', methods=['POST', ])
@@ -500,7 +495,7 @@ def approve_doc_view(id):
     doc = Document.query.get_or_404(id)
     doc.verify_all_unverified_tokens()
 
-    return redirect(url_for('main_view'))
+    return redirect(url_for('doc_view', id=id))
 
 
 @app.route('/unverified', methods=['GET', 'POST'])
