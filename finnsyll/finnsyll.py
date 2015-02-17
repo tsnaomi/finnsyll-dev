@@ -274,7 +274,7 @@ class Document(db.Model):
             if isinstance(t, int):
                 modal_count += 1
                 word = Token.query.get(t)
-                is_gold_class = self._get_is_gold_class(word)
+                is_gold_class = self._get_is_gold_class(word.is_gold)
                 html += u' <a href="#modal-%s" class="word' % modal_count
                 html += u' %s' % is_gold_class
 
@@ -298,16 +298,9 @@ class Document(db.Model):
         return html
 
     @staticmethod
-    def _get_is_gold_class(word):
-        # Return an is_gold css class for a given token.
-        # return 'good' if word else 'unverified' if word is None else 'bad'
-        if word.is_gold is None:
-            return 'unverified'
-
-        if word.is_gold is False:
-            return 'bad'
-
-        return 'good'
+    def _get_is_gold_class(gold):
+        # Return an is_gold css class for a given token.is_gold value
+        return 'good' if gold else 'unverified' if gold is None else 'bad'
 
     @staticmethod
     def _create_modal(token, modal_count, is_gold_class):
