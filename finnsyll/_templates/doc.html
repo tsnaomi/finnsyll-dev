@@ -8,4 +8,9 @@
 
 {{ doc|safe }}
 
+<form class='entrance' method='POST' action="{{ url_for('approve_doc_view', id=doc.id) }}{{ doc_id }}"> 
+    <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+    <input type='submit' class='BIG-OK' value='OK!'  onclick="return confirm('Are you positive you want to approve all of the syllabifications in this document?\n\n(This does not include any syllabifications previously marked as incorrect.)');">
+</form>
+
 {% endblock %}

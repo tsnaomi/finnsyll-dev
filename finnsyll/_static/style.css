@@ -1,3 +1,5 @@
+/* color picker: http://www.w3schools.com/tags/ref_colorpicker.asp?colorhex=000000 */
+
 body {
     font-family: 'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 16px;
@@ -27,8 +29,6 @@ input[type='submit'] {
     padding: 0px;
 }
 
-/* Tokens ------------------------------------------------------------------------------------ */
-
 .navbar {
     font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
     font-size: 16px;
@@ -39,10 +39,209 @@ input[type='submit'] {
     border: 1px solid transparent;
 }
 
-.navbar a:hover {
+.navbar a:hover,
+a.doc-title:hover {
     border-bottom: 1px dashed #00FF7F;
     padding-bottom: 2px;
 }
+
+/* Main -------------------------------------------------------------------------------------- */
+
+div.docs {
+    text-align: center;
+}
+
+/* Doc --------------------------------------------------------------------------------------- */
+
+.doc-title,
+div.doc-text {
+    font-family: Garamond;
+}
+
+.doc-title {
+    font-size: 28px;
+    text-align: center;
+}
+
+div.doc-text {
+    font-size: 20px;
+    line-height: 144%;
+    width: 60%;
+    margin: 28px auto;
+}
+
+input.BIG-OK {
+    font-size: 24px !important;
+    width: 80px;
+    color: #FFF;
+    border-color: #00FF7F;
+    background-color: #00FF7F;
+    margin-top: 2px;
+}
+
+input.BIG-OK:hover {
+    color: #00FF7F;
+    border-color: #00FF7F;
+    background-color: #fff;
+}
+
+span.punct,
+a.word {
+    padding: 3px;
+}
+
+span.punct {
+    color: #4D4D4D;
+    /* color: #666666;*/
+    font-weight: bold;
+    /*background: #F0F8FF;*/
+    /*background: #FAFDFF;*/
+}
+
+a.word {
+    /*font-weight: bolder;*/
+}
+
+a.word:hover {
+    color: #000000;
+    background: #80FFBF;
+}
+
+.good {
+    background: #F0F8FF;
+}
+
+.bad {
+    background: #FFE4E1;
+}
+
+.compound {
+    border-bottom: 1px #FF7F50 dashed;
+}
+
+/* Modal  ------------------------------------------------------------------------------------ */
+/* http://codepen.io/maccadb7/pen/nbHEg?editors=110 */
+
+.btn {
+    background: #428bca;
+    border: #357ebd solid 1px;
+    border-radius: 3px;
+    color: #fff;
+    display: inline-block;
+    font-size: 14px;
+    padding: 8px 15px;
+    text-decoration: none;
+    text-align: center;
+    min-width: 60px;
+    position: relative;
+    transition: color .1s ease;
+    /* top: 40em;*/
+}
+
+.btn:hover {
+    background: #357ebd;
+}
+
+.btn.btn-big {
+    font-size: 18px;
+    padding: 15px 20px;
+    min-width: 100px;
+}
+
+.btn-close {
+    color: #aaaaaa;
+    font-size: 24px;
+    text-decoration: none;
+    position: absolute;
+    right: 10px;
+    top: 0;
+}
+
+.btn-close:hover {
+    color: #919191;
+}
+
+.modal:before {
+    content: "";
+    display: none;
+    background: rgba(0, 0, 0, 0.6);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+}
+
+.modal:target:before {
+    display: block;
+}
+
+.modal:target .modal-dialog {
+  -webkit-transform: translate(0, 0);
+    -ms-transform: translate(0, 0);
+    transform: translate(0, 0);
+    top: 20%;
+}
+
+.modal-dialog {
+    background: #fefefe;
+    border: #333333 solid 1px;
+    border-radius: 5px;
+    margin-left: -200px;
+    position: fixed;
+    left: 50%;
+    top: -100%;
+    z-index: 11;
+    width: 360px;
+    -webkit-transform: translate(0, -500%);
+    -ms-transform: translate(0, -500%);
+    transform: translate(0, -500%);
+    -webkit-transition: -webkit-transform 0.3s ease-out;
+    -moz-transition: -moz-transform 0.3s ease-out;
+    -o-transition: -o-transform 0.3s ease-out;
+    transition: transform 0.3s ease-out;
+}
+
+.modal-body {
+    padding: 20px 20px 30px;
+}
+
+.modal-header {
+    padding: 10px 20px;
+    font-size: 20px;
+}
+
+/* added to stop scrolling to top*/
+#close {
+    display: none;
+}
+
+.doc-tokens > input[type=text],
+.doc-tokens > input[type=checkbox],
+.doc-tokens > span {
+    font-size: 14px;
+    line-height: 280%
+}
+
+.modal-label {
+    position: absolute;
+    text-transform: uppercase
+}
+
+.doc-tokens > input[type=text],
+.doc-tokens > input[type=text]:focus,
+.doc-tokens > .test_syll {
+    font-family: inherit;
+    margin-left: 124px;
+    padding: 4px;
+}
+
+.doc-tokens > input[type=checkbox] {
+    margin-left: 128px;
+}
+
+/* Tokens ------------------------------------------------------------------------------------ */
 
 .highlight {
     border-bottom: 1px dotted #00FF7F;
@@ -114,106 +313,7 @@ input.OK:hover {
     background-color: #fff;
 }
 
-/* Modals ------------------------------------------------------------------------------------ */
-/* http://codepen.io/maccadb7/pen/nbHEg?editors=110 */
-
-.btn {
-  background: #428bca;
-  border: #357ebd solid 1px;
-  border-radius: 3px;
-  color: #fff;
-  display: inline-block;
-  font-size: 14px;
-  padding: 8px 15px;
-  text-decoration: none;
-  text-align: center;
-  min-width: 60px;
-  position: relative;
-  transition: color .1s ease;
-  /* top: 40em;*/
-}
-
-.btn:hover {
-  background: #357ebd;
-}
-
-.btn.btn-big {
-  font-size: 18px;
-  padding: 15px 20px;
-  min-width: 100px;
-}
-
-.btn-close {
-  color: #aaaaaa;
-  font-size: 30px;
-  text-decoration: none;
-  position: absolute;
-  right: 5px;
-  top: 0;
-}
-
-.btn-close:hover {
-  color: #919191;
-}
-
-.modal:before {
-  content: "";
-  display: none;
-  background: rgba(0, 0, 0, 0.6);
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 10;
-}
-
-.modal:target:before {
-  display: block;
-}
-
-.modal:target .modal-dialog {
-  -webkit-transform: translate(0, 0);
-  -ms-transform: translate(0, 0);
-  transform: translate(0, 0);
-  top: 20%;
-}
-
-.modal-dialog {
-  background: #fefefe;
-  border: #333333 solid 1px;
-  border-radius: 5px;
-  margin-left: -200px;
-  position: fixed;
-  left: 50%;
-  top: -100%;
-  z-index: 11;
-  width: 360px;
-  -webkit-transform: translate(0, -500%);
-  -ms-transform: translate(0, -500%);
-  transform: translate(0, -500%);
-  -webkit-transition: -webkit-transform 0.3s ease-out;
-  -moz-transition: -moz-transform 0.3s ease-out;
-  -o-transition: -o-transform 0.3s ease-out;
-  transition: transform 0.3s ease-out;
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.modal-header {
-  padding: 10px 20px;
-  border-bottom: #eeeeee solid 1px;
-  font-size: 20px;
-}
-
-/* added to stop scrolling to top*/
-#close {
-  display: none;
-}
-
-/* Entrance ------------------------------------------------------------------------------------ */
+/* Entrance ---------------------------------------------------------------------------------- */
 
 form.entrance {
     margin-top: 80px;

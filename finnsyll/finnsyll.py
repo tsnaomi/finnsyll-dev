@@ -62,7 +62,8 @@ class Token(db.Model):
     orth = db.Column(
         db.String(40, convert_unicode=True),
         nullable=False,
-        unique=True)
+        unique=True,
+        )
 
     # the syllabification that is estimated programmatically
     test_syll = db.Column(db.String(40, convert_unicode=True), default='')
@@ -93,7 +94,7 @@ class Token(db.Model):
     is_stopword = db.Column(db.Boolean, default=False)
 
     # a boolean indicating if the algorithm has estimated correctly
-    is_gold = db.Column(db.Boolean)
+    is_gold = db.Column(db.Boolean, default=None)
 
     def __init__(self, orth, syll=None, alt_syll=None):
         self.orth = orth
@@ -233,12 +234,13 @@ class Document(db.Model):
 
     def query_tokens(self):
         '''Return query of Tokens, ordered as they appear in the text.'''
-        query = Token.query
+        tokens = []
 
         for ID in self.token_IDs:
-            query = query.union(Token.query.get(ID))
+            token = Token.query.get(ID)
+            tokens.append(token)
 
-        return query
+        return tokens
 
     def verify_all_unverified_tokens(self):
         '''For all of the text's unverified Tokens, set syll equal to test_syll.
@@ -247,10 +249,10 @@ class Document(db.Model):
         correctly syllabified in test_syll. Proceed with caution.
         '''
         tokens = self.query_tokens()
-        tokens = tokens.filter(is_gold=None)
 
         for token in tokens:
-            token.correct(syll=token.test_syll)
+            if token.is_gold is None:
+                token.correct(syll=token.test_syll)
 
         self.reviewed = True
         db.session.commit()
@@ -296,9 +298,16 @@ class Document(db.Model):
         return html
 
     @staticmethod
-    def _get_is_gold_class(gold):
+    def _get_is_gold_class(word):
         # Return an is_gold css class for a given token.
-        return 'good' if gold else 'unverified' if gold is None else 'bad'
+        # return 'good' if word else 'unverified' if word is None else 'bad'
+        if word.is_gold is None:
+            return 'unverified'
+
+        if word.is_gold is False:
+            return 'bad'
+
+        return 'good'
 
     @staticmethod
     def _create_modal(token, modal_count, is_gold_class):
@@ -314,7 +323,7 @@ class Document(db.Model):
 
                 <div class="modal-body">
 
-                    <form class="tokens2" method="POST">
+                    <form class="doc-tokens" method="POST">
                         <input
                             type='hidden' name='_csrf_token'
                             value='{{ csrf_token() }}'>
@@ -329,15 +338,14 @@ class Document(db.Model):
                             type='text' name='syll'
                             placeholder='correct syll'
                             value='%s'><br>
-                        <span class='modal-label'>Alternative Syll: </span>
+                        <span class='modal-label'>Alt Syll: </span>
                         <input
                             type='text' name='alt_syll'
                             placeholder='alternative syll'
                             value='%s'><br>
-                        <span class='modal-label'>Compound</span>
-                        <span>
-                            <input type='checkbox' name='is_compound' value=1>
-                        </span><br><br>
+                        <span class='modal-label'>Compound:</span>
+                        <input type='checkbox' name='is_compound' value=1 %s>
+                        <br><br>
                         <input
                             type='submit' class='OK' value='OK!'>
                     </form>
@@ -353,6 +361,7 @@ class Document(db.Model):
                 token.test_syll,
                 token.syll,
                 token.alt_syll,
+                'checked' if token.is_compound else ''
             )
         modal = modal.strip('\n')
 
@@ -479,8 +488,8 @@ def doc_view(id):
     '''Present detail view of specified doc, composed of editable Tokens.'''
     doc = Document.query.get_or_404(id)
 
-    if doc.reviewed:
-        abort(404)
+    # if doc.reviewed:
+    #     abort(404)
 
     if request.method == 'POST':
         apply_form(request.form)
@@ -495,7 +504,7 @@ def doc_view(id):
 @login_required
 def approve_doc_view(id):
     '''For all of the doc's unverified Tokens, set syll equal to test_syll.'''
-    doc = Token.query.get_or_404(id)
+    doc = Document.query.get_or_404(id)
     doc.verify_all_unverified_tokens()
 
     return redirect(url_for('main_view'))

@@ -4,7 +4,7 @@
 
 <div class='docs'>
     {% for doc in docs %}
-    <p><a href="{{ url_for('doc_view', id=doc.id) }}">Doc {{ doc.id }}</a></p>
+    <p><a href="{{ url_for('doc_view', id=doc.id) }}" class='doc-title'>Doc {{ doc.id }}</a></p>
     {% endfor %}
 </div>
 
