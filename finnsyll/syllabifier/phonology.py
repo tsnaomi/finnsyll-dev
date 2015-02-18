@@ -148,24 +148,20 @@ def get_sonorities(syllables):  # PLUG
 
 # Weight functions ------------------------------------------------------------
 
-CV = 0  # (C)V
-CVC = 1  # (C)VC+
-CVV = 2  # (C)VV+C*
-
-annotate_weight = lambda w: 'L' if w else 'H'
-
-
 def get_weights(syllables):  # PLUG
     '''Given a list of syllables, return a list of corresponding weights.'''
     weights = [_get_syllable_weight(syll) for syll in syllables]
+    weights = ''.join(weights)
 
     return weights
 
 
 def _get_syllable_weight(syllable):
     '''Return the syllable weight of a single syllable.'''
-    # Syllable weights in increasing order of weight, for deciding which to
-    # stress in a sequence of two syllables
+    CV = 'L'  # (C)V
+    CVC = 'H'  # (C)VC+
+    CVV = 'H'  # (C)VV+C*
+
     onset, nucleus, coda = split_syllable(syllable)
 
     # if the nucleus is long
@@ -178,16 +174,5 @@ def _get_syllable_weight(syllable):
 
     # if the syllable is light
     return CV
-
-
-def is_heavy(weight):
-    '''Return True if weight is greater than the weight of a light syllable.'''
-    return weight > 0
-
-
-def is_heavier(weight1, weight2):
-    '''Return True if weight1 is heavier than weight2.'''
-    return weight1 > weight2
-
 
 # -----------------------------------------------------------------------------
