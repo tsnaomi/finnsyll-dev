@@ -168,7 +168,7 @@ class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     # the entire text of the document
-    text = db.Column(db.Text, unique=True)  # nullable=False
+    text = db.Column(db.Text, unique=True)
 
     # a list of IDs for each word as they appear in the text
     token_IDs = db.Column(db.PickleType)
@@ -343,6 +343,19 @@ class Document(db.Model):
                         <input
                             type='submit' class='OK' value='OK!'>
                     </form>
+
+                    <br>
+
+                    <form method='POST'
+                        action="%s">
+                        <input type='hidden' name='_csrf_token'
+                            value='{{ csrf_token() }}'>
+                        <input type='submit' class='DELETE'
+                            value='delete token'
+                            onclick="return confirm('Are you positive you want
+                            to delete this token?');">
+                    </form>
+
                 </div>
               </div>
             </div>
@@ -355,7 +368,10 @@ class Document(db.Model):
                 token.test_syll,
                 token.syll,
                 token.alt_syll,
-                'checked' if token.is_compound else ''
+                'checked' if token.is_compound else '',
+                url_for('delete_token_view', id=token.id)
+                # token.id,
+                # token.id,
             )
         modal = modal.strip('\n')
 
@@ -364,12 +380,29 @@ class Document(db.Model):
 
 # Database functions ----------------------------------------------------------
 
-def delete_token(orth):
+def delete_token(id):
     '''Delete token (e.g., if the orthopgraphy is a misspelling).'''
     try:
-        token = Token.query.filter_by(orth=orth).first()
-        db.session.delete(token)
-        db.session.commit()
+        token = Token.query.get(id)
+        documents = Document.query.all()
+
+        for doc in documents:
+            # replace the token with a string representation in the doc text
+            for i, v in enumerate(doc.pickled_text):
+                if v == token.id:
+                    doc.pickled_text[i] = token.orth
+
+            # remove the token.id from the doc's list of token IDs
+            try:
+                while True:
+                    doc.token_IDs.remove(token.id)
+            except ValueError:
+                continue
+
+            # TODO: make PickleType column mutable!!
+
+        # db.session.delete(token)
+        # db.session.commit()
 
     except KeyError:
         pass
@@ -533,6 +566,15 @@ def good_view():
     tokens = get_good_tokens()
 
     return render_template('tokens.html', tokens=tokens, kw='good')
+
+
+@app.route('/delete/delete/delete/token/<id>', methods=['POST', ])
+@login_required
+def delete_token_view(id):
+    '''Delete the specified token.'''
+    delete_token(id)
+
+    return redirect(url_for('main_view'))
 
 
 @app.route('/enter', methods=['GET', 'POST'])
