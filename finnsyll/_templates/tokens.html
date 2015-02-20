@@ -16,7 +16,7 @@
 <form class='tokens' method='POST'>
     <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
     <input type='text' name='orth' class='okii orth' value='{{ token.orth }}' readonly='True'>
-    <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' readonly='True'>
+    <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' title='Sonority: {{ token.sonorities() }}&#10;&#10;Weight: {{ token.weights() }}&#10;'readonly='True'>
     <input type='text' name='syll' class='okii' value='{{ token.syll }}'>
     <input type='text' name='alt_syll' class='okii' value='{{ token.alt_syll }}'>
     <input type='checkbox' name='is_compound' class='chisaii' value=1 {% if token.is_compound %}checked{% endif %}>

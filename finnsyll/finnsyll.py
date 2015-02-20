@@ -16,6 +16,7 @@ from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
 from pickler import is_word, split_by_punctuation
+from syllabifier.phonology import get_sonorities, get_weights
 from syllabifier.v2 import syllabify
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
@@ -76,15 +77,6 @@ class Token(db.Model):
     # the word's part-of-speech
     pos = db.Column(db.String(10, convert_unicode=True), default='')
 
-    # a list of the word's syllables
-    syllables = db.Column(db.PickleType, default=[])
-
-    # a list of the word's weights
-    weights = db.Column(db.PickleType, default=[])
-
-    # a list of the word's sonorities
-    sonorities = db.Column(db.PickleType, default=[])
-
     # a boolean indicating if the word is a compound
     is_compound = db.Column(db.Boolean, default=False)
 
@@ -117,6 +109,27 @@ class Token(db.Model):
 
     def __unicode__(self):
         return self.__repr__()
+
+    # Token attribute methods -------------------------------------------------
+
+    def syllable_count(self):
+        '''Return the number of syllables the word contains.'''
+        if self.syll:
+            return self.syll.count('.') + 1
+
+    def syllables(self):
+        '''Return a list of the word's syllables.'''
+        return self.test_syll.split('.')
+
+    def weights(self):
+        '''Return the weight structure of the test syllabification.'''
+        return get_weights(self.test_syll)
+
+    def sonorities(self):
+        '''Return the sonority structure of the test syllabification.'''
+        return get_sonorities(self.test_syll)
+
+    # Syllabification methods -------------------------------------------------
 
     def update_gold(self):
         '''Compare test syllabifcation against true syllabification.
@@ -154,14 +167,6 @@ class Token(db.Model):
         db.session.commit()
 
         self.update_gold()
-
-    def syllable_count(self):
-        '''Return the number of syllables the word contains.'''
-        if self.is_gold:
-            if self.syllables:
-                return len(self.syllables)
-
-            return self.syll.count('.') + 1
 
 
 class Document(db.Model):

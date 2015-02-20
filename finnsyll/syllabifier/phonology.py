@@ -131,48 +131,59 @@ def is_consonantal_onset(chars):
 
 # Sonority functions ----------------------------------------------------------
 
-# Return the sonority of a syllable
-annotate_sonority = lambda vowel: vowel[0].upper() if vowel else '?'
-
-
-def get_sonorities(syllables):  # PLUG
+def get_sonorities(syllabified_word):
+    '''Return the specified word's sonority structure.'''
+    syllables = syllabified_word.split('.')
     sonorities = []
 
     for syllable in syllables:
-        nucleus = split_syllable(syllable)[1]
-        sonority = annotate_sonority(nucleus)
-        sonorities.append(sonority)
+
+        try:
+            onset, nucleus, coda = split_syllable(syllable)
+            sonority = nucleus.title()  # make first character uppercase
+            sonorous_syllable = onset + sonority + coda
+            sonorities.append(sonorous_syllable)
+
+        except ValueError:
+            sonorities.append(u'?')
+
+    sonorities = u'.'.join(sonorities)
 
     return sonorities
 
 
 # Weight functions ------------------------------------------------------------
 
-def get_weights(syllables):  # PLUG
-    '''Given a list of syllables, return a list of corresponding weights.'''
+def get_weights(syllabified_word):
+    '''Return the specified word's weight structure.'''
+    syllables = syllabified_word.split('.')
     weights = [_get_syllable_weight(syll) for syll in syllables]
-    weights = ''.join(weights)
+    weights = u'.'.join(weights)
 
     return weights
 
 
 def _get_syllable_weight(syllable):
-    '''Return the syllable weight of a single syllable.'''
-    CV = 'L'  # (C)V
-    CVC = 'H'  # (C)VC+
-    CVV = 'H'  # (C)VV+C*
+    '''Return the syllable weight of the given single syllable.'''
+    CV = u'L'  # (C)V
+    CVC = u'H'  # (C)VC+
+    CVV = u'H'  # (C)VV+C*
 
-    onset, nucleus, coda = split_syllable(syllable)
+    try:
+        onset, nucleus, coda = split_syllable(syllable)
 
-    # if the nucleus is long
-    if len(nucleus) > 1:
-        return CVV
+        # if the nucleus is long
+        if len(nucleus) > 1:
+            return CVV
 
-    # if a coda is present
-    elif coda:
-        return CVC
+        # if a coda is present
+        elif coda:
+            return CVC
 
-    # if the syllable is light
-    return CV
+        # if the syllable is light
+        return CV
+
+    except ValueError:
+        return u'?'
 
 # -----------------------------------------------------------------------------
