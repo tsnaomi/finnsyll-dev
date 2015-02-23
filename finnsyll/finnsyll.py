@@ -72,7 +72,13 @@ class Token(db.Model):
     syll = db.Column(db.String(40, convert_unicode=True), default='')
 
     # an alternative syllabification (hand-verified)
-    alt_syll = db.Column(db.String(40, convert_unicode=True), default='')
+    alt_syll1 = db.Column(db.String(40, convert_unicode=True), default='')
+
+    # an alternative syllabification (hand-verified)
+    alt_syll2 = db.Column(db.String(40, convert_unicode=True), default='')
+
+    # an alternative syllabification (hand-verified)
+    alt_syll3 = db.Column(db.String(40, convert_unicode=True), default='')
 
     # the word's part-of-speech
     pos = db.Column(db.String(10, convert_unicode=True), default='')
@@ -140,8 +146,14 @@ class Token(db.Model):
         if self.test_syll and self.syll:
             is_gold = self.test_syll == self.syll
 
-            if not is_gold and self.alt_syll:
-                is_gold = self.test_syll == self.alt_syll
+            if not is_gold:
+                is_gold = self.test_syll == self.alt_syll1
+
+            if not is_gold:
+                is_gold = self.test_syll == self.alt_syll2
+
+            if not is_gold:
+                is_gold = self.test_syll == self.alt_syll3
 
             self.is_gold = is_gold
             db.session.commit()
@@ -159,10 +171,17 @@ class Token(db.Model):
         if self.syll:
             self.update_gold()
 
-    def correct(self, syll, alt_syll='', is_compound=False):
+    def correct(
+            self,
+            syll,
+            alt_syll1='',
+            alt_syll2='',
+            alt_syll3='',
+            is_compound=False
+            ):
         '''Store correct syllabification and/or alternative syllabfication.'''
         self.syll = syll
-        self.alt_syll = alt_syll
+        self.alt_syll1 = alt_syll1
         self.is_compound = is_compound
         db.session.commit()
 
@@ -266,7 +285,7 @@ class Document(db.Model):
 
         This html string includes a modal for each word in the text. Each modal
         contains a form that will allow Arto to edit the word's Token, i.e.,
-        Token.syll, Token.alt_syll, and Token.is_compound.
+        Token.syll, Token.alt_syll1-3, and Token.is_compound.
         '''
         html = u'<div class="doc-text">'
 
@@ -285,7 +304,7 @@ class Document(db.Model):
                 if word.is_compound:
                     html += u' compound'
 
-                if word.alt_syll:
+                if word.alt_syll1 or word.alt_syll2 or word.alt_syll3:
                     html += u' alt'
 
                 html += u'"> %s </a>' % word.test_syll
@@ -337,10 +356,20 @@ class Document(db.Model):
                             type='text' name='syll'
                             placeholder='correct syll'
                             value='%s'><br>
-                        <span class='modal-label'>Alt Syll: </span>
+                        <span class='modal-label'>Alt Syll 1: </span>
                         <input
-                            type='text' name='alt_syll'
-                            placeholder='alternative syll'
+                            type='text' name='alt_syll1'
+                            placeholder='alternative syll 1'
+                            value='%s'><br>
+                        <span class='modal-label'>Alt Syll 2: </span>
+                        <input
+                            type='text' name='alt_syll2'
+                            placeholder='alternative syll 2'
+                            value='%s'><br>
+                        <span class='modal-label'>Alt Syll 3: </span>
+                        <input
+                            type='text' name='alt_syll3'
+                            placeholder='alternative syll 3'
                             value='%s'><br>
                         <span class='modal-label'>Compound:</span>
                         <input type='checkbox' name='is_compound' value=1 %s>
@@ -372,11 +401,11 @@ class Document(db.Model):
                 is_gold_class,
                 token.test_syll,
                 token.syll,
-                token.alt_syll,
+                token.alt_syll1,
+                token.alt_syll2,
+                token.alt_syll3,
                 'checked' if token.is_compound else '',
                 url_for('delete_token_view', id=token.id)
-                # token.id,
-                # token.id,
             )
         modal = modal.strip('\n')
 
@@ -491,12 +520,16 @@ def apply_form(http_form):
     try:
         orth = http_form['orth']
         syll = http_form['syll'] or http_form['test_syll']
-        alt_syll = http_form['alt_syll'] or ''
+        alt_syll1 = http_form['alt_syll1'] or ''
+        alt_syll2 = http_form['alt_syll2'] or ''
+        alt_syll3 = http_form['alt_syll3'] or ''
         is_compound = bool(http_form.getlist('is_compound'))
         token = find_token(orth)
         token.correct(
             syll=syll,
-            alt_syll=alt_syll,
+            alt_syll1=alt_syll1,
+            alt_syll2=alt_syll2,
+            alt_syll3=alt_syll3,
             is_compound=is_compound
             )
 

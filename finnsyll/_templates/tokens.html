@@ -6,7 +6,9 @@
     <span class='okii'>Orthography *</span>
     <span class='okii'>Test Syll *</span>
     <span class='okii'>Correct Syll</span>
-    <span class='okii'>Alternative Syll</span>
+    <span class='okii'>Alternative Syll1</span>
+    <span class='okii'>Alternative Syll2</span>
+    <span class='okii'>Alternative Syll3</span>
     <span class='chisaii'>Compound</span>
 </div>
 
@@ -18,7 +20,9 @@
     <input type='text' name='orth' class='okii orth' value='{{ token.orth }}' readonly='True'>
     <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' title='Sonority: {{ token.sonorities() }}&#10;&#10;Weight: {{ token.weights() }}&#10;'readonly='True'>
     <input type='text' name='syll' class='okii' value='{{ token.syll }}'>
-    <input type='text' name='alt_syll' class='okii' value='{{ token.alt_syll }}'>
+    <input type='text' name='alt_syll1' class='okii' value='{{ token.alt_syll1 }}'>
+    <input type='text' name='alt_syll2' class='okii' value='{{ token.alt_syll2 }}'>
+    <input type='text' name='alt_syll3' class='okii' value='{{ token.alt_syll3 }}'>
     <input type='checkbox' name='is_compound' class='chisaii' value=1 {% if token.is_compound %}checked{% endif %}>
     <input type='submit' class='OK' class='chisaii' value='OK!'>
 </form>
