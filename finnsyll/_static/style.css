@@ -236,6 +236,13 @@ a.word:hover {
     padding: 4px;
 }
 
+.rules {
+    color: #000000;
+    font-size: 13px;
+    word-spacing: 4px;
+    margin-left: 78px;
+}
+
 .doc-tokens > input[type=checkbox] {
     margin-left: 128px;
 }

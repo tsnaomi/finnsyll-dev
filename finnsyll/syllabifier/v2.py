@@ -19,26 +19,29 @@ from phonology import (
 def syllabify(word):
     '''Syllabify the given word.'''
     word = replace_umlauts(word)
-    word, CONTINUE_VV, CONTINUE_VVV = apply_T1(word)
+    word, CONTINUE_VV, CONTINUE_VVV, applied_rules = apply_T1(word)
 
     if CONTINUE_VV:
-        word = apply_T2(word)
-        word = apply_T4(word)
+        word, T2 = apply_T2(word)
+        word, T4 = apply_T4(word)
+        applied_rules += T2 + T4
 
     if CONTINUE_VVV:
-        word = apply_T5(word)
-        word = apply_T6(word)
-        word = apply_T7(word)
+        word, T5 = apply_T5(word)
+        word, T6 = apply_T6(word)
+        word, T7 = apply_T7(word)
+        applied_rules += T5 + T6 + T7
 
     word = replace_umlauts(word, put_back=True)
 
-    return word
+    return word, applied_rules
 
 
 # T1 --------------------------------------------------------------------------
 
 def apply_T1(word):
     '''There is a syllable boundary in front of every CV-sequence.'''
+    T1 = ' T1'
     WORD = _split_consonants_and_vowels(word)
     CONTINUE_VV = 0
     CONTINUE_VVV = 0
@@ -61,7 +64,7 @@ def apply_T1(word):
 
     word = ''.join(WORD)
 
-    return word, CONTINUE_VV, CONTINUE_VVV
+    return word, CONTINUE_VV, CONTINUE_VVV, T1
 
 
 def _same_syllabic_feature(ch1, ch2):
@@ -98,6 +101,7 @@ def _split_consonants_and_vowels(word):
 def apply_T2(word):
     '''There is a syllable boundary within a sequence VV of two nonidentical
     that are not a genuine diphthong, e.g., [ta.e], [ko.et.taa].'''
+    T2 = ''
     WORD = word.split('.')
 
     for i, v in enumerate(WORD):
@@ -108,10 +112,11 @@ def apply_T2(word):
             if VV:
                 I = v.find(VV) + 1
                 WORD[i] = v[:I] + '.' + v[I:]
+                T2 = ' T2'
 
     word = '.'.join(WORD)
 
-    return word
+    return word, T2
 
 
 # T4 --------------------------------------------------------------------------
@@ -120,6 +125,7 @@ def apply_T4(word):
     '''An agglutination diphthong that ends in /u, y/ usually contains a
     syllable boundary when -C# or -CCV follow, e.g., [lau.ka.us],
     [va.ka.ut.taa].'''
+    T4 = ''
     WORD = word.split('.')
 
     for i, v in enumerate(WORD):
@@ -131,14 +137,16 @@ def apply_T4(word):
                 if contains_Vu_diphthong(v):
                     I = v.rfind('u')
                     WORD[i] = v[:I] + '.' + v[I:]
+                    T4 = ' T4'
 
                 elif contains_Vy_diphthong(v):
                     I = v.rfind('y')
                     WORD[i] = v[:I] + '.' + v[I:]
+                    T4 = ' T4'
 
     word = '.'.join(WORD)
 
-    return word
+    return word, T4
 
 
 # T5 --------------------------------------------------------------------------
@@ -151,6 +159,7 @@ def apply_T5(word):
     diphthong, there is a syllable boundary between it and the third vowel,
     e.g., [raa.ois.sa], [huo.uim.me], [la.eis.sa], [sel.vi.äi.si], [tai.an],
     [säi.e], [oi.om.me].'''
+    T5 = ''
     WORD = word.split('.')
 
     for i, v in enumerate(WORD):
@@ -158,10 +167,11 @@ def apply_T5(word):
         if contains_VVV(v) and any(i for i in i_DIPHTHONGS if i in v):
             I = v.rfind('i') - 1
             WORD[i] = v[:I] + '.' + v[I:]
+            T5 = ' T5'
 
     word = '.'.join(WORD)
 
-    return word
+    return word, T5
 
 
 # T6 --------------------------------------------------------------------------
@@ -173,6 +183,7 @@ def apply_T6(word):
     '''If a VVV-sequence contains a long vowel, there is a syllable boundary
     between it and the third vowel, e.g. [kor.ke.aa], [yh.ti.öön], [ruu.an],
     [mää.yt.te].'''
+    T6 = ''
     WORD = word.split('.')
 
     for i, v in enumerate(WORD):
@@ -185,13 +196,15 @@ def apply_T6(word):
 
                 if I + 2 == len(v) or is_vowel(v[I + 2]):
                     WORD[i] = v[:I] + '.' + v[I:]
+                    T6 = ' T6'
 
                 else:
                     WORD[i] = v[:I + 1] + '.' + v[I + 1:]  # TODO
+                    T6 = ' T6'
 
     word = '.'.join(WORD)
 
-    return word
+    return word, T6
 
 
 # T7 --------------------------------------------------------------------------
@@ -200,6 +213,7 @@ def apply_T7(word):
     '''If a VVV-sequence does not contain a potential /i/-final diphthong,
     there is a syllable boundary between the second and third vowels, e.g.
     # [kau.an], [leu.an], [kiu.as].'''
+    T7 = ''
     WORD = word.split('.')
 
     for i, v in enumerate(WORD):
@@ -210,10 +224,11 @@ def apply_T7(word):
 
                 if is_vowel(V):
                     WORD[i] = v[:I] + '.' + v[I:]
+                    T7 = ' T7'
 
     word = '.'.join(WORD)
 
-    return word
+    return word, T7
 
 
 # -----------------------------------------------------------------------------

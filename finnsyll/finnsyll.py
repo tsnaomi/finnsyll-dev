@@ -65,8 +65,17 @@ class Token(db.Model):
         unique=True,
         )
 
+    # the word's citation form  (for later use)
+    citation = db.Column(db.String(40, convert_unicode=True), default='')
+
+    # a boolean indicating if the word is the stemmed form of the word
+    is_citation_form = db.Column(db.Boolean, default=None)
+
     # the syllabification that is estimated programmatically
     test_syll = db.Column(db.String(40, convert_unicode=True), default='')
+
+    # a string of the rules applied in the test syllabfication
+    applied_rules = db.Column(db.String(40, convert_unicode=True), default='')
 
     # the correct syllabification (hand-verified)
     syll = db.Column(db.String(40, convert_unicode=True), default='')
@@ -82,6 +91,9 @@ class Token(db.Model):
 
     # the word's part-of-speech
     pos = db.Column(db.String(10, convert_unicode=True), default='')
+
+    # the word's frequency in the finnish newspaper corpus (for later use)
+    freq = db.Column(db.Integer)
 
     # a boolean indicating if the word is a compound
     is_compound = db.Column(db.Boolean, default=False)
@@ -166,7 +178,7 @@ class Token(db.Model):
         '''Algorithmically syllabify Token based on its orthography.'''
         # syllabifcations do not preserve capitalization
         token = self.orth.lower()
-        self.test_syll = syllabify(token)
+        self.test_syll, self.applied_rules = syllabify(token)
 
         if self.syll:
             self.update_gold()
@@ -351,6 +363,9 @@ class Document(db.Model):
                         <input
                             type='text' name='test_syll' class='%s'
                             value='%s' readonly='True'><br>
+                        <span class='modal-label rules-label'>Rules:
+                            <span class='rules'>%s</span>
+                        </span><br><br>
                         <span class='modal-label'>Correct Syll: </span>
                         <input
                             type='text' name='syll'
@@ -400,6 +415,7 @@ class Document(db.Model):
                 token.orth,
                 is_gold_class,
                 token.test_syll,
+                token.applied_rules,
                 token.syll,
                 token.alt_syll1,
                 token.alt_syll2,
