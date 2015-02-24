@@ -1,5 +1,7 @@
 # coding=utf-8
 
+import tokenize
+
 from flask import (
     flash,
     Flask,
@@ -15,7 +17,6 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
-from pickler import is_word, split_by_punctuation
 from syllabifier.phonology import get_sonorities, get_weights
 from syllabifier.v2 import syllabify
 
@@ -213,7 +214,7 @@ class Document(db.Model):
     reviewed = db.Column(db.Boolean, default=False)
 
     def __init__(self, filename):
-        text, token_IDs, pickled_text = self.pickle(filename)
+        text, token_IDs, pickled_text = tokenize.tokenize(filename)
         self.text = text
         self.token_IDs = token_IDs
         self.pickled_text = pickled_text
@@ -223,46 +224,6 @@ class Document(db.Model):
 
     def __unicode__(self):
         return self.__repr__()
-
-    @staticmethod
-    def pickle(filename):
-        '''Compile self.text, self.token_IDs, and self.picked_text.'''
-        try:
-            filename = 'fin.txt'
-
-            f = open(filename, 'r')
-            text = f.readlines()
-            f.close()
-
-            token_IDs = []
-            pickled_text = []
-
-            for line in text:
-                line = line.split(' ')
-
-                for i in line:
-                    tokens = split_by_punctuation(i)  # TODO: keep compounds!!
-
-                    for t in tokens:
-
-                        if is_word(t):
-                            word = find_token(t)
-
-                            if not word:
-                                word = Token(t)
-                                db.session.add(word)
-                                db.session.commit()
-
-                            token_IDs.append(word.id)
-                            pickled_text.append(word.id)
-
-                        elif t:
-                            pickled_text.append(t)
-
-            return text, token_IDs, pickled_text
-
-        except IOError:
-            raise IOError('File %s could not be opened.' % filename)
 
     def query_tokens(self):
         '''Return query of Tokens, ordered as they appear in the text.'''
@@ -503,7 +464,8 @@ def get_unreviewed_documents():
 def get_numbers():
     total = Token.query.filter(Token.is_gold.isnot(None)).count()
     gold = Token.query.filter_by(is_gold=True).count()
-    accuracy = round((float(gold) / total) * 100.0, 2)
+    accuracy = float(gold) / total if gold and total else 0
+    accuracy = round(accuracy, 2)
 
     return gold, total, accuracy
 
