@@ -464,7 +464,7 @@ def get_unreviewed_documents():
 def get_numbers():
     total = Token.query.filter(Token.is_gold.isnot(None)).count()
     gold = Token.query.filter_by(is_gold=True).count()
-    accuracy = float(gold) / total if gold and total else 0
+    accuracy = (float(gold) / total) * 100.0 if gold and total else 0
     accuracy = round(accuracy, 2)
 
     return gold, total, accuracy
