@@ -68,9 +68,6 @@ class Token(db.Model):
     # the word's citation form  (for later use)
     citation = db.Column(db.String(40, convert_unicode=True), default='')
 
-    # a boolean indicating if the word is the stemmed form of the word
-    is_citation_form = db.Column(db.Boolean, default=None)
-
     # the syllabification that is estimated programmatically
     test_syll = db.Column(db.String(40, convert_unicode=True), default='')
 
@@ -105,6 +102,9 @@ class Token(db.Model):
     # a boolean indicating if the algorithm has estimated correctly
     is_gold = db.Column(db.Boolean, default=None)
 
+    # a boolean indiciating if the token is a valid token
+    active = db.Column(db.Boolean, default=True)
+
     def __init__(self, orth, syll=None, alt_syll=None):
         self.orth = orth
 
@@ -130,19 +130,23 @@ class Token(db.Model):
 
     # Token attribute methods -------------------------------------------------
 
+    @property
     def syllable_count(self):
         '''Return the number of syllables the word contains.'''
         if self.syll:
             return self.syll.count('.') + 1
 
+    @property
     def syllables(self):
         '''Return a list of the word's syllables.'''
         return self.test_syll.split('.')
 
+    @property
     def weights(self):
         '''Return the weight structure of the test syllabification.'''
         return get_weights(self.test_syll)
 
+    @property
     def sonorities(self):
         '''Return the sonority structure of the test syllabification.'''
         return get_sonorities(self.test_syll)
@@ -183,20 +187,13 @@ class Token(db.Model):
         if self.syll:
             self.update_gold()
 
-    def correct(
-            self,
-            syll,
-            alt_syll1='',
-            alt_syll2='',
-            alt_syll3='',
-            is_compound=False
-            ):
-        '''Store correct syllabification and/or alternative syllabfication.'''
-        self.syll = syll
-        self.alt_syll1 = alt_syll1
-        self.is_compound = is_compound
-        db.session.commit()
+    def correct(self, **kwargs):
+        '''Save new attribute values to Token and update gold.'''
+        for attr, value in kwargs.iteritems():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
 
+        db.session.commit()
         self.update_gold()
 
 
@@ -273,7 +270,9 @@ class Document(db.Model):
 
         for ID in self.token_IDs:
             token = Token.query.get(ID)
-            tokens.append(token)
+
+            if token.active:
+                tokens.append(token)
 
         return tokens
 
@@ -309,18 +308,23 @@ class Document(db.Model):
             if isinstance(t, int):
                 modal_count += 1
                 word = Token.query.get(t)
-                is_gold_class = self._get_is_gold_class(word.is_gold)
-                html += u' <a href="#modal-%s" class="word' % modal_count
-                html += u' %s' % is_gold_class
 
-                if word.is_compound:
-                    html += u' compound'
+                if word.active:
+                    gold_class = self._get_gold_class(word.is_gold)
+                    html += u' <a href="#modal-%s" class="word' % modal_count
+                    html += u' %s' % gold_class
 
-                if word.alt_syll1 or word.alt_syll2 or word.alt_syll3:
-                    html += u' alt'
+                    if word.is_compound:
+                        html += u' compound'
 
-                html += u'"> %s </a>' % word.test_syll
-                modals += self._create_modal(word, modal_count, is_gold_class)
+                    if word.alt_syll1 or word.alt_syll2 or word.alt_syll3:
+                        html += u' alt'
+
+                    html += u'"> %s </a>' % word.test_syll
+                    modals += self._create_modal(word, modal_count, gold_class)
+
+                else:
+                    html += u'<span class="punct">%s</span>' % word.orth
 
             elif t == u'\n':
                 html += u'<br>'
@@ -333,12 +337,12 @@ class Document(db.Model):
         return html
 
     @staticmethod
-    def _get_is_gold_class(gold):
+    def _get_gold_class(gold):
         # Return an is_gold css class for a given token.is_gold value
         return 'good' if gold else 'unverified' if gold is None else 'bad'
 
     @staticmethod
-    def _create_modal(token, modal_count, is_gold_class):
+    def _create_modal(token, modal_count, gold_class):
         # http://codepen.io/maccadb7/pen/nbHEg?editors=110
         modal = u'''
             <!-- Modal %s -->
@@ -358,12 +362,13 @@ class Document(db.Model):
                         <span class='modal-label'>Orthography: </span>
                         <input
                             type='text' name='orth' class='orth'
-                            value='%s' readonly='True'><br>
+                            value='%s'><br>
                         <span class='modal-label'>Test Syll: </span>
                         <input
                             type='text' name='test_syll' class='%s'
-                            value='%s' readonly='True'><br>
-                        <span class='modal-label rules-label'>Rules:
+                            value='%s' readonly='True'
+                            title='Sonority: %s&#10;&#10;Weight: %s&#10;'><br>
+                        <span class='modal-label'>Rules:
                             <span class='rules'>%s</span>
                         </span><br><br>
                         <span class='modal-label'>Correct Syll: </span>
@@ -388,6 +393,9 @@ class Document(db.Model):
                             value='%s'><br>
                         <span class='modal-label'>Compound:</span>
                         <input type='checkbox' name='is_compound' value=1 %s>
+                        <br>
+                        <span class='modal-label'>Stopword:</span>
+                        <input type='checkbox' name='is_stopword' value=1 %s>
                         <br><br>
                         <input
                             type='submit' class='OK' value='OK!'>
@@ -400,9 +408,7 @@ class Document(db.Model):
                         <input type='hidden' name='_csrf_token'
                             value='{{ csrf_token() }}'>
                         <input type='submit' class='DELETE'
-                            value='delete token'
-                            onclick="return confirm('Are you positive you want
-                            to delete this token?');">
+                            value='delete token'>
                     </form>
 
                 </div>
@@ -413,15 +419,18 @@ class Document(db.Model):
                 modal_count,
                 modal_count,
                 token.orth,
-                is_gold_class,
+                gold_class,
                 token.test_syll,
+                token.sonorities,
+                token.weights,
                 token.applied_rules,
                 token.syll,
                 token.alt_syll1,
                 token.alt_syll2,
                 token.alt_syll3,
                 'checked' if token.is_compound else '',
-                url_for('delete_token_view', id=token.id)
+                'checked' if token.is_stopword else '',
+                url_for('delete_token_view', id=token.id),
             )
         modal = modal.strip('\n')
 
@@ -434,25 +443,9 @@ def delete_token(id):
     '''Delete token (e.g., if the orthopgraphy is a misspelling).'''
     try:
         token = Token.query.get(id)
-        documents = Document.query.all()
-
-        for doc in documents:
-            # replace the token with a string representation in the doc text
-            for i, v in enumerate(doc.pickled_text):
-                if v == token.id:
-                    doc.pickled_text[i] = token.orth
-
-            # remove the token.id from the doc's list of token IDs
-            try:
-                while True:
-                    doc.token_IDs.remove(token.id)
-            except ValueError:
-                continue
-
-            # TODO: make PickleType column mutable!!
-
-        # db.session.delete(token)
-        # db.session.commit()
+        token.is_gold = None
+        token.active = False
+        db.session.commit()
 
     except KeyError:
         pass
@@ -461,7 +454,8 @@ def delete_token(id):
 def find_token(orth):
     '''Retrieve token by its ID.'''
     try:
-        token = Token.query.filter_by(orth=orth).first()
+        # ilike queries are case insensitive
+        token = Token.query.filter(Token.orth.ilike(orth)).first()
         return token
 
     except KeyError:
@@ -480,7 +474,7 @@ def get_good_tokens():
 
 def get_unverified_tokens():
     '''Return Tokens with uncertain syllabifications.'''
-    return Token.query.filter_by(is_gold=None)
+    return Token.query.filter_by(is_gold=None).filter_by(active=True)
 
 
 def review_tokens():
@@ -504,6 +498,14 @@ def syllabify_tokens():
 
 def get_unreviewed_documents():
     return Document.query.filter_by(reviewed=False)
+
+
+def get_numbers():
+    total = Token.query.filter(Token.is_gold.isnot(None)).count()
+    gold = Token.query.filter_by(is_gold=True).count()
+    accuracy = round((float(gold) / total) * 100.0, 2)
+
+    return gold, total, accuracy
 
 
 # View helpers ----------------------------------------------------------------
@@ -540,16 +542,19 @@ def apply_form(http_form):
         alt_syll2 = http_form['alt_syll2'] or ''
         alt_syll3 = http_form['alt_syll3'] or ''
         is_compound = bool(http_form.getlist('is_compound'))
+        is_stopword = bool(http_form.getlist('is_stopword'))
         token = find_token(orth)
         token.correct(
+            orth=orth,
             syll=syll,
             alt_syll1=alt_syll1,
             alt_syll2=alt_syll2,
             alt_syll3=alt_syll3,
-            is_compound=is_compound
+            is_compound=is_compound,
+            is_stopword=is_stopword,
             )
 
-    except (KeyError, LookupError):
+    except (AttributeError, KeyError, LookupError):
         pass
 
 
@@ -560,7 +565,9 @@ def apply_form(http_form):
 def main_view():
     '''List links to unverified texts (think: Table of Contents).'''
     docs = get_unreviewed_documents()
-    return render_template('main.html', docs=docs, kw='main')
+    stats = '%s/%s correctly syllabified<br>%s%% accuracy' % get_numbers()
+
+    return render_template('main.html', docs=docs, stats=stats, kw='main')
 
 
 @app.route('/doc/<id>', methods=['GET', 'POST'])
@@ -628,7 +635,7 @@ def delete_token_view(id):
     '''Delete the specified token.'''
     delete_token(id)
 
-    return redirect(url_for('main_view'))
+    return redirect(redirect_url())
 
 
 @app.route('/enter', methods=['GET', 'POST'])
@@ -658,6 +665,7 @@ def login_view():
 def logout_view():
     '''Sign out current user.'''
     session.pop('current_user', None)
+
     return redirect(url_for('main_view'))
 
 

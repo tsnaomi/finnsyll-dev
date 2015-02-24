@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 
-{% block body %}
+<div class='stats'>
+    {% block body %}
+</div>
+
+{{ stats|safe }}
 
 <div class='docs'>
     {% for doc in docs %}
