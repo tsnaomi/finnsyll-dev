@@ -7,6 +7,14 @@
     <head>
         <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
         {% block head %}{% endblock %}
+        <script type='text/javascript'>
+            function uncheck(namenum) {
+                var box = confirm('Are you positive you want to delete this token?');
+                if (box==true);
+                    document.getElementById(namenum).value = 0;
+                    return true
+            }
+        </script>
     </head>
 
     <body>

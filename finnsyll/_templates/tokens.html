@@ -2,15 +2,6 @@
 
 {% block body %}
 
-<script type='text/javascript'>
-    function uncheck() {
-        var box = confirm('Are you positive you want to delete this token?');
-        if (box==true);
-            document.getElementById('active').value = 0;
-            return true
-    }
-</script>
-
 <div class='token-table'>
 
     <div class='table-header'>
@@ -30,7 +21,7 @@
 
     <form class='tokens' method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-        <input type='hidden' id='active' name='active' value={% if token.active %}1{% endif %}>
+        <input type='hidden' id='active{{ loop.index }}' name='active' value={% if token.active %}1{% endif %}>
         <input type='text' name='orth' class='okii orth' value='{{ token.orth }}'>
         <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' title='Sonority: {{ token.sonorities }}&#10;&#10;Weight: {{ token.weights }}&#10;'readonly='True'>
         <input type='text' name='syll' class='okii' value='{{ token.syll }}'>
@@ -40,7 +31,7 @@
         <input type='checkbox' name='is_compound' class='chisaii' value=1 {% if token.is_compound %}checked{% endif %}>
         <input type='checkbox' name='is_stopword' class='chisaii' value=1 {% if token.is_stopword %}checked{% endif %}>
         <input type='submit' class='OK' class='chisaii' value='OK!'>
-        <input type='submit' class='X' value='X' onclick="return uncheck();">
+        <input type='submit' class='X' value='X' onclick="return uncheck('active{{ loop.index }}');">
     </form>
 
     {% endfor %}

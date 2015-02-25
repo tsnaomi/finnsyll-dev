@@ -320,6 +320,8 @@ class Document(db.Model):
                         <input
                             type='hidden' name='_csrf_token'
                             value='{{ csrf_token() }}'>
+                        <input type='hidden' id='active%s'
+                            name='active' value=%s>
                         <span class='modal-label'>Orthography: </span>
                         <input
                             type='text' name='orth' class='orth'
@@ -358,19 +360,11 @@ class Document(db.Model):
                         <span class='modal-label'>Stopword:</span>
                         <input type='checkbox' name='is_stopword' value=1 %s>
                         <br><br>
-                        <input
-                            type='submit' class='OK' value='OK!'>
+                        <input type='submit' class='OK' value='OK!'>
+                        <br><br>
+                        <input type='submit' class='X' value='X'
+                            onclick="return uncheck('active%s');">
                     </form>
-
-                    <br>
-
-                    <form method='POST'
-                        action="%s">
-                        <input type='hidden' name='_csrf_token'
-                            value='{{ csrf_token() }}'>
-                        <input type='submit' class='X' value='X'>
-                    </form>
-
                 </div>
               </div>
             </div>
@@ -378,6 +372,8 @@ class Document(db.Model):
             ''' % (
                 modal_count,
                 modal_count,
+                modal_count,
+                '1' if token.active else '0',  # should always be 1
                 token.orth,
                 gold_class,
                 token.test_syll,
@@ -390,7 +386,7 @@ class Document(db.Model):
                 token.alt_syll3,
                 'checked' if token.is_compound else '',
                 'checked' if token.is_stopword else '',
-                url_for('delete_token_view', id=token.id),
+                modal_count,
             )
         modal = modal.strip('\n')
 
