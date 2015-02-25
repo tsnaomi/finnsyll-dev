@@ -10,20 +10,19 @@ import sys
 PUNCT_DIGITS = string.punctuation + string.digits
 
 
-def remove_punctuation_and_digits(token):
-    '''Remove punctuation and numbers surrounding a word.'''
-    token = token.lstrip(PUNCT_DIGITS)
-    token = token.rstrip(PUNCT_DIGITS)
-
-    return token
-
-
 def split_by_punctuation(token):
     '''Split token into a list, delimited by and including punctuation.'''
     token = token.replace('\xe2\x80\x9c', '"').replace('\xe2\x80\x9d', '"')
     token = token.strip(' ')
-    regex = '([%s])' % string.punctuation  # TODO: keep compounds!!
-    token = re.split(regex, token)
+    token = token.decode('utf-8')
+    token = re.split('([\W+])', token, flags=re.U)
+    token = ' '.join(token)
+
+    if ''.join(re.findall('[^A-Za-z+]', token)) == token:
+        token = token.replace(' ', '')
+
+    token = token.encode('utf-8')
+    token = token.split(' ')
 
     return token
 
@@ -82,7 +81,7 @@ def tokenize(filename):
 # punctuation marks, and numbers contained in the file. A version of pickle()
 # is utilized in finnsyll.py.
 
-def _tokenize(filename='fin.txt'):
+def _tokenize(filename='fin1.txt'):
     try:
         f = open(filename, 'r')
         text = f.readlines()
