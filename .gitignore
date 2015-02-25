@@ -6,6 +6,8 @@ finnsyll/migrations/
 finnsyll/syllabifier/falk
 
 finnsyll/fin.txt
+finnsyll/fin1.txt
+finnsyll/fin2.txt
 finnsyll/finnsyll_config.py
 finnsyll/start.py
 finnsyll/start.txt
