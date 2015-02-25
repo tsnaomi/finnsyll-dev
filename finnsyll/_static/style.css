@@ -4,13 +4,13 @@ body {
     font-family: 'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 16px;
     line-height: 1.42857143;
-    color: #333;
-}
+    color: #333333;
+    }
 
 a, a:hover {
     color: inherit;
     text-decoration: none;
-}
+    }
 
 input {
     color: rgb(84, 84, 84);
@@ -22,53 +22,133 @@ input {
     -moz-border-radius: 0px;
     -webkit-border-radius: 0px;
     -khtml-border-radius: 0px;
-}
+    }
 
 input[type='submit'] {
     vertical-align: top;
     padding: 0px;
-}
+    }
 
-.navbar {
-    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
-    font-size: 16px;
-    text-align: center;
-    text-transform: lowercase;
-    margin: 40px 0 40px 0;
-    min-height: 50px; 
-    border: 1px solid transparent;
-}
+.highlight {
+    border-bottom: 2px solid #00FF7F;
+    padding-bottom: 2px;
+    }
 
-.navbar a:hover,
-a.doc-title:hover {
+.bar {
+    padding: 4px;
+    color: #FAFAFA;
+    }
+
+li a {
+    /*padding: 14px 20px;*/
+    margin: 14px 20px;
+    }
+
+li a:hover {
     border-bottom: 1px dashed #00FF7F;
     padding-bottom: 2px;
-}
+    }
+
+nav.fixed-nav-bar {
+    /*font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;*/
+    /*font-size: 16px;*/
+    font-size: 18px;
+    text-align: center;
+    text-transform: lowercase;
+    min-height: 50px; 
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 9999;
+    width: 100%;
+    height: 50px;
+    background-color: #FFFFFF;
+    border-bottom: 1px #E6E6E6 solid;
+    box-shadow: 1px 1px 1px #E6E6E6;
+    }
+
+.block-body {
+    padding-top: 60px;
+    }
+
+nav ul {
+    padding: 13px;
+    margin: auto;
+    list-style: none;
+    position: relative;
+    display: inline-block;
+    }
+    
+nav ul li {
+    float: left;
+    display: list-item;
+    list-style: none; 
+    }
+    
+/* hide dropdowns by default */
+nav ul ul {
+    display: none;
+    position: absolute;
+    left: 0;
+    width: 124px;
+    margin-left: -18px;
+    }
+    
+/* display dropdown on hover */
+nav ul li:hover > ul {
+    display: list-item;
+    }
+    
+/* dropdown */
+nav ul ul li {
+    float: none;
+    left: 0;
+    padding: 13px 0;
+    border: 1px #E6E6E6;
+    border-style: solid solid none solid;
+    background: #FFFFFF;
+    box-shadow: 1px 1px 1px #E6E6E6;
+    }
+
+/*nav ul ul li:first-child {
+    margin-top: 3px;
+    }*/
+
+nav ul ul li:last-child {
+    border-bottom-style: solid;
+    }
+
+nav ul ul li:hover {
+    background: #80FFBF;
+    }
 
 /* Main -------------------------------------------------------------------------------------- */
 
-div.docs {
+div.stats {
+    font-size: 18px;
     text-align: center;
-}
+    line-height: 40px;
+    }
 
 /* Doc --------------------------------------------------------------------------------------- */
 
-.doc-title,
+div.doc-title,
 div.doc-text {
     font-family: Garamond;
-}
+    }
 
-.doc-title {
+div.doc-title {
     font-size: 28px;
     text-align: center;
-}
+    margin-top: 20px;
+    }
 
 div.doc-text {
     font-size: 20px;
     line-height: 144%;
     width: 60%;
-    margin: 28px auto;
-}
+    margin: 20px auto;
+    }
 
 input.BIG-OK {
     font-size: 24px !important;
@@ -77,18 +157,18 @@ input.BIG-OK {
     border-color: #00FF7F;
     background-color: #00FF7F;
     margin-top: 2px;
-}
+    }
 
 input.BIG-OK:hover {
     color: #00FF7F;
     border-color: #00FF7F;
     background-color: #fff;
-}
+    }
 
 span.punct,
 a.word {
     padding: 3px;
-}
+    }
 
 span.punct {
     color: #4D4D4D;
@@ -96,28 +176,28 @@ span.punct {
     font-weight: bold;
     /*background: #F0F8FF;*/
     /*background: #FAFDFF;*/
-}
+    }
 
 a.word {
     /*font-weight: bolder;*/
-}
+    }
 
 a.word:hover {
     color: #000000;
     background: #80FFBF;
-}
+    }
 
 .good {
     background: #F0F8FF;
-}
+    }
 
 .bad {
     background: #FFE4E1;
-}
+    }
 
 .compound {
     border-bottom: 1px #FF7F50 dashed;
-}
+    }
 
 /* Modal -------------------- */
 /* http://codepen.io/maccadb7/pen/nbHEg?editors=110 */
@@ -136,17 +216,17 @@ a.word:hover {
     position: relative;
     transition: color .1s ease;
     /* top: 40em;*/
-}
+    }
 
 .btn:hover {
     background: #357ebd;
-}
+    }
 
 .btn.btn-big {
     font-size: 18px;
     padding: 15px 20px;
     min-width: 100px;
-}
+    }
 
 .btn-close {
     color: #aaaaaa;
@@ -155,11 +235,11 @@ a.word:hover {
     position: absolute;
     right: 10px;
     top: 0;
-}
+    }
 
 .btn-close:hover {
     color: #919191;
-}
+    }
 
 .modal:before {
     content: "";
@@ -171,18 +251,18 @@ a.word:hover {
     right: 0;
     bottom: 0;
     z-index: 10;
-}
+    }
 
 .modal:target:before {
     display: block;
-}
+    }
 
 .modal:target .modal-dialog {
   -webkit-transform: translate(0, 0);
     -ms-transform: translate(0, 0);
     transform: translate(0, 0);
     top: 20%;
-}
+    }
 
 .modal-dialog {
     background: #fefefe;
@@ -201,164 +281,181 @@ a.word:hover {
     -moz-transition: -moz-transform 0.3s ease-out;
     -o-transition: -o-transform 0.3s ease-out;
     transition: transform 0.3s ease-out;
-}
+    }
 
 .modal-body {
     padding: 20px 20px 30px;
-}
+    }
 
 .modal-header {
     padding: 10px 20px;
     font-size: 20px;
-}
+    }
 
 /* added to stop scrolling to top*/
 #close {
     display: none;
-}
+    }
 
 .doc-tokens > input[type=text],
 .doc-tokens > input[type=checkbox],
 .doc-tokens > span {
     font-size: 14px;
     line-height: 280%
-}
+    }
 
 .modal-label {
     position: absolute;
     text-transform: uppercase
-}
+    }
 
 .doc-tokens > input[type=text],
 .doc-tokens > input[type=text]:focus {
     font-family: inherit;
     margin-left: 124px;
     padding: 4px;
-}
+    }
 
 .rules {
     color: #000000;
     font-size: 13px;
     word-spacing: 4px;
     margin-left: 78px;
-}
+    }
 
 .doc-tokens > input[type=checkbox] {
     margin-left: 128px;
-}
+    }
 
 /* Tokens ------------------------------------------------------------------------------------ */
 
-.highlight {
-    border-bottom: 1px dotted #00FF7F;
-    padding-bottom: 2px;
-}
+.token-table {
+    width: 1550px;
+    }
 
 .table-header {
+    width: 1540px;
     color: rgb(84, 84, 84);
-    text-transform: uppercase;
-    padding-left: 10%;
-
-}
+    padding: 1%;
+    /*position: fixed;*/
+    /*top: 50px;*/
+    /*background: #FFFFFF;*/
+    font-style: bold;
+    }
 
 .table-header > span {
-    padding-left: 2px;
     border: 1px solid #fff;
-}
+    }
 
 .tokens {
-    padding: 10px 0 10px 10%;
+    width: 1540px;
+    padding: 10px 0 10px 1%;
     border-bottom: 1px solid #F8F8F8;
-}
+    }
 
 .tokens > input {
     font-size: 13px;
-}
+    }
 
 .tokens input:focus {
-    /*padding: 0 0 0 5px;*/
     border: 1px solid #E0E0E0;
-}
+    }
 
 .okii {
-    width: 220px;
+    width: 194px;
     margin-right: 8px;
     float: left;
-}
+    }
 
 .chisaii {
-    width: 80px;
-}
+    width: 90px;
+    margin-right: 8px;
+    float: left;
+    }
 
 input[disabled='True'] {
     border: none;
-}
+    }
 
 input[name='syll']:focus,
 input[name='alt_syll']:focus {
     padding: 0 0 0 4px;
     margin: 0 0 0 4px;
-}
+    }
 
-input[type='checkbox'] {
-    margin: 2px 40px 0 28px;
-}
-
-input.OK {
+input.OK,
+input.X {
     font-size: 18px;
     width: 40px;
+    margin-top: 2px;
+    }
+
+input.OK {
     color: #FFF;
     border-color: #00FF7F;
     background-color: #00FF7F;
-    margin-top: 2px;
-}
+    }
 
 input.OK:hover {
     color: #00FF7F;
     border-color: #00FF7F;
     background-color: #fff;
-}
+    }
+
+input.X {
+    border: 1px solid #E0E0E0;
+    }
+
+.tokens > .X {
+    margin-left: 14px;
+    }
+
+input.X:hover {
+    color: #FFFFFF;
+    background: #666666;
+    }
+
 
 /* Entrance ---------------------------------------------------------------------------------- */
 
 form.entrance {
     margin-top: 80px;
-}
+    }
 
 .entrance input {
     font-size: 15px;
     height: 40px;
     display: inline-block;
     border: 1px solid #E0E0E0;
-}
+    }
 
 .entrance input:focus,
 input[type='submit']:hover {
     border: 1px solid #C7C7C7;
-}
+    }
 
 .entrance {
     width: 307px;
     display: block;
     text-align: center;
     margin: auto;
-}
+    }
 
 .entrance-auth {
     font-family: 'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     width: 300px;
     padding: 0 0 0 5px;
     margin: 0 0 5px;
-}
+    }
 
 .entrance-submit {
     font-family: garamond, 'EB Garamond', serif;
     width: 307px;
-}
+    }
 
 .flash {
     font-family: 'Pacifico', garamond, cursive;
     font-size: 16px;
     text-align: center;
     margin-top: 36px;
-}
+    }

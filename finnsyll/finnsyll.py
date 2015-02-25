@@ -1,6 +1,6 @@
 # coding=utf-8
 
-import tokenize
+import tokenizer
 
 from flask import (
     flash,
@@ -214,7 +214,7 @@ class Document(db.Model):
     reviewed = db.Column(db.Boolean, default=False)
 
     def __init__(self, filename):
-        text, token_IDs, pickled_text = tokenize.tokenize(filename)
+        text, token_IDs, pickled_text = tokenizer.tokenize(filename)
         self.text = text
         self.token_IDs = token_IDs
         self.pickled_text = pickled_text
@@ -368,8 +368,7 @@ class Document(db.Model):
                         action="%s">
                         <input type='hidden' name='_csrf_token'
                             value='{{ csrf_token() }}'>
-                        <input type='submit' class='DELETE'
-                            value='delete token'>
+                        <input type='submit' class='X' value='X'>
                     </form>
 
                 </div>
@@ -490,6 +489,13 @@ def login_required(x):
     return decorator
 
 
+@app.context_processor
+def serve_docs():
+    docs = get_unreviewed_documents()
+
+    return dict(docs=docs)
+
+
 def redirect_url(default='main_view'):
     # Redirect page to previous url or to main_view
     return request.referrer or url_for(default)
@@ -505,16 +511,22 @@ def apply_form(http_form):
         alt_syll3 = http_form['alt_syll3'] or ''
         is_compound = bool(http_form.getlist('is_compound'))
         is_stopword = bool(http_form.getlist('is_stopword'))
+        active = bool(int(http_form['active']))
         token = find_token(orth)
-        token.correct(
-            orth=orth,
-            syll=syll,
-            alt_syll1=alt_syll1,
-            alt_syll2=alt_syll2,
-            alt_syll3=alt_syll3,
-            is_compound=is_compound,
-            is_stopword=is_stopword,
-            )
+
+        if not active:
+            delete_token(token.id)
+
+        else:
+            token.correct(
+                orth=orth,
+                syll=syll,
+                alt_syll1=alt_syll1,
+                alt_syll2=alt_syll2,
+                alt_syll3=alt_syll3,
+                is_compound=is_compound,
+                is_stopword=is_stopword,
+                )
 
     except (AttributeError, KeyError, LookupError):
         pass
@@ -526,10 +538,13 @@ def apply_form(http_form):
 @login_required
 def main_view():
     '''List links to unverified texts (think: Table of Contents).'''
-    docs = get_unreviewed_documents()
-    stats = '%s/%s correctly syllabified<br>%s%% accuracy' % get_numbers()
+    # docs = get_unreviewed_documents()
+    stats = (
+        '<b>%s</b>/<b>%s</b> correctly syllabified<br><b>%s</b>%% accuracy'
+        ) % get_numbers()
 
-    return render_template('main.html', docs=docs, stats=stats, kw='main')
+    # return render_template('main.html', docs=docs, stats=stats, kw='main')
+    return render_template('main.html', stats=stats, kw='main')
 
 
 @app.route('/doc/<id>', methods=['GET', 'POST'])

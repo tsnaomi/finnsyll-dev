@@ -1,15 +1,9 @@
 {% extends 'base.html' %}
 
-<div class='stats'>
     {% block body %}
-</div>
 
-{{ stats|safe }}
-
-<div class='docs'>
-    {% for doc in docs %}
-    <p><a href="{{ url_for('doc_view', id=doc.id) }}" class='doc-title'>Doc {{ doc.id }}</a></p>
-    {% endfor %}
+<div class='stats'>
+    {{ stats|safe }}
 </div>
 
 {% endblock %}

@@ -2,42 +2,49 @@
 
 {% block body %}
 
-<div class='table-header'>
-    <span class='okii'>Orthography *</span>
-    <span class='okii'>Test Syll *</span>
-    <span class='okii'>Correct Syll</span>
-    <span class='okii'>Alternative Syll1</span>
-    <span class='okii'>Alternative Syll2</span>
-    <span class='okii'>Alternative Syll3</span>
-    <span class='chisaii'>Compound</span>
+<script type='text/javascript'>
+    function uncheck() {
+        var box = confirm('Are you positive you want to delete this token?');
+        if (box==true);
+            document.getElementById('active').value = 0;
+            return true
+    }
+</script>
+
+<div class='token-table'>
+
+    <div class='table-header'>
+        <span class='okii'>Orthography</span>
+        <span class='okii'>Test *</span>
+        <span class='okii'>Correct</span>
+        <span class='okii'>Alternative 1</span>
+        <span class='okii'>Alternative 2</span>
+        <span class='okii'>Alternative 3</span>
+        <span class='chisaii'>Compound</span>
+        <span class='chisaii'>Stopword</span>
+    </div>
+
+    <br>
+
+    {% for token in tokens %}
+
+    <form class='tokens' method='POST'>
+        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+        <input type='hidden' id='active' name='active' value={% if token.active %}1{% endif %}>
+        <input type='text' name='orth' class='okii orth' value='{{ token.orth }}'>
+        <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' title='Sonority: {{ token.sonorities }}&#10;&#10;Weight: {{ token.weights }}&#10;'readonly='True'>
+        <input type='text' name='syll' class='okii' value='{{ token.syll }}'>
+        <input type='text' name='alt_syll1' class='okii' value='{{ token.alt_syll1 }}'>
+        <input type='text' name='alt_syll2' class='okii' value='{{ token.alt_syll2 }}'>
+        <input type='text' name='alt_syll3' class='okii' value='{{ token.alt_syll3 }}'>
+        <input type='checkbox' name='is_compound' class='chisaii' value=1 {% if token.is_compound %}checked{% endif %}>
+        <input type='checkbox' name='is_stopword' class='chisaii' value=1 {% if token.is_stopword %}checked{% endif %}>
+        <input type='submit' class='OK' class='chisaii' value='OK!'>
+        <input type='submit' class='X' value='X' onclick="return uncheck();">
+    </form>
+
+    {% endfor %}
+
 </div>
-
-<br>
-
-{% for token in tokens %}
-
-<form class='tokens' method='POST'>
-    <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-    <input type='text' name='orth' class='okii orth' value='{{ token.orth }}'>
-    <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' title='Sonority: {{ token.sonorities }}&#10;&#10;Weight: {{ token.weights }}&#10;'readonly='True'>
-    <input type='text' name='syll' class='okii' value='{{ token.syll }}'>
-    <input type='text' name='alt_syll1' class='okii' value='{{ token.alt_syll1 }}'>
-    <input type='text' name='alt_syll2' class='okii' value='{{ token.alt_syll2 }}'>
-    <input type='text' name='alt_syll3' class='okii' value='{{ token.alt_syll3 }}'>
-    <input type='checkbox' name='is_compound' class='chisaii' value=1 {% if token.is_compound %}checked{% endif %}>
-    <input type='submit' class='OK' class='chisaii' value='OK!'>
-</form>
-
-<form method='POST' action="{{ url_for('delete_token_view', id=token.id) }}{{ token_id }}">
-    <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-    <input type='submit' class='DELETE' value='delete token' onclick="return confirm('Are you positive you want to delete this token?');">
-</form>
-
-{% endfor %}
-
-<br>
-<br>
-<br>
-<br>
 
 {% endblock %}
