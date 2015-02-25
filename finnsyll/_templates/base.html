@@ -18,7 +18,7 @@
                         {% for doc in docs %}
                             <li><a href="{{ url_for('doc_view', id=doc.id) }}" class='doc-title'>Doc {{ doc.id }}</a></li>
                         {% else %}
-                            <li class='no-docs'><a href="#">No docs to review.</a></li>
+                            <li class='no-docs'><a href="#">...</a></li>
                         {% endfor %}
                     </ul>
                     <span class="bar">|</span>
