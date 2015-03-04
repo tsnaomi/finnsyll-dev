@@ -130,6 +130,25 @@ div.stats {
     line-height: 40px;
     }
 
+form.upload {
+    margin-top: 50px;
+    text-align: center;
+    }
+
+input.upload[type='file'] {
+    height: 32px;
+    border: 1px solid #E0E0E0;
+    vertical-align: middle;
+    margin-right: 10px;
+    }
+
+input.upload[type='submit'] {
+    height: 34px;
+    border: 1px solid #E0E0E0;
+    vertical-align: middle;
+    padding: 10px;
+}
+
 /* Doc --------------------------------------------------------------------------------------- */
 
 div.doc-title,

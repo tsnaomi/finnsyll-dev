@@ -38,11 +38,10 @@ def is_word(token):
     return not any([i for i in token if i in PUNCT_DIGITS])
 
 
-def tokenize(filename):
+def tokenize(file, read=False):
     try:
-        f = open(filename, 'r')
-        text = f.readlines()
-        f.close()
+        with open(file, 'r') as f:
+            text = f.readlines()
 
         token_IDs = []
         pickled_text = []
@@ -72,7 +71,7 @@ def tokenize(filename):
         return text, token_IDs, pickled_text
 
     except IOError:
-        raise IOError('File %s could not be opened.' % filename)
+        raise IOError('File %s could not be opened.' % file)
 
 
 # This is for seeing how well we're tokenizing text files. The function

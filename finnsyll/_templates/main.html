@@ -1,9 +1,23 @@
 {% extends 'base.html' %}
 
-    {% block body %}
+{% block head %}
+<link rel='stylesheet' type='text/css' href='http://fonts.googleapis.com/css?family=Pacifico|EB+Garamond'>
+{% endblock %}
+
+{% block body %}
 
 <div class='stats'>
     {{ stats|safe }}
 </div>
+
+<form class='upload' method='POST'>
+    <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+    <input type='file' class='upload'  name='file'>
+    <input type='submit' class='upload' value='syllabify file'>
+</form>
+
+{% for message in get_flashed_messages() %}
+<div class='flash'>{{ message }}</div>
+{% endfor %}
 
 {% endblock %}

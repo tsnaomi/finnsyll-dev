@@ -17,8 +17,10 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
+from sqlalchemy.exc import IntegrityError
 from syllabifier.phonology import get_sonorities, get_weights
 from syllabifier.v2 import syllabify
+from werkzeug.exceptions import BadRequestKeyError
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
 app.config.from_pyfile('finnsyll_config.py')
@@ -66,8 +68,8 @@ class Token(db.Model):
         unique=True,
         )
 
-    # the word's citation form  (for later use)
-    citation = db.Column(db.String(40, convert_unicode=True), default='')
+    # the word's lemma form  (for later use)
+    lemma = db.Column(db.String(40, convert_unicode=True), default='')
 
     # the syllabification that is estimated programmatically
     test_syll = db.Column(db.String(40, convert_unicode=True), default='')
@@ -151,6 +153,9 @@ class Token(db.Model):
     def sonorities(self):
         '''Return the sonority structure of the test syllabification.'''
         return get_sonorities(self.test_syll)
+
+    def is_lemma(self):
+        return self.orth.lower() == self.lemma.lower()
 
     # Syllabification methods -------------------------------------------------
 
@@ -452,6 +457,24 @@ def syllabify_tokens():
         token.syllabify()
 
 
+def add_doc(filename):
+    if filename.endswith('.txt'):
+
+        try:
+            doc = Document(filename)
+            db.session.add(doc)
+            db.session.commit()
+
+            return doc
+
+        except IntegrityError:
+            db.session.rollback()
+            flash('This file was previously uploaded')
+
+    else:
+        flash('Plese input a text (.txt) file. Thank you!')
+
+
 def get_unreviewed_documents():
     return Document.query.filter_by(reviewed=False)
 
@@ -534,7 +557,18 @@ def apply_form(http_form):
 @login_required
 def main_view():
     '''List links to unverified texts (think: Table of Contents).'''
-    # docs = get_unreviewed_documents()
+    if request.method == 'POST':
+
+        try:
+            f = request.form['file']
+            doc = add_doc(f)
+
+            if doc:
+                return redirect(url_for('doc_view', id=doc.id))
+
+        except BadRequestKeyError:
+            flash('No file was selected.')
+
     stats = (
         '<b>%s</b>/<b>%s</b> correctly syllabified<br><b>%s</b>%% accuracy'
         ) % get_numbers()
