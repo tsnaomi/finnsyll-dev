@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import jinja2
 import tokenizer
 
 from flask import (
@@ -212,17 +213,17 @@ class Document(db.Model):
     # a list of IDs for each word as they appear in the text
     token_IDs = db.Column(db.PickleType)
 
-    # the text as a pickled list, incl. Token IDs and punctuation strings
-    pickled_text = db.Column(db.PickleType)
+    # the text as a tokenized list, incl. Token IDs and punctuation strings
+    tokenized_text = db.Column(db.PickleType)
 
     # a boolean indicating if all of the document's words have been reviewed
     reviewed = db.Column(db.Boolean, default=False)
 
     def __init__(self, filename):
-        text, token_IDs, pickled_text = tokenizer.tokenize(filename)
+        text, token_IDs, tokenized_text = tokenizer.tokenize(filename)
         self.text = text
         self.token_IDs = token_IDs
-        self.pickled_text = pickled_text
+        self.tokenized_text = tokenized_text
 
     def __repr__(self):
         return 'Text #%s' % self.id
@@ -230,8 +231,18 @@ class Document(db.Model):
     def __unicode__(self):
         return self.__repr__()
 
+    def query_document(self):
+        '''Return a list of Tokens and puncts as they appear in the text.'''
+        doc = []
+
+        for t in self.tokenized_text:
+            t = Token.query.get(t) if isinstance(t, int) else t
+            doc.append(t)
+
+        return doc
+
     def query_tokens(self):
-        '''Return query of Tokens, ordered as they appear in the text.'''
+        '''Return list of Tokens, ordered as they appear in the text.'''
         tokens = []
 
         for ID in self.token_IDs:
@@ -256,146 +267,6 @@ class Document(db.Model):
 
         self.reviewed = True
         db.session.commit()
-
-    def render_html(self):
-        '''Return text as an html string to be rendered on the frontend.
-
-        This html string includes a modal for each word in the text. Each modal
-        contains a form that will allow Arto to edit the word's Token, i.e.,
-        Token.syll, Token.alt_syll1-3, and Token.is_compound.
-        '''
-        html = u'<div class="doc-text">'
-
-        modals = u''
-        modal_count = 0
-
-        for t in self.pickled_text:
-
-            if isinstance(t, int):
-                modal_count += 1
-                word = Token.query.get(t)
-
-                if word.active:
-                    gold_class = self._get_gold_class(word.is_gold)
-                    html += u' <a href="#modal-%s" class="word' % modal_count
-                    html += u' %s' % gold_class
-
-                    if word.is_compound:
-                        html += u' compound'
-
-                    if word.alt_syll1 or word.alt_syll2 or word.alt_syll3:
-                        html += u' alt'
-
-                    html += u'"> %s </a>' % word.test_syll
-                    modals += self._create_modal(word, modal_count, gold_class)
-
-                else:
-                    html += u'<span class="punct">%s</span>' % word.orth
-
-            elif t == u'\n':
-                html += u'<br>'
-
-            else:
-                html += u'<span class="punct">%s</span>' % t
-
-        html += u'</div>' + modals
-
-        return html
-
-    @staticmethod
-    def _get_gold_class(gold):
-        # Return an is_gold css class for a given token.is_gold value
-        return 'good' if gold else 'unverified' if gold is None else 'bad'
-
-    @staticmethod
-    def _create_modal(token, modal_count, gold_class):
-        # http://codepen.io/maccadb7/pen/nbHEg?editors=110
-        modal = u'''
-            <!-- Modal %s -->
-            <div class="modal" id="modal-%s" aria-hidden="true">
-              <div class="modal-dialog">
-
-                <div class="modal-header">
-                  <a href="#close" class="btn-close" aria-hidden="true">x</a>
-                </div>
-
-                <div class="modal-body">
-
-                    <form class="doc-tokens" method="POST">
-                        <input
-                            type='hidden' name='_csrf_token'
-                            value='{{ csrf_token() }}'>
-                        <input type='hidden' id='active%s'
-                            name='active' value=%s>
-                        <span class='modal-label'>Orthography: </span>
-                        <input
-                            type='text' name='orth' class='orth'
-                            value='%s'><br>
-                        <span class='modal-label'>Test Syll: </span>
-                        <input
-                            type='text' name='test_syll' class='%s'
-                            value='%s' readonly='True'
-                            title='Sonority: %s&#10;&#10;Weight: %s&#10;'><br>
-                        <span class='modal-label'>Rules:
-                            <span class='rules'>%s</span>
-                        </span><br><br>
-                        <span class='modal-label'>Correct Syll: </span>
-                        <input
-                            type='text' name='syll'
-                            placeholder='correct syll'
-                            value='%s'><br>
-                        <span class='modal-label'>Alt Syll 1: </span>
-                        <input
-                            type='text' name='alt_syll1'
-                            placeholder='alternative syll 1'
-                            value='%s'><br>
-                        <span class='modal-label'>Alt Syll 2: </span>
-                        <input
-                            type='text' name='alt_syll2'
-                            placeholder='alternative syll 2'
-                            value='%s'><br>
-                        <span class='modal-label'>Alt Syll 3: </span>
-                        <input
-                            type='text' name='alt_syll3'
-                            placeholder='alternative syll 3'
-                            value='%s'><br>
-                        <span class='modal-label'>Compound:</span>
-                        <input type='checkbox' name='is_compound' value=1 %s>
-                        <br>
-                        <span class='modal-label'>Stopword:</span>
-                        <input type='checkbox' name='is_stopword' value=1 %s>
-                        <br><br>
-                        <input type='submit' class='OK' value='OK!'>
-                        <br><br>
-                        <input type='submit' class='X' value='X'
-                            onclick="return uncheck('active%s');">
-                    </form>
-                </div>
-              </div>
-            </div>
-            <!-- /Modal -->
-            ''' % (
-                modal_count,
-                modal_count,
-                modal_count,
-                '1' if token.active else '0',  # should always be 1
-                token.orth,
-                gold_class,
-                token.test_syll,
-                token.sonorities,
-                token.weights,
-                token.applied_rules,
-                token.syll,
-                token.alt_syll1,
-                token.alt_syll2,
-                token.alt_syll3,
-                'checked' if token.is_compound else '',
-                'checked' if token.is_stopword else '',
-                modal_count,
-            )
-        modal = modal.strip('\n')
-
-        return modal
 
 
 # Database functions ----------------------------------------------------------
@@ -585,7 +456,7 @@ def doc_view(id):
         apply_form(request.form)
 
     doc = Document.query.get_or_404(id)
-    TEXT = doc.render_html()
+    TEXT = doc.query_document()
 
     return render_template('doc.html', doc=doc, TEXT=TEXT, kw='doc')
 
@@ -674,6 +545,24 @@ def logout_view():
     session.pop('current_user', None)
 
     return redirect(url_for('main_view'))
+
+
+# Jinja2 ----------------------------------------------------------------------
+
+def gold_class(t):
+    # Return an is_gold css class for a given token.is_gold value
+    gold = t.is_gold
+    return 'good' if gold else 'unverified' if gold is None else 'bad'
+
+
+def istoken(t):
+    # Return True if the t is a Token object, else False
+    return hasattr(t, 'syll')  # isinstance(t, Token)
+
+jinja2.filters.FILTERS['gold_class'] = gold_class
+jinja2.filters.FILTERS['istoken'] = istoken
+
+# -----------------------------------------------------------------------------
 
 
 if __name__ == '__main__':
