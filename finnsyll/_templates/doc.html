@@ -56,7 +56,7 @@
 
     <div class='modal-body'>
 
-        <form class='doc-tokens' method='POST'>
+        <form class='doc-tokens' method='POST' onsubmit="window.location.assign('#close')">
 
             <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
             <input type='hidden' id='active' name='active' value=1>
