@@ -1,6 +1,7 @@
 *.pyc
 
 research/
+aamulehti-1999/
 
 finnsyll/migrations/
 finnsyll/syllabifier/falk
