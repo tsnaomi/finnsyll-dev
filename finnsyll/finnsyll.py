@@ -1,7 +1,5 @@
 # coding=utf-8
 
-import jinja2
-
 from flask import (
     flash,
     Flask,
@@ -228,15 +226,62 @@ class Document(db.Model):
     def __unicode__(self):
         return self.__repr__()
 
-    def query_document(self):
-        '''Return a list of Tokens and puncts as they appear in the text.'''
-        doc = []
+    def render_html(self):
+        '''Return text as an html string to be rendered on the frontend.
+
+        This html string includes a modal for each word in the text. Each modal
+        contains a form that will allow Arto to edit the word's Token, i.e.,
+        Token.syll, Token.alt_syll1-3, and Token.is_compound.
+        '''
+
+        def gold_class(word):
+            gold = word.is_gold
+            return 'good' if gold else 'unverified' if gold is None else 'bad'
+
+        html = u'<div class="doc-text">'
 
         for t in self.tokenized_text:
-            t = Token.query.get(t) if isinstance(t, int) else t
-            doc.append(t)
 
-        return doc
+            if isinstance(t, int):
+                word = Token.query.get(t)
+                html += u' <a href="#modal"'
+                html += (
+                    u' onclick="populatemodal(\'%s\', \'%s\', \'%s\', \'%s\','
+                    u' \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\','
+                    u' \'%s\');"') % (
+                    word.orth,
+                    gold_class(word),
+                    word.test_syll,
+                    word.sonorities,
+                    word.weights,
+                    word.applied_rules,
+                    word.syll,
+                    word.alt_syll1,
+                    word.alt_syll2,
+                    word.alt_syll3,
+                    word.is_compound,
+                    word.is_stopword,
+                    )
+
+                html += u' class="word %s' % gold_class(word)
+
+                if word.is_compound:
+                    html += u' compound'
+
+                if word.alt_syll1 or word.alt_syll2 or word.alt_syll3:
+                    html += u' alt'
+
+                html += u'"> %s </a>' % word.test_syll
+
+            else:
+                html += u'<span class="punct">%s</span>' % t
+
+                if t == u'.':
+                    html += u'<br><br>'
+
+        html = html[:-8] + u'</div>'  # fencepost
+
+        return html
 
     def query_tokens(self):
         '''Return list of Tokens, ordered as they appear in the text.'''
@@ -442,7 +487,6 @@ def main_view():
         '<b>%s</b>/<b>%s</b> correctly syllabified<br><b>%s</b>%% accuracy'
         ) % get_numbers()
 
-    # return render_template('main.html', docs=docs, stats=stats, kw='main')
     return render_template('main.html', stats=stats, kw='main')
 
 
@@ -454,10 +498,7 @@ def doc_view(id):
         apply_form(request.form)
 
     doc = Document.query.get_or_404(id)
-    TEXT = doc.query_document()
-
-    for t in TEXT:
-        print type(t), u'%s' % t
+    TEXT = doc.render_html()
 
     return render_template('doc.html', doc=doc, TEXT=TEXT, kw='doc')
 
@@ -546,25 +587,6 @@ def logout_view():
     session.pop('current_user', None)
 
     return redirect(url_for('main_view'))
-
-
-# Jinja2 ----------------------------------------------------------------------
-
-def gold_class(t):
-    # Return an is_gold css class for a given token.is_gold value
-    gold = t.is_gold
-    return 'good' if gold else 'unverified' if gold is None else 'bad'
-
-
-def istoken(t):
-    # Return True if the t is a Token object, else False
-    return hasattr(t, 'syll')
-
-jinja2.filters.FILTERS['gold_class'] = gold_class
-jinja2.filters.FILTERS['istoken'] = istoken
-
-
-# -----------------------------------------------------------------------------
 
 
 if __name__ == '__main__':

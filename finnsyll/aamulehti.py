@@ -6,7 +6,7 @@ import string
 import xml.etree.ElementTree as ET
 
 
-letters = string.letters + u'-äöÄÖ'
+letters = string.letters + u' -äöÄÖ'
 invalid_types = ['Delimiter', 'Abbrev']
 
 
