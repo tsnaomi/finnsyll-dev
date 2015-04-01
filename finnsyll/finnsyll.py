@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import jinja2
-import tokenizer
 
 from flask import (
     flash,
@@ -63,11 +62,7 @@ class Token(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
     # the word's orthography
-    orth = db.Column(
-        db.String(40, convert_unicode=True),
-        nullable=False,
-        unique=True,
-        )
+    orth = db.Column(db.String(40, convert_unicode=True), nullable=False)
 
     # the word's lemma form  (for later use)
     lemma = db.Column(db.String(40, convert_unicode=True), default='')
@@ -91,7 +86,10 @@ class Token(db.Model):
     alt_syll3 = db.Column(db.String(40, convert_unicode=True), default='')
 
     # the word's part-of-speech
-    pos = db.Column(db.String(10, convert_unicode=True), default='')
+    pos = db.Column(db.String(40, convert_unicode=True), default='')
+
+    # the word's morpho-syntactic description
+    msd = db.Column(db.String(40, convert_unicode=True), default='')
 
     # the word's frequency in the finnish newspaper corpus (for later use)
     freq = db.Column(db.Integer)
@@ -111,6 +109,7 @@ class Token(db.Model):
 
     def __init__(self, orth, syll=None, alt_syll=None):
         self.orth = orth
+        self.freq = 0
 
         if syll:
             self.syll = syll
@@ -207,11 +206,11 @@ class Token(db.Model):
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
 
-    # the entire text of the document
-    text = db.Column(db.Text, unique=True)
+    # the name of the xml file in the Aamulehti-1999 corpus
+    filename = db.Column(db.Text, unique=True)
 
     # a list of IDs for each word as they appear in the text
-    token_IDs = db.Column(db.PickleType)
+    tokens = db.Column(db.PickleType)
 
     # the text as a tokenized list, incl. Token IDs and punctuation strings
     tokenized_text = db.Column(db.PickleType)
@@ -219,14 +218,13 @@ class Document(db.Model):
     # a boolean indicating if all of the document's words have been reviewed
     reviewed = db.Column(db.Boolean, default=False)
 
-    def __init__(self, filename):
-        text, token_IDs, tokenized_text = tokenizer.tokenize(filename)
-        self.text = text
-        self.token_IDs = token_IDs
+    def __init__(self, filename, tokens, tokenized_text):
+        self.filename = filename
+        self.tokens = tokens
         self.tokenized_text = tokenized_text
 
     def __repr__(self):
-        return 'Text #%s' % self.id
+        return self.filename
 
     def __unicode__(self):
         return self.__repr__()
@@ -245,7 +243,7 @@ class Document(db.Model):
         '''Return list of Tokens, ordered as they appear in the text.'''
         tokens = []
 
-        for ID in self.token_IDs:
+        for ID in self.tokens:
             token = Token.query.get(ID)
 
             if token.active:
@@ -557,7 +555,7 @@ def gold_class(t):
 
 def istoken(t):
     # Return True if the t is a Token object, else False
-    return hasattr(t, 'syll')  # isinstance(t, Token)
+    return hasattr(t, 'syll')
 
 jinja2.filters.FILTERS['gold_class'] = gold_class
 jinja2.filters.FILTERS['istoken'] = istoken

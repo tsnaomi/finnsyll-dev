@@ -19,15 +19,7 @@
 
         {% if t.active %}
 
-            <a 
-                href='#modal' 
-                onclick="populatemodal('{{ t.orth }}', '{{ t|gold_class }}', '{{ t.test_syll }}', '{{ t.sonorities }}', '{{ t.weights }}', '{{ t.applied_rules }}', '{{ t.syll }}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}', '{% if t.is_stopword %}checked{% else %} {% endif %}');"
-                class='
-                    word
-                    {{ t|gold_class }}
-                    {% if t.is_compound %} compound {% endif %}
-                    {% if t.alt_syll1 or t.alt_syll2 or t.alt_syll3 %} alt {% endif %}
-                    '> {{ t.test_syll }} </a>
+            <a href='#modal' onclick="populatemodal('{{ t.orth }}', '{{ t|gold_class }}', '{{ t.test_syll }}', '{{ t.sonorities }}', '{{ t.weights }}', '{{ t.applied_rules }}', '{{ t.syll }}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}', '{% if t.is_stopword %}checked{% else %} {% endif %}');" class='word {{ t|gold_class }} {% if t.is_compound %} compound {% endif %} {% if t.alt_syll1 or t.alt_syll2 or t.alt_syll3 %} alt {% endif %}'>{{ t.test_syll }}</a>
         
         {% else %}
             <span class='punct'>{{ t.orth }}</span>
