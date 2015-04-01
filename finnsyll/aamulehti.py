@@ -2,10 +2,12 @@
 
 import finnsyll
 import os
+import string
 import xml.etree.ElementTree as ET
 
 
-invalid_types = ['Delimiter', 'Abbrev', 'Numeral']
+letters = string.letters + u'-äöÄÖ'
+invalid_types = ['Delimiter', 'Abbrev']
 
 
 def populate_db_from_aamulehti_1999():
@@ -36,8 +38,8 @@ def decode_xml_file(filename, filepath):
             attrs = w.attrib
             t = w.text
 
-            # ignore punctuation and acronyms
-            if attrs['type'] not in invalid_types:
+            # ignore punctuation, acronyms, and numbers
+            if attrs['type'] not in invalid_types and isalpha(t):
 
                 # comvert words that are not proper nouns into lowercase
                 t = t.lower() if attrs['type'] != 'Proper' else t
@@ -65,7 +67,7 @@ def decode_xml_file(filename, filepath):
                 tokens.append(word.id)
                 tokenized_text.append(word.id)
 
-            # keep punctuation and acronyms as strings
+            # keep punctuation, acronyms, and numbers as strings
             else:
                 tokenized_text.append(t)
 
@@ -76,11 +78,7 @@ def decode_xml_file(filename, filepath):
         finnsyll.db.session.commit()
 
     except Exception as E:
-        print E
-        import pdb; pdb.set_trace()
-        print
-        print
-        print
+        print filename, E
 
 
 def syllabify_unseen_lemmas():
@@ -99,6 +97,10 @@ def syllabify_unseen_lemmas():
             word.pos = t.pos
             finnsyll.db.session.add(word)
             finnsyll.db.session.commit()
+
+
+def isalpha(word):
+    return all([1 if i in letters else 0 for i in word])
 
 
 if __name__ == '__main__':

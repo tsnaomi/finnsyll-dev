@@ -64,7 +64,7 @@ class Token(db.Model):
     # the word's orthography
     orth = db.Column(db.String(40, convert_unicode=True), nullable=False)
 
-    # the word's lemma form  (for later use)
+    # the word's lemma/citation form
     lemma = db.Column(db.String(40, convert_unicode=True), default='')
 
     # the syllabification that is estimated programmatically
@@ -91,8 +91,8 @@ class Token(db.Model):
     # the word's morpho-syntactic description
     msd = db.Column(db.String(40, convert_unicode=True), default='')
 
-    # the word's frequency in the finnish newspaper corpus (for later use)
-    freq = db.Column(db.Integer)
+    # the word's frequency in the Aamulehti-1999 corpus
+    freq = db.Column(db.Integer, default=0)
 
     # a boolean indicating if the word is a compound
     is_compound = db.Column(db.Boolean, default=False)
@@ -105,11 +105,10 @@ class Token(db.Model):
     is_gold = db.Column(db.Boolean, default=None)
 
     # a boolean indiciating if the token is a valid token
-    active = db.Column(db.Boolean, default=True)
+    active = db.Column(db.Boolean, default=True)  # TODO
 
     def __init__(self, orth, syll=None, alt_syll=None):
         self.orth = orth
-        self.freq = 0
 
         if syll:
             self.syll = syll
@@ -125,8 +124,7 @@ class Token(db.Model):
         self.syllabify()
 
     def __repr__(self):
-        return '\tWord: %s\n\tEstimated syll: %s\n\tCorrect syll: %s\n\t' % (
-            self.orth, self.test_syll or '', self.syll or '')
+        return self.orth
 
     def __unicode__(self):
         return self.__repr__()
@@ -155,6 +153,7 @@ class Token(db.Model):
         return get_sonorities(self.test_syll)
 
     def is_lemma(self):
+        '''Return True if the word is in its citation form, else False.'''
         return self.orth.lower() == self.lemma.lower()
 
     # Syllabification methods -------------------------------------------------
@@ -269,7 +268,7 @@ class Document(db.Model):
 
 # Database functions ----------------------------------------------------------
 
-def delete_token(id):
+def delete_token(id):  # TODO
     '''Delete token (e.g., if the orthopgraphy is a misspelling).'''
     try:
         token = Token.query.get(id)
@@ -326,7 +325,7 @@ def syllabify_tokens():
         token.syllabify()
 
 
-def add_doc(filename):
+def add_doc(filename):  # TODO
     if filename.endswith('.txt'):
 
         try:
@@ -345,10 +344,11 @@ def add_doc(filename):
 
 
 def get_unreviewed_documents():
+    '''Return all unreviewed documents.'''
     return Document.query.filter_by(reviewed=False)
 
 
-def get_numbers():
+def get_numbers():  # TODO
     total = Token.query.filter(Token.is_gold.isnot(None)).count()
     gold = Token.query.filter_by(is_gold=True).count()
     accuracy = (float(gold) / total) * 100.0 if gold and total else 0
@@ -426,7 +426,7 @@ def apply_form(http_form):
 @login_required
 def main_view():
     '''List links to unverified texts (think: Table of Contents).'''
-    if request.method == 'POST':
+    if request.method == 'POST':  # TODO
 
         try:
             f = request.form['file']
@@ -455,6 +455,9 @@ def doc_view(id):
 
     doc = Document.query.get_or_404(id)
     TEXT = doc.query_document()
+
+    for t in TEXT:
+        print type(t), u'%s' % t
 
     return render_template('doc.html', doc=doc, TEXT=TEXT, kw='doc')
 
@@ -559,6 +562,7 @@ def istoken(t):
 
 jinja2.filters.FILTERS['gold_class'] = gold_class
 jinja2.filters.FILTERS['istoken'] = istoken
+
 
 # -----------------------------------------------------------------------------
 
