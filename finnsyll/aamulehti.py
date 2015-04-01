@@ -20,9 +20,9 @@ def populate_db_from_aamulehti_1999():
         for f in filenames:
             filepath = dirpath + '/' + f
             decode_xml_file(f, filepath)
-            return
+            return  # TODO
 
-    # syllabify_unseen_lemmas()
+    syllabify_unseen_lemmas()
 
 
 def decode_xml_file(filename, filepath):
@@ -41,7 +41,7 @@ def decode_xml_file(filename, filepath):
             # ignore punctuation, acronyms, and numbers
             if attrs['type'] not in invalid_types and isalpha(t):
 
-                # comvert words that are not proper nouns into lowercase
+                # convert words that are not proper nouns into lowercase
                 t = t.lower() if attrs['type'] != 'Proper' else t
 
                 # convert lemmas that are not proper nouns into lowercase
@@ -50,7 +50,7 @@ def decode_xml_file(filename, filepath):
 
                 word = finnsyll.find_token(t)
 
-                # create token for word if one does not already exist
+                # create Token for word if one does not already exist
                 if not word or word.lemma != attrs['lemma'] or \
                         word.msd != attrs['msd'] or word.pos != attrs['type']:
                     word = finnsyll.Token(t)
@@ -90,7 +90,7 @@ def syllabify_unseen_lemmas():
     for t in lemmas:
         lemma = finnsyll.find_token(t.lemma)
 
-        # create token for lemma if one does not already exist
+        # create Token for lemma if one does not already exist
         if not lemma:
             word = finnsyll.Token(t.lemma)
             word.lemma = t.lemma
