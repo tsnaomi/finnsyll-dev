@@ -84,17 +84,17 @@ def decode_xml_file(filename, filepath):
 def syllabify_unseen_lemmas():
     # get all unique lemmas
     tokens = finnsyll.Token.query.all()
-    lemmas = [t.lemma for t in tokens]
+    lemmas = [(t.lemma, t.pos) for t in tokens]
     lemmas = list(set(lemmas))
 
     for t in lemmas:
-        lemma = finnsyll.find_token(t.lemma)
+        lemma = finnsyll.find_token(t[0])
 
         # create Token for lemma if one does not already exist
         if not lemma:
-            word = finnsyll.Token(t.lemma)
-            word.lemma = t.lemma
-            word.pos = t.pos
+            word = finnsyll.Token(t[0])
+            word.lemma = t[0]
+            word.pos = t[1]
             finnsyll.db.session.add(word)
             finnsyll.db.session.commit()
 
