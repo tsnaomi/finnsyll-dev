@@ -10,14 +10,4 @@
     {{ stats|safe }}
 </div>
 
-<form class='upload' method='POST'>
-    <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-    <input type='file' class='upload'  name='file'>
-    <input type='submit' class='upload' value='syllabify file'>
-</form>
-
-{% for message in get_flashed_messages() %}
-<div class='flash'>{{ message }}</div>
-{% endfor %}
-
 {% endblock %}

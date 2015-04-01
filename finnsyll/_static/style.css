@@ -130,25 +130,6 @@ div.stats {
     line-height: 40px;
     }
 
-form.upload {
-    margin-top: 50px;
-    text-align: center;
-    }
-
-input.upload[type='file'] {
-    height: 32px;
-    border: 1px solid #E0E0E0;
-    vertical-align: middle;
-    margin-right: 10px;
-    }
-
-input.upload[type='submit'] {
-    height: 34px;
-    border: 1px solid #E0E0E0;
-    vertical-align: middle;
-    padding: 10px;
-}
-
 /* Doc --------------------------------------------------------------------------------------- */
 
 div.doc-title,
@@ -402,14 +383,10 @@ input[name='alt_syll']:focus {
     margin: 0 0 0 4px;
     }
 
-input.OK,
-input.X {
+input.OK {
     font-size: 18px;
     width: 40px;
     margin-top: 2px;
-    }
-
-input.OK {
     color: #FFF;
     border-color: #00FF7F;
     background-color: #00FF7F;
@@ -420,20 +397,6 @@ input.OK:hover {
     border-color: #00FF7F;
     background-color: #fff;
     }
-
-input.X {
-    border: 1px solid #E0E0E0;
-    }
-
-.tokens > .X {
-    margin-left: 14px;
-    }
-
-input.X:hover {
-    color: #FFFFFF;
-    background: #666666;
-    }
-
 
 /* Entrance ---------------------------------------------------------------------------------- */
 

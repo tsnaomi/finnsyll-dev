@@ -31,7 +31,6 @@
         <input type='checkbox' name='is_compound' class='chisaii' value=1 {% if token.is_compound %}checked{% endif %}>
         <input type='checkbox' name='is_stopword' class='chisaii' value=1 {% if token.is_stopword %}checked{% endif %}>
         <input type='submit' class='OK' class='chisaii' value='OK!'>
-        <input type='submit' class='X' value='X' onclick="return uncheck('active{{ loop.index }}');">
     </form>
 
     {% endfor %}

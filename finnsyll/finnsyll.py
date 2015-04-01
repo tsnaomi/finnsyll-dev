@@ -15,10 +15,8 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
-from sqlalchemy.exc import IntegrityError
 from syllabifier.phonology import get_sonorities, get_weights
 from syllabifier.v2 import syllabify
-from werkzeug.exceptions import BadRequestKeyError
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
 app.config.from_pyfile('finnsyll_config.py')
@@ -102,19 +100,10 @@ class Token(db.Model):
     # a boolean indicating if the algorithm has estimated correctly
     is_gold = db.Column(db.Boolean, default=None)
 
-    # a boolean indiciating if the token is a valid token
-    active = db.Column(db.Boolean, default=True)  # TODO
-
-    def __init__(self, orth, syll=None, alt_syll=None):
+    def __init__(self, orth):
         self.orth = orth
 
-        if syll:
-            self.syll = syll
-
-        if alt_syll:
-            self.alt_syll = alt_syll
-
-        # converts all strings to Unicode prior to syllabifications
+        # convert orth to Unicode prior to syllabifications
         db.session.add(self)
         db.session.commit()
 
@@ -289,9 +278,7 @@ class Document(db.Model):
 
         for ID in self.tokens:
             token = Token.query.get(ID)
-
-            if token.active:
-                tokens.append(token)
+            tokens.append(token)
 
         return tokens
 
@@ -313,16 +300,16 @@ class Document(db.Model):
 
 # Database functions ----------------------------------------------------------
 
-def delete_token(id):  # TODO
-    '''Delete token (e.g., if the orthopgraphy is a misspelling).'''
-    try:
-        token = Token.query.get(id)
-        token.is_gold = None
-        token.active = False
-        db.session.commit()
 
-    except KeyError:
-        pass
+def syllabify_tokens():
+    '''Algorithmically syllabify all Tokens.
+
+    This is done anytime a Token is instantiated. It *should* also be done
+    anytime the syllabifying algorithm is updated.'''
+    tokens = Token.query.all()
+
+    for token in tokens:
+        token.syllabify()
 
 
 def find_token(orth):
@@ -338,54 +325,17 @@ def find_token(orth):
 
 def get_bad_tokens():
     '''Return all of the Tokens that are incorrectly syllabified.'''
-    return Token.query.filter_by(is_gold=False).order_by(Token.orth)
+    return Token.query.filter_by(is_gold=False).order_by(Token.lemma)
 
 
 def get_good_tokens():
     '''Return all of the Tokens that are correctly syllabified.'''
-    return Token.query.filter_by(is_gold=True).order_by(Token.orth)
+    return Token.query.filter_by(is_gold=True).order_by(Token.lemma)
 
 
 def get_unverified_tokens():
     '''Return Tokens with uncertain syllabifications.'''
-    return Token.query.filter_by(is_gold=None).filter_by(active=True)
-
-
-def review_tokens():
-    '''Compare test_syll and syll for all Tokens; update is_gold.'''
-    tokens = Token.query.all()
-
-    for token in tokens:
-        token.update_gold()
-
-
-def syllabify_tokens():
-    '''Algorithmically syllabify all Tokens.
-
-    This is done anytime a Token is instantiated. It *should* also be done
-    anytime the syllabifying algorithm is updated.'''
-    tokens = Token.query.all()
-
-    for token in tokens:
-        token.syllabify()
-
-
-def add_doc(filename):  # TODO
-    if filename.endswith('.txt'):
-
-        try:
-            doc = Document(filename)
-            db.session.add(doc)
-            db.session.commit()
-
-            return doc
-
-        except IntegrityError:
-            db.session.rollback()
-            flash('This file was previously uploaded')
-
-    else:
-        flash('Plese input a text (.txt) file. Thank you!')
+    return Token.query.filter_by(is_gold=None).order_by(Token.lemma)
 
 
 def get_unreviewed_documents():
@@ -444,22 +394,17 @@ def apply_form(http_form):
         alt_syll3 = http_form['alt_syll3'] or ''
         is_compound = bool(http_form.getlist('is_compound'))
         is_stopword = bool(http_form.getlist('is_stopword'))
-        active = bool(int(http_form['active']))
         token = find_token(orth)
 
-        if not active:
-            delete_token(token.id)
-
-        else:
-            token.correct(
-                orth=orth,
-                syll=syll,
-                alt_syll1=alt_syll1,
-                alt_syll2=alt_syll2,
-                alt_syll3=alt_syll3,
-                is_compound=is_compound,
-                is_stopword=is_stopword,
-                )
+        token.correct(
+            orth=orth,
+            syll=syll,
+            alt_syll1=alt_syll1,
+            alt_syll2=alt_syll2,
+            alt_syll3=alt_syll3,
+            is_compound=is_compound,
+            is_stopword=is_stopword,
+            )
 
     except (AttributeError, KeyError, LookupError):
         pass
@@ -471,18 +416,6 @@ def apply_form(http_form):
 @login_required
 def main_view():
     '''List links to unverified texts (think: Table of Contents).'''
-    if request.method == 'POST':  # TODO
-
-        try:
-            f = request.form['file']
-            doc = add_doc(f)
-
-            if doc:
-                return redirect(url_for('doc_view', id=doc.id))
-
-        except BadRequestKeyError:
-            flash('No file was selected.')
-
     stats = (
         '<b>%s</b>/<b>%s</b> correctly syllabified<br><b>%s</b>%% accuracy'
         ) % get_numbers()
@@ -547,15 +480,6 @@ def good_view():
     tokens = get_good_tokens()
 
     return render_template('tokens.html', tokens=tokens, kw='good')
-
-
-@app.route('/delete/delete/delete/token/<id>', methods=['POST', ])
-@login_required
-def delete_token_view(id):
-    '''Delete the specified token.'''
-    delete_token(id)
-
-    return redirect(redirect_url())
 
 
 @app.route('/enter', methods=['GET', 'POST'])
