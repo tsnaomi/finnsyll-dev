@@ -7,7 +7,13 @@
 {% block body %}
 
 <div class='stats'>
-    {{ stats|safe }}
+    <br><b>{{ stats.gold }}</b> / <b>{{ stats.verified }}</b> word forms correctly syllabified
+    <br><b>{{ stats.accuracy }}</b>% accuracy
+    <br>
+    <br><b>{{ stats.reviewed }}</b> / <b>{{ stats.doc_count }}</b> documents reviewed
+    <br><b>{{ stats.verified }}</b> / <b>{{ stats.token_count }}</b> word forms verified
+    <br> 
+    <br><b>{{ stats.remaining }}</b> word forms left to verify
 </div>
 
 {% endblock %}

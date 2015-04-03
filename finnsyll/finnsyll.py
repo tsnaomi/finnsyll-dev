@@ -38,13 +38,6 @@ flask_bcrypt = Bcrypt(app)
 
 # Models ----------------------------------------------------------------------
 
-DocTokens = db.Table(
-    'DocWords',
-    db.Column('token_id', db.Integer, db.ForeignKey('Token.id')),
-    db.Column('document_id', db.Integer, db.ForeignKey('Document.id')),
-    )
-
-
 class Linguist(db.Model):
     __tablename__ = 'Linguist'
     id = db.Column(db.Integer, primary_key=True)
@@ -214,24 +207,14 @@ class Document(db.Model):
     # a boolean indicating if all of the document's words have been reviewed
     reviewed = db.Column(db.Boolean, default=False)
 
-    # number of unverified tokens that appear in the text
-    unverified_count = db.Column(db.Integer)
+    # number of unique Tokens that appear in the text
+    unique_count = db.Column(db.Integer)
 
-    # relationship with Tokens table
-    doc_tokens = db.relationship(
-        'Token',
-        secondary=DocTokens,
-        backref=db.backref('documents', lazy='dynamic'),
-        )
-
-    # def __init__(self, filename, tokens, tokenized_text):
-    #     self.filename = filename
-    #     self.tokens = tokens
-    #     self.tokenized_text = tokenized_text
-    #     self.unverified_count = len(tokens)
-
-    def __init__(self, filename):
+    def __init__(self, filename, tokens, tokenized_text):
         self.filename = filename
+        self.tokens = tokens
+        self.tokenized_text = tokenized_text
+        self.unique_count = len(tokens)
 
     def __repr__(self):
         return self.filename
@@ -321,25 +304,21 @@ class Document(db.Model):
         self.reviewed = True
         db.session.commit()
 
-    # def update_unverified_count(self):
-    #     '''Return a list of the unverified Tokens that appear in the text.'''
-    #     tokens = self.query_tokens()
-    #     unverified_count = 0
+    def update_document_review(self):
+        '''Set reviewed to True if all of the Tokens have been verified.'''
+        tokens = self.query_tokens()
+        unverified_count = 0
 
-    #     for t in tokens:
-    #         if t.is_gold is None:
-    #             unverified_count += 1
+        for t in tokens:
+            if t.is_gold is None:
+                unverified_count += 1
 
-    #     # if there are no unverified tokens but the document isn't marked as
-    #     # reviewed, mark the document as reviewed; this would be the case if
-    #     # all of the documents's tokens were verified in previous documents
-    #     if unverified_count == 0 and self.reviewed is False:
-    #         self.reviewed = True
-
-    #     self.unverified_count = unverified_count
-    #     db.session.commit()
-
-    #     return unverified_count
+        # if there are no unverified tokens but the document isn't marked as
+        # reviewed, mark the document as reviewed; this would be the case if
+        # all of the documents's tokens were verified in previous documents
+        if unverified_count == 0 and self.reviewed is False:
+            self.reviewed = True
+            db.session.commit()
 
 
 # Database functions ----------------------------------------------------------
@@ -353,6 +332,14 @@ def syllabify_tokens():
 
     for token in tokens:
         token.syllabify()
+
+
+def update_document_reviews():
+    '''Mark Documents as reviewed if all of their Tokens have been verified.'''
+    docs = Document.query.filter_by(reviewed=False)
+
+    for doc in docs:
+        doc.update_document_review()
 
 
 def find_token(orth):
@@ -381,41 +368,37 @@ def get_unverified_tokens():
     return Token.query.filter_by(is_gold=None).order_by(Token.lemma)
 
 
-# def update_unverified_counts():
-#     docs = Document.query.filter_by(reviewed=False)
-
-#     for doc in docs:
-#         doc.update_unverified_count()
-
-
 def get_unreviewed_documents():
     '''Return all unreviewed documents.'''
-    # docs = Document.query.filter_by(reviewed=False)
-    # docs = docs.order_by(Document.unverified_count.desc()).limit(10)
-    # docs = Document.query.order_by(Document.doc_tokens.any(Token.is_gold == None).desc()).limit(10)
-    # query = db.session.query(Document, func.count(DocTokens.c.token_id).filter(Token.is_gold==None).label('unverified')).join(DocTokens).group_by(Document).order_by('unverified DESC').limit(10)
-
-    # token_query = Token.query.filter(Token.is_gold is None)
-
-    # docs = [d[0] for d in query]
-    # import pdb; pdb.set_trace()
-
-    # docs = Document.query.join(Token).filter(Token.is_gold is None)
-
-    query = db.session.query(Document, func.count(DocTokens.c.token_id).label('unverified')).join(DocTokens).group_by(Document).order_by('unverified DESC').filter(Document.reviewed==False).limit(10)
-
-    docs = [d[0] for d in query]
+    docs = Document.query.filter_by(reviewed=False)
+    docs = docs.order_by(Document.unique_count.desc()).limit(10)
 
     return docs
 
 
-def get_numbers():  # TODO
-    total = Token.query.filter(Token.is_gold.isnot(None)).count()
-    gold = Token.query.filter_by(is_gold=True).count()
-    accuracy = (float(gold) / total) * 100.0 if gold and total else 0
-    accuracy = round(accuracy, 2)
+def get_numbers():
+    '''Generate statistics.'''
 
-    return gold, total, accuracy
+    class Stats(object):
+        _token_count = Token.query.count()
+        _verified = Token.query.filter(Token.is_gold.isnot(None)).count()
+        _gold = Token.query.filter_by(is_gold=True).count()
+        _accuracy = (float(_gold) / _verified) * 100 if _gold else 0
+        _remaining = _token_count - _verified
+        _doc_count = Document.query.count()
+        _reviewed = Document.query.filter_by(reviewed=True).count()
+
+        token_count = format(_token_count, ',d')
+        verified = format(_verified, ',d')
+        gold = format(_gold, ',d')
+        accuracy = round(_accuracy, 2)
+        remaining = format(_remaining, ',d')
+        doc_count = format(_doc_count, ',d')
+        reviewed = format(_reviewed, ',d')
+
+    stats = Stats()
+
+    return stats
 
 
 # View helpers ----------------------------------------------------------------
@@ -482,9 +465,7 @@ def apply_form(http_form):
 @login_required
 def main_view():
     '''List links to unverified texts (think: Table of Contents).'''
-    stats = (
-        '<b>%s</b>/<b>%s</b> correctly syllabified<br><b>%s</b>%% accuracy'
-        ) % get_numbers()
+    stats = get_numbers()
 
     return render_template('main.html', stats=stats, kw='main')
 
@@ -508,7 +489,6 @@ def approve_doc_view(id):
     '''For all of the doc's unverified Tokens, set syll equal to test_syll.'''
     doc = Document.query.get_or_404(id)
     doc.verify_all_unverified_tokens()
-    # update_unverified_counts()
 
     return redirect(url_for('doc_view', id=id))
 
