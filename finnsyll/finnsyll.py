@@ -15,6 +15,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
+from sqlalchemy import func
 from syllabifier.phonology import get_sonorities, get_weights
 from syllabifier.v2 import syllabify
 
@@ -37,8 +38,15 @@ flask_bcrypt = Bcrypt(app)
 
 # Models ----------------------------------------------------------------------
 
+DocTokens = db.Table(
+    'DocWords',
+    db.Column('token_id', db.Integer, db.ForeignKey('Token.id')),
+    db.Column('document_id', db.Integer, db.ForeignKey('Document.id')),
+    )
+
+
 class Linguist(db.Model):
-    __tablename__ = 'Mages'
+    __tablename__ = 'Linguist'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(40), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
@@ -55,37 +63,38 @@ class Linguist(db.Model):
 
 
 class Token(db.Model):
+    __tablename__ = 'Token'
     id = db.Column(db.Integer, primary_key=True)
 
     # the word's orthography
-    orth = db.Column(db.String(40, convert_unicode=True), nullable=False)
+    orth = db.Column(db.String(80, convert_unicode=True), nullable=False)
 
     # the word's lemma/citation form
-    lemma = db.Column(db.String(40, convert_unicode=True), default='')
+    lemma = db.Column(db.String(80, convert_unicode=True), default='')
 
     # the syllabification that is estimated programmatically
-    test_syll = db.Column(db.String(40, convert_unicode=True), default='')
+    test_syll = db.Column(db.String(80, convert_unicode=True), default='')
 
     # a string of the rules applied in the test syllabfication
-    applied_rules = db.Column(db.String(40, convert_unicode=True), default='')
+    applied_rules = db.Column(db.String(80, convert_unicode=True), default='')
 
     # the correct syllabification (hand-verified)
-    syll = db.Column(db.String(40, convert_unicode=True), default='')
+    syll = db.Column(db.String(80, convert_unicode=True), default='')
 
     # an alternative syllabification (hand-verified)
-    alt_syll1 = db.Column(db.String(40, convert_unicode=True), default='')
+    alt_syll1 = db.Column(db.String(80, convert_unicode=True), default='')
 
     # an alternative syllabification (hand-verified)
-    alt_syll2 = db.Column(db.String(40, convert_unicode=True), default='')
+    alt_syll2 = db.Column(db.String(80, convert_unicode=True), default='')
 
     # an alternative syllabification (hand-verified)
-    alt_syll3 = db.Column(db.String(40, convert_unicode=True), default='')
+    alt_syll3 = db.Column(db.String(80, convert_unicode=True), default='')
 
     # the word's part-of-speech
-    pos = db.Column(db.String(40, convert_unicode=True), default='')
+    pos = db.Column(db.String(80, convert_unicode=True), default='')
 
     # the word's morpho-syntactic description
-    msd = db.Column(db.String(40, convert_unicode=True), default='')
+    msd = db.Column(db.String(80, convert_unicode=True), default='')
 
     # the word's frequency in the Aamulehti-1999 corpus
     freq = db.Column(db.Integer, default=0)
@@ -190,6 +199,7 @@ class Token(db.Model):
 
 
 class Document(db.Model):
+    __tablename__ = 'Document'
     id = db.Column(db.Integer, primary_key=True)
 
     # the name of the xml file in the Aamulehti-1999 corpus
@@ -204,10 +214,24 @@ class Document(db.Model):
     # a boolean indicating if all of the document's words have been reviewed
     reviewed = db.Column(db.Boolean, default=False)
 
-    def __init__(self, filename, tokens, tokenized_text):
+    # number of unverified tokens that appear in the text
+    unverified_count = db.Column(db.Integer)
+
+    # relationship with Tokens table
+    doc_tokens = db.relationship(
+        'Token',
+        secondary=DocTokens,
+        backref=db.backref('documents', lazy='dynamic'),
+        )
+
+    # def __init__(self, filename, tokens, tokenized_text):
+    #     self.filename = filename
+    #     self.tokens = tokens
+    #     self.tokenized_text = tokenized_text
+    #     self.unverified_count = len(tokens)
+
+    def __init__(self, filename):
         self.filename = filename
-        self.tokens = tokens
-        self.tokenized_text = tokenized_text
 
     def __repr__(self):
         return self.filename
@@ -273,7 +297,7 @@ class Document(db.Model):
         return html
 
     def query_tokens(self):
-        '''Return list of Tokens, ordered as they appear in the text.'''
+        '''Return a list of the Tokens that appear in the text.'''
         tokens = []
 
         for ID in self.tokens:
@@ -297,9 +321,28 @@ class Document(db.Model):
         self.reviewed = True
         db.session.commit()
 
+    # def update_unverified_count(self):
+    #     '''Return a list of the unverified Tokens that appear in the text.'''
+    #     tokens = self.query_tokens()
+    #     unverified_count = 0
+
+    #     for t in tokens:
+    #         if t.is_gold is None:
+    #             unverified_count += 1
+
+    #     # if there are no unverified tokens but the document isn't marked as
+    #     # reviewed, mark the document as reviewed; this would be the case if
+    #     # all of the documents's tokens were verified in previous documents
+    #     if unverified_count == 0 and self.reviewed is False:
+    #         self.reviewed = True
+
+    #     self.unverified_count = unverified_count
+    #     db.session.commit()
+
+    #     return unverified_count
+
 
 # Database functions ----------------------------------------------------------
-
 
 def syllabify_tokens():
     '''Algorithmically syllabify all Tokens.
@@ -338,9 +381,32 @@ def get_unverified_tokens():
     return Token.query.filter_by(is_gold=None).order_by(Token.lemma)
 
 
+# def update_unverified_counts():
+#     docs = Document.query.filter_by(reviewed=False)
+
+#     for doc in docs:
+#         doc.update_unverified_count()
+
+
 def get_unreviewed_documents():
     '''Return all unreviewed documents.'''
-    return Document.query.filter_by(reviewed=False)
+    # docs = Document.query.filter_by(reviewed=False)
+    # docs = docs.order_by(Document.unverified_count.desc()).limit(10)
+    # docs = Document.query.order_by(Document.doc_tokens.any(Token.is_gold == None).desc()).limit(10)
+    # query = db.session.query(Document, func.count(DocTokens.c.token_id).filter(Token.is_gold==None).label('unverified')).join(DocTokens).group_by(Document).order_by('unverified DESC').limit(10)
+
+    # token_query = Token.query.filter(Token.is_gold is None)
+
+    # docs = [d[0] for d in query]
+    # import pdb; pdb.set_trace()
+
+    # docs = Document.query.join(Token).filter(Token.is_gold is None)
+
+    query = db.session.query(Document, func.count(DocTokens.c.token_id).label('unverified')).join(DocTokens).group_by(Document).order_by('unverified DESC').filter(Document.reviewed==False).limit(10)
+
+    docs = [d[0] for d in query]
+
+    return docs
 
 
 def get_numbers():  # TODO
@@ -442,6 +508,7 @@ def approve_doc_view(id):
     '''For all of the doc's unverified Tokens, set syll equal to test_syll.'''
     doc = Document.query.get_or_404(id)
     doc.verify_all_unverified_tokens()
+    # update_unverified_counts()
 
     return redirect(url_for('doc_view', id=id))
 
