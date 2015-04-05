@@ -245,7 +245,6 @@ class Document(db.Model):
                 html += (
                     u' onclick="populatemodal(\'%s\', \'%s\', \'%s\', \'%s\','
                     u' \'%s\', \'%s\', \'%s\', \'%s\', \'%s\');"') % (
-                    # u' \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\');"') % (
                     word.orth,
                     gold_class(word),
                     word.test_syll,
@@ -255,7 +254,6 @@ class Document(db.Model):
                     word.alt_syll2,
                     word.alt_syll3,
                     word.is_compound,
-                    # word.is_stopword,
                     )
 
                 html += u' class="word %s' % gold_class(word)
