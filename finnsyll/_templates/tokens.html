@@ -1,19 +1,28 @@
 {% extends 'base.html' %}
 
+{% block head %}
+<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+{% endblock %}
+
+{% block toolbar %}
+
+<div class='table-header'>
+    <span class='okii'>Orthography</span>
+    <span class='okii'>Test *</span>
+    <span class='okii'>Correct</span>
+    <span class='okii'>Alternative 1</span>
+    <span class='okii'>Alternative 2</span>
+    <span class='okii'>Alternative 3</span>
+    <span class='chisaii'>Compound</span>
+    <!-- <span class='chisaii'>Stopword</span> -->
+</div>
+
+{% endblock %}
+
 {% block body %}
 
 <div class='token-table'>
-
-    <div class='table-header'>
-        <span class='okii'>Orthography</span>
-        <span class='okii'>Test *</span>
-        <span class='okii'>Correct</span>
-        <span class='okii'>Alternative 1</span>
-        <span class='okii'>Alternative 2</span>
-        <span class='okii'>Alternative 3</span>
-        <span class='chisaii'>Compound</span>
-        <span class='chisaii'>Stopword</span>
-    </div>
 
     <br>
 
@@ -22,19 +31,42 @@
     <form class='tokens' method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
         <input type='hidden' id='active{{ loop.index }}' name='active' value={% if token.active %}1{% endif %}>
-        <input type='text' name='orth' class='okii orth' value='{{ token.orth }}'>
-        <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' title='Sonority: {{ token.sonorities }}&#10;&#10;Weight: {{ token.weights }}&#10;'readonly='True'>
+        <input type='text' name='orth' class='okii orth' value='{{ token.orth }}' title='Rules: {{ token.applied_rules }}&#10;&#10;Lemma: {{ token.lemma }}&#10;&#10;Part of speech: {{ token.pos }}&#10;&#10;Morpho-syntactic description: {{ token.msd }}&#10;&#10;Sonority: {{ token.sonorities }}&#10;&#10;Weight: {{ token.weights }}'readonly>
+        <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' readonly>
         <input type='text' name='syll' class='okii' value='{{ token.syll }}'>
         <input type='text' name='alt_syll1' class='okii' value='{{ token.alt_syll1 }}'>
         <input type='text' name='alt_syll2' class='okii' value='{{ token.alt_syll2 }}'>
         <input type='text' name='alt_syll3' class='okii' value='{{ token.alt_syll3 }}'>
         <input type='checkbox' name='is_compound' class='chisaii' value=1 {% if token.is_compound %}checked{% endif %}>
-        <input type='checkbox' name='is_stopword' class='chisaii' value=1 {% if token.is_stopword %}checked{% endif %}>
+       <!--  <input type='checkbox' name='is_stopword' class='chisaii' value=1 {% if token.is_stopword %}checked{% endif %}> -->
         <input type='submit' class='OK' class='chisaii' value='OK!'>
     </form>
 
     {% endfor %}
 
+</div>
+
+<br>
+
+<div class='pagination'>
+    {% if pagination.has_prev %}
+    <a href="{{ url_for_other_page(pagination.page - 1) }}">&laquo; Previous</a>
+        {% endif %}
+    {% for page in pagination.iter_pages() %}
+        {% if page %}
+            {% if page != pagination.page %}
+    <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+            {% else %}
+    <strong>{{ page }}</strong>
+            {% endif %}
+        {% else %}
+    <span class='ellipsis'>…</span>
+        {% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+    <a href="{{ url_for_other_page(pagination.page + 1)
+      }}">Next &raquo;</a>
+    {% endif %}
 </div>
 
 {% endblock %}

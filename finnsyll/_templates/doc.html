@@ -35,7 +35,6 @@
         <form class='doc-tokens' method='POST' onsubmit="window.location.assign('#close')">
 
             <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-            <input type='hidden' id='active' name='active' value=1>
 
             <span class='modal-label'>Orthography: </span>
             <input type='text' id='orth' name='orth' class='orth' value=''><br>
@@ -62,11 +61,10 @@
             <span class='modal-label'>Compound:</span>
             <input type='checkbox' id='compound' name='is_compound' value=1 ><br>
 
-            <span class='modal-label'>Stopword:</span>
-            <input type='checkbox' id='stopword' name='is_stopword' value=1 ><br><br>
+            <!-- <span class='modal-label'>Stopword:</span>
+            <input type='checkbox' id='stopword' name='is_stopword' value=1 ><br> --><br>
 
             <input type='submit' class='OK' value='OK!'><br><br>
-            <!-- <input type='submit' class='X' value='X' onclick="return uncheck('active');"> -->
 
         </form>
     </div>
@@ -74,16 +72,12 @@
 </div>
 <!-- /Modal -->
 
-
 <script>
-    function populatemodal(orth, gold, test, sonorities, weights, rules, syll, alt1, alt2, alt3, compound, stopword) {
+    // function populatemodal(orth, gold, test, rules, syll, alt1, alt2, alt3, compound, stopword) {
+    function populatemodal(orth, gold, test, rules, syll, alt1, alt2, alt3, compound) {
         $('#orth').val(orth);
         $('#test').val(test);
         $('#test').addClass(gold);
-
-        // FIX
-        $('#test').attr('title', 'Sonority: '+sonorities+'&#10;&#10;Weight: '+weights+'&#10;');
-
         $('#rules').html(rules);
         $('#syll').val(syll);
         $('#alt1').val(alt1);
@@ -92,9 +86,9 @@
         if (compound == 'checked') {
              $('#compound').prop('checked', true);
         }
-        if (stopword == 'checked') {
-             $('#stopword').prop('checked', true);
-        }
+        // if (stopword == 'checked') {
+        //      $('#stopword').prop('checked', true);
+        // }
     }
 </script>
 

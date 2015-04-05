@@ -1,5 +1,3 @@
-/* color picker: http://www.w3schools.com/tags/ref_colorpicker.asp?colorhex=000000 */
-
 body {
     font-family: 'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     font-size: 16px;
@@ -40,7 +38,6 @@ input[type='submit'] {
     }
 
 li a {
-    /*padding: 14px 20px;*/
     margin: 14px 20px;
     }
 
@@ -50,8 +47,6 @@ li a:hover {
     }
 
 nav.fixed-nav-bar {
-    /*font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;*/
-    /*font-size: 16px;*/
     font-size: 18px;
     text-align: center;
     text-transform: lowercase;
@@ -109,10 +104,6 @@ nav ul ul li {
     background: #FFFFFF;
     box-shadow: 1px 1px 1px #E6E6E6;
     }
-
-/*nav ul ul li:first-child {
-    margin-top: 3px;
-    }*/
 
 nav ul ul li:last-child {
     border-bottom-style: solid;
@@ -178,10 +169,6 @@ span.punct {
     /*background: #FAFDFF;*/
     }
 
-a.word {
-    /*font-weight: bolder;*/
-    }
-
 a.word:hover {
     color: #000000;
     background: #80FFBF;
@@ -215,7 +202,6 @@ a.word:hover {
     min-width: 60px;
     position: relative;
     transition: color .1s ease;
-    /* top: 40em;*/
     }
 
 .btn:hover {
@@ -311,6 +297,7 @@ a.word:hover {
 
 .doc-tokens > input[type=text],
 .doc-tokens > input[type=text]:focus {
+    width: 200px;
     font-family: inherit;
     margin-left: 124px;
     padding: 4px;
@@ -329,27 +316,33 @@ a.word:hover {
 
 /* Tokens ------------------------------------------------------------------------------------ */
 
-.token-table {
-    width: 1550px;
+.token-table,
+.tokens {
+    width: 1290px;
     }
+
 
 .table-header {
-    width: 1540px;
+    width: 1300px;
     color: rgb(84, 84, 84);
-    padding: 1%;
-    /*position: fixed;*/
-    /*top: 50px;*/
-    /*background: #FFFFFF;*/
-    font-style: bold;
+    font-size: 15px;
+    font-style: italic;
+    text-transform: capitalize;
+    margin-top: -6px;
+    margin-left: 20px;
+    padding: 20px 20px 48px 42px;
+    background-color: #fff;
+    border-top: 1px #E6E6E6 solid;
     }
 
-.table-header > span {
-    border: 1px solid #fff;
+.table-header > span.okii {
+    text-align: left;
+    padding-left: 2px;
     }
 
 .tokens {
-    width: 1540px;
-    padding: 10px 0 10px 1%;
+    margin-left: 20px;
+    padding: 10px 40px 10px 40px;
     border-bottom: 1px solid #F8F8F8;
     }
 
@@ -362,26 +355,20 @@ a.word:hover {
     }
 
 .okii {
-    width: 194px;
+    width: 180px;
     margin-right: 8px;
     float: left;
     }
 
 .chisaii {
-    width: 90px;
+    width: 94px;
     margin-right: 8px;
     float: left;
     }
 
-input[disabled='True'] {
+input:read-only:focus {
     border: none;
-    }
-
-input[name='syll']:focus,
-input[name='alt_syll']:focus {
-    padding: 0 0 0 4px;
-    margin: 0 0 0 4px;
-    }
+}
 
 input.OK {
     font-size: 18px;
@@ -397,6 +384,11 @@ input.OK:hover {
     border-color: #00FF7F;
     background-color: #fff;
     }
+
+.pagination {
+    text-align: center;
+    word-spacing: 10px;
+}
 
 /* Entrance ---------------------------------------------------------------------------------- */
 

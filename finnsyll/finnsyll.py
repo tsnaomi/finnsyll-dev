@@ -1,6 +1,7 @@
 # coding=utf-8
 
 from flask import (
+    abort,
     flash,
     Flask,
     redirect,
@@ -15,7 +16,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
-from sqlalchemy import func
+from math import ceil
 from syllabifier.phonology import get_sonorities, get_weights
 from syllabifier.v2 import syllabify
 
@@ -243,20 +244,18 @@ class Document(db.Model):
                 html += u' <a href="#modal"'
                 html += (
                     u' onclick="populatemodal(\'%s\', \'%s\', \'%s\', \'%s\','
-                    u' \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\','
-                    u' \'%s\');"') % (
+                    u' \'%s\', \'%s\', \'%s\', \'%s\', \'%s\');"') % (
+                    # u' \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\');"') % (
                     word.orth,
                     gold_class(word),
                     word.test_syll,
-                    word.sonorities,
-                    word.weights,
                     word.applied_rules,
                     word.syll,
                     word.alt_syll1,
                     word.alt_syll2,
                     word.alt_syll3,
                     word.is_compound,
-                    word.is_stopword,
+                    # word.is_stopword,
                     )
 
                 html += u' class="word %s' % gold_class(word)
@@ -493,40 +492,60 @@ def approve_doc_view(id):
     return redirect(url_for('doc_view', id=id))
 
 
-@app.route('/unverified', methods=['GET', 'POST'])
+@app.route('/unverified', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/unverified/page/<int:page>')
 @login_required
-def unverified_view():
+def unverified_view(page):
     '''List all unverified Tokens and process corrections.'''
     if request.method == 'POST':
         apply_form(request.form)
 
     tokens = get_unverified_tokens()
+    tokens, pagination = paginate(page, tokens)
 
-    return render_template('tokens.html', tokens=tokens, kw='unverified')
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='unverified',
+        pagination=pagination,
+        )
 
 
-@app.route('/bad', methods=['GET', 'POST'])
+@app.route('/good', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/good/page/<int:page>')
 @login_required
-def bad_view():
-    '''List all incorrectly syllabified Tokens and process corrections.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
-    tokens = get_bad_tokens()
-
-    return render_template('tokens.html', tokens=tokens, kw='bad')
-
-
-@app.route('/good', methods=['GET', 'POST'])
-@login_required
-def good_view():
+def good_view(page):
     '''List all correctly syllabified Tokens and process corrections.'''
     if request.method == 'POST':
         apply_form(request.form)
 
     tokens = get_good_tokens()
+    tokens, pagination = paginate(page, tokens)
 
-    return render_template('tokens.html', tokens=tokens, kw='good')
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='good',
+        pagination=pagination,
+        )
+
+
+@app.route('/bad', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/bad/page/<int:page>')
+def bad_view(page):
+    '''List all incorrectly syllabified Tokens and process corrections.'''
+    if request.method == 'POST':
+        apply_form(request.form)
+
+    tokens = get_bad_tokens()
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='bad',
+        pagination=pagination,
+        )
 
 
 @app.route('/enter', methods=['GET', 'POST'])
@@ -559,6 +578,73 @@ def logout_view():
 
     return redirect(url_for('main_view'))
 
+
+# Pagination ------------------------------------------------------------------
+
+PER_PAGE = 40
+
+
+class Pagination(object):
+
+    def __init__(self, page, total_count):
+        self.page = page
+        self.per_page = PER_PAGE
+        self.total_count = total_count
+
+    @property
+    def pages(self):
+        return int(ceil(self.total_count / float(self.per_page)))
+
+    @property
+    def has_prev(self):
+        return self.page > 1
+
+    @property
+    def has_next(self):
+        return self.page < self.pages
+
+    def iter_pages(self):
+        left_edge, left_current = 2, 2
+        right_edge, right_current = 2, 5
+
+        last = 0
+        for num in xrange(1, self.pages + 1):
+            if num <= left_edge or (
+                num > self.page - left_current - 1 and
+                num < self.page + right_current
+                    ) or num > self.pages - right_edge:
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
+
+
+def paginate(page, tokens):
+    count = tokens.count()
+    start = (page - 1) * PER_PAGE or 0
+    end = min(start + PER_PAGE, count)
+
+    try:
+        tokens = tokens[start:end]
+
+    except IndexError:
+        if page != 1:
+            abort(404)
+
+    pagination = Pagination(page, count)
+
+    return tokens, pagination
+
+
+def url_for_other_page(page):
+    args = request.view_args.copy()
+    args['page'] = page
+    return url_for(request.endpoint, **args)
+
+app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+
+
+# -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
     manager.run()
