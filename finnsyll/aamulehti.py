@@ -5,6 +5,17 @@ import os
 import string
 import xml.etree.ElementTree as ET
 
+# Characters:
+# 0123456789!"#$%&'()*+,-./:;<=>?@^_aAbBcCDdeEfFGgHhiIjJkKLlMmnNoOpPqQRrSsTtUu
+# VvWwxXyYzZ~¡£¥§°±µ·»¿ßàÀÁáâÃãÄäåÅæÆçÇèÈéÉêëËìÍíîïñòÓóôÕõÖöØøÙùÚúÛûÜü
+
+# Types:
+# Code, Noun, Pronoun, Adverb, Adjective-Noun, CompPart, Abbrev, Adjective,
+# Preposition, Delimiter, Verb, Proper, Numeral, Conjunction, Noun-Noun,
+# Interj1ection
+
+# word forms estimate (excl. delimiters, abbreviation) : 1,059,224
+
 
 letters = string.letters + u' -äöÄÖ'
 invalid_types = ['Delimiter', 'Abbrev']
@@ -17,10 +28,17 @@ def populate_db_from_aamulehti_1999():
         if dirpath == '../aamulehti-1999':
             continue
 
+        count = 0
+
         for f in filenames:
             filepath = dirpath + '/' + f
             decode_xml_file(f, filepath)
-            return  # TODO
+            count += 1
+
+            if count > 1000:
+                return  # TODO
+
+        print dirpath
 
     syllabify_unseen_lemmas()
 
@@ -29,7 +47,7 @@ def decode_xml_file(filename, filepath):
     tree = ET.parse(filepath)
     root = tree.getroot()
 
-    tokens = []
+    tokens = set()
     tokenized_text = []
 
     try:
@@ -42,11 +60,11 @@ def decode_xml_file(filename, filepath):
             if attrs['type'] not in invalid_types and isalpha(t):
 
                 # convert words that are not proper nouns into lowercase
-                t = t.lower() if attrs['type'] != 'Proper' else t
+                t = t.lower() if attrs['type'] != 'Proper' else t  # TODO
 
                 # convert lemmas that are not proper nouns into lowercase
                 l = attrs['lemma']
-                l = l.lower() if attrs['type'] != 'Proper' else l
+                l = l.lower() if attrs['type'] != 'Proper' else l  # TODO
 
                 word = finnsyll.find_token(t)
 
@@ -64,7 +82,7 @@ def decode_xml_file(filename, filepath):
                 finnsyll.db.session.add(word)
                 finnsyll.db.session.commit()
 
-                tokens.append(word.id)
+                tokens.add(word.id)
                 tokenized_text.append(word.id)
 
             # keep punctuation, acronyms, and numbers as strings
@@ -72,7 +90,7 @@ def decode_xml_file(filename, filepath):
                 tokenized_text.append(t)
 
         # create document instance
-        doc = finnsyll.Document(filename, tokens, tokenized_text)
+        doc = finnsyll.Document(filename, list(tokens), tokenized_text)
         finnsyll.db.session.add(doc)
 
         finnsyll.db.session.commit()
