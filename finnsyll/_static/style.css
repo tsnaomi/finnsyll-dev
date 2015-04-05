@@ -270,7 +270,8 @@ a.word:hover {
     }
 
 .modal-body {
-    padding: 20px 20px 30px;
+    margin-top: -40px;
+    padding: 20px 20px 40px;
     }
 
 .modal-header {
