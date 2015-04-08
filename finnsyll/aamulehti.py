@@ -75,7 +75,7 @@ def decode_xml_file(filename, filepath, words):
                     word = finnsyll.Token(t)
                     word.msd = msd
                     word.pos = pos
-                    word.lemma = lemma
+                    word.lemma = lemma.replace('_', ' ')
 
                 # update the word's frequency count
                 word.freq += 1
