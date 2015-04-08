@@ -20,16 +20,16 @@ def syllabify(word):
     delimiter = '-' if '-' in word else ' ' if ' ' in word else None
 
     # if the word contains a delimiter (a hyphens or space), split the world
-    #  along the delimiter and syllabify the individual parts separately
+    # along the delimiter and syllabify the individual parts separately
     if delimiter:
-        word_, rules_ = [], []
+        _word, _rules = [], []
 
         for w in word.split(delimiter):
             syll, rules = _syllabify(w)
-            word_.append(syll)
-            rules_.append(rules)
+            _word.append(syll)
+            _rules.append(rules)
 
-        return word_.join(delimiter), rules_.join(' | ')
+        return _word.join(delimiter), _rules.join(' | ')
 
     return _syllabify(word)
 
