@@ -350,20 +350,6 @@ def find_token(orth):
         return None
 
 
-def _find_token(orth, lemma=None, msd=None, pos=None):
-    '''Retrieve token by its orthography, lemma, msd, and pos.'''
-    try:
-        # ilike queries are case insensitive
-        token = Token.query.filter(Token.orth.ilike(orth)).\
-            filter_by(lemma=lemma).filter_by(msd=msd).\
-            filter_by(pos=pos).first()
-
-        return token
-
-    except KeyError:
-        return None
-
-
 def get_bad_tokens():
     '''Return all of the Tokens that are incorrectly syllabified.'''
     return Token.query.filter_by(is_gold=False).order_by(Token.lemma)
