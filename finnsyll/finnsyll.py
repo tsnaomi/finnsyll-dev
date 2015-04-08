@@ -340,10 +340,24 @@ def update_document_reviews():
 
 
 def find_token(orth):
-    '''Retrieve token by its ID.'''
+    '''Retrieve token by its orthography.'''
     try:
         # ilike queries are case insensitive
         token = Token.query.filter(Token.orth.ilike(orth)).first()
+        return token
+
+    except KeyError:
+        return None
+
+
+def _find_token(orth, lemma=None, msd=None, pos=None):
+    '''Retrieve token by its orthography, lemma, msd, and pos.'''
+    try:
+        # ilike queries are case insensitive
+        token = Token.query.filter(Token.orth.ilike(orth)).\
+            filter_by(lemma=lemma).filter_by(msd=msd).\
+            filter_by(pos=pos).first()
+
         return token
 
     except KeyError:

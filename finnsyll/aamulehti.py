@@ -2,23 +2,31 @@
 
 import finnsyll
 import os
-import string
 import xml.etree.ElementTree as ET
 
-# Characters:
-# 0123456789!"#$%&'()*+,-./:;<=>?@^_aAbBcCDdeEfFGgHhiIjJkKLlMmnNoOpPqQRrSsTtUu
-# VvWwxXyYzZ~¡£¥§°±µ·»¿ßàÀÁáâÃãÄäåÅæÆçÇèÈéÉêëËìÍíîïñòÓóôÕõÖöØøÙùÚúÛûÜü
 
-# Types:
-# Code, Noun, Pronoun, Adverb, Adjective-Noun, CompPart, Abbrev, Adjective,
-# Preposition, Delimiter, Verb, Proper, Numeral, Conjunction, Noun-Noun,
-# Interj1ection
+# word forms estimate: 986000 (exluding unseen lemmas)
 
-# word forms estimate (excl. delimiters, abbreviation) : 1,059,224
+characters = u'aAbBcCDdeEfFGgHhiIjJkKLlMmnNoOpPqQRrSsTtUuVvWwxXyYzZ -äöÄÖ'
+invalid_types = ['Delimiter', 'Abbrev', 'Code']
 
 
-letters = string.letters + u' -äöÄÖ'
-invalid_types = ['Delimiter', 'Abbrev']
+def isalpha(word):
+    return all([1 if i in characters else 0 for i in word])
+
+
+def find_token(orth, lemma=None, msd=None, pos=None):
+    '''Retrieve token by its orthography, lemma, msd, and pos.'''
+    try:
+        # ilike queries are case insensitive
+        token = finnsyll.Token.query.filter(finnsyll.Token.orth.ilike(orth)).\
+            filter_by(lemma=lemma).filter_by(msd=msd).\
+            filter_by(pos=pos).first()
+
+        return token
+
+    except KeyError:
+        return None
 
 
 def populate_db_from_aamulehti_1999():
@@ -28,22 +36,18 @@ def populate_db_from_aamulehti_1999():
         if dirpath == '../aamulehti-1999':
             continue
 
-        count = 0
-
         for f in filenames:
             filepath = dirpath + '/' + f
             decode_xml_file(f, filepath)
-            count += 1
-
-            if count > 1000:
-                return  # TODO
 
         print dirpath
 
-    syllabify_unseen_lemmas()
+        break  # TODO
+
+    print '%s tokens' % finnsyll.Token.query.count()
 
 
-def decode_xml_file(filename, filepath):
+def decode_xml_file(filename, filepath, words):
     tree = ET.parse(filepath)
     root = tree.getroot()
 
@@ -51,30 +55,27 @@ def decode_xml_file(filename, filepath):
     tokenized_text = []
 
     try:
-
         for w in root.iter('w'):
-            attrs = w.attrib
-            t = w.text
+            lemma = w.attrib['lemma']
+            msd = w.attrib['msd']
+            pos = w.attrib['type']
+            t = w.text or ''
 
-            # ignore punctuation, acronyms, and numbers
-            if attrs['type'] not in invalid_types and isalpha(t):
+            # ignore null lemmas, null types, and illegal characters and types
+            if all([t, lemma, msd, pos, isalpha(t), pos not in invalid_types]):
 
                 # convert words that are not proper nouns into lowercase
-                t = t.lower() if attrs['type'] != 'Proper' else t  # TODO
+                t = t.lower() if pos != 'Proper' else t
+                lemma = lemma.lower() if pos != 'Proper' else lemma
 
-                # convert lemmas that are not proper nouns into lowercase
-                l = attrs['lemma']
-                l = l.lower() if attrs['type'] != 'Proper' else l  # TODO
-
-                word = finnsyll.find_token(t)
+                word = find_token(t, lemma=lemma, msd=msd, pos=pos)
 
                 # create Token for word if one does not already exist
-                if not word or word.lemma != attrs['lemma'] or \
-                        word.msd != attrs['msd'] or word.pos != attrs['type']:
+                if not word:
                     word = finnsyll.Token(t)
-                    word.msd = attrs['msd']
-                    word.pos = attrs['type']
-                    word.lemma = l
+                    word.msd = msd
+                    word.pos = pos
+                    word.lemma = lemma
 
                 # update the word's frequency count
                 word.freq += 1
@@ -98,27 +99,29 @@ def decode_xml_file(filename, filepath):
     except Exception as E:
         print filename, E
 
+    return words
+
 
 def syllabify_unseen_lemmas():
     # get all unique lemmas
     tokens = finnsyll.Token.query.all()
-    lemmas = [(t.lemma, t.pos) for t in tokens]
+    lemmas = [(t.lemma.replace('_', ' '), t.pos) for t in tokens]
     lemmas = list(set(lemmas))
 
-    for t in lemmas:
-        lemma = finnsyll.find_token(t[0])
+    # isolate lemmas that do not have their own Tokens
+    unseen_lemmas = [t for t in lemmas if not finnsyll.find_token(t[0])]
 
-        # create Token for lemma if one does not already exist
-        if not lemma:
-            word = finnsyll.Token(t[0])
-            word.lemma = t[0]
-            word.pos = t[1]
-            finnsyll.db.session.add(word)
-            finnsyll.db.session.commit()
+    print '%s unseen lemmas' % len(unseen_lemmas)
+    import pdb
+    pdb.set_trace()
 
-
-def isalpha(word):
-    return all([1 if i in letters else 0 for i in word])
+    # create Tokens for unseen lemmas
+    for t in unseen_lemmas:
+        word = finnsyll.Token(t[0])
+        word.lemma = t[0]
+        word.pos = t[1]
+        finnsyll.db.session.add(word)
+        finnsyll.db.session.commit()
 
 
 if __name__ == '__main__':
