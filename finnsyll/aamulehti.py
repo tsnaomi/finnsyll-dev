@@ -2,6 +2,7 @@
 
 import finnsyll
 import os
+import sys
 import xml.etree.ElementTree as ET
 
 
@@ -29,7 +30,7 @@ def find_token(orth, lemma=None, msd=None, pos=None):
         return None
 
 
-def populate_db_from_aamulehti_1999():
+def populate_db_from_aamulehti_1999(test=False):
     for tup in os.walk('../aamulehti-1999'):
         dirpath, dirname, filenames = tup
 
@@ -40,14 +41,15 @@ def populate_db_from_aamulehti_1999():
             filepath = dirpath + '/' + f
             decode_xml_file(f, filepath)
 
-        print dirpath
+            if test:
+                break
 
-        break  # TODO
+        print dirpath
 
     print '%s tokens' % finnsyll.Token.query.count()
 
 
-def decode_xml_file(filename, filepath, words):
+def decode_xml_file(filename, filepath):
     tree = ET.parse(filepath)
     root = tree.getroot()
 
@@ -99,8 +101,6 @@ def decode_xml_file(filename, filepath, words):
     except Exception as E:
         print filename, E
 
-    return words
-
 
 def syllabify_unseen_lemmas():
     # get all unique lemmas
@@ -125,4 +125,5 @@ def syllabify_unseen_lemmas():
 
 
 if __name__ == '__main__':
-    populate_db_from_aamulehti_1999()
+    test = True if '-test' in sys.argv[1:] else False
+    populate_db_from_aamulehti_1999(test=test)
