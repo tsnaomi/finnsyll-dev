@@ -29,7 +29,7 @@ def syllabify(word):
             _word.append(syll)
             _rules.append(rules)
 
-        return _word.join(delimiter), _rules.join(' | ')
+        return delimiter.join(_word), (' | ').join(_rules)
 
     return _syllabify(word)
 
