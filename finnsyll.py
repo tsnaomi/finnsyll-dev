@@ -39,13 +39,6 @@ flask_bcrypt = Bcrypt(app)
 
 # Models ----------------------------------------------------------------------
 
-DocTokens = db.Table(
-    'DocTokens',
-    db.Column('token_id', db.Integer, db.ForeignKey('Token.id')),
-    db.Column('document_id', db.Integer, db.ForeignKey('Document.id')),
-    )
-
-
 class Linguist(db.Model):
     __tablename__ = 'Linguist'
     id = db.Column(db.Integer, primary_key=True)
@@ -212,15 +205,17 @@ class Document(db.Model):
     # the text as a tokenized list, incl. Token IDs and punctuation strings
     tokenized_text = db.Column(db.PickleType)
 
-    tokens = db.relationship(
-        'Token',
-        secondary=DocTokens,
-        backref=db.backref('documents', lazy='dynamic'),
-        )
+    # a list of IDs for each word as they appear in the text
+    tokens = db.Column(db.PickleType)
 
-    def __init__(self, filename, tokenized_text):
+    # number of unique Tokens that appear in the text
+    unique_count = db.Column(db.Integer)
+
+    def __init__(self, filename, tokenized_text, tokens):
         self.filename = filename
         self.tokenized_text = tokenized_text
+        self.tokens = tokens
+        self.unique_count = len(tokens)
 
     def __repr__(self):
         return self.filename
@@ -284,13 +279,23 @@ class Document(db.Model):
 
         return html
 
+    def get_tokens(self):
+        '''Return a list of the Tokens that appear in the text.'''
+        tokens = []
+
+        for ID in self.tokens:
+            token = Token.query.get(ID)
+            tokens.append(token)
+
+        return tokens
+
     def verify_all_unverified_tokens(self):
         '''For all of the text's unverified Tokens, set syll equal to test_syll.
 
         This function is intended for when all uverified Tokens have been
         correctly syllabified in test_syll. Proceed with caution.
         '''
-        tokens = self.tokens
+        tokens = self.get_tokens()
 
         for token in tokens:
             if token.is_gold is None:
@@ -299,9 +304,9 @@ class Document(db.Model):
         self.reviewed = True
         db.session.commit()
 
-    def update_document_review(self):
+    def update_review(self):
         '''Set reviewed to True if all of the Tokens have been verified.'''
-        tokens = self.tokens
+        tokens = self.get_tokens()
         unverified_count = 0
 
         for t in tokens:
@@ -311,7 +316,7 @@ class Document(db.Model):
         # if there are no unverified tokens but the document isn't marked as
         # reviewed, mark the document as reviewed; this would be the case if
         # all of the documents's tokens were verified in previous documents
-        if unverified_count == 0 and self.reviewed is False:
+        if unverified_count == 0:
             self.reviewed = True
             db.session.commit()
 
@@ -340,6 +345,14 @@ def find_token(orth):
         return None
 
 
+def update_documents():
+    '''Mark documents as reviewed if all of their tokens have been verified.'''
+    docs = Document.query.filter_by(reviewed=False)
+
+    for doc in docs:
+        doc.update_review()
+
+
 def get_bad_tokens():
     '''Return all of the Tokens that are incorrectly syllabified.'''
     return Token.query.filter_by(is_gold=False).order_by(Token.lemma)
@@ -357,7 +370,10 @@ def get_unverified_tokens():
 
 def get_unreviewed_documents():
     '''Return all unreviewed documents.'''
-    return Document.query.limit(10)
+    docs = Document.query.filter_by(reviewed=False)
+    docs = docs.order_by(Document.unique_count.desc()).limit(10)
+
+    return docs
 
 
 def get_numbers():

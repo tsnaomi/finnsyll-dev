@@ -2,7 +2,6 @@
 
 import finnsyll
 import os
-import sys
 import xml.etree.ElementTree as ET
 
 # var = raw_input("Please enter something: ")
@@ -33,17 +32,11 @@ def find_token(orth, lemma=None, msd=None, pos=None):
         return None
 
 
-def populate_db_from_aamulehti_1999(DIR):
-    if not DIR:
-        raise ValueError('Please specify a directory.')
-
-    for tup in os.walk('../aamulehti-1999'):
+def populate_db_from_aamulehti_1999():
+    for tup in os.walk('aamulehti-1999'):
         dirpath, dirname, filenames = tup
 
-        if dirpath == '../aamulehti-1999':
-            continue
-
-        if not dirpath.endswith(DIR):
+        if dirpath == 'aamulehti-1999':
             continue
 
         for f in filenames:
@@ -102,7 +95,7 @@ def decode_xml_file(filename, filepath):
                 tokenized_text.append(t)
 
         # create document instance
-        doc = finnsyll.Document(filename, tokenized_text, tokens)
+        doc = finnsyll.Document(filename, tokenized_text, list(tokens))
 
         finnsyll.db.session.add(doc)
 
@@ -133,10 +126,7 @@ def syllabify_unseen_lemmas():
 
 
 if __name__ == '__main__':
-    DIR = sys.argv[1] if sys.argv[1:] else None
-    populate_db_from_aamulehti_1999(DIR=DIR)
+    populate_db_from_aamulehti_1999()
 
-    # test time: 44.73 seconds
-    # estimated corpus time: 63.70 hours
-
-    # last loaded doc: al4586.xml
+    # test time: 73.36 seconds
+    # estimated corpus time: 104.49 hours
