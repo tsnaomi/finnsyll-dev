@@ -2,7 +2,7 @@
 
 <html lang='en'>
 
-    <title>FinnSyll - Development</title>
+    <title>FinnSyll {% if config.TESTING %}- Development{% endif %}</title>
 
     <head>
         <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
