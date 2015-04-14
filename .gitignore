@@ -1,7 +1,7 @@
 *.pyc
 
-research/
 aamulehti-1999/
-
-migrations/
+research/
 syllabifier/falk
+
+nohup.out
