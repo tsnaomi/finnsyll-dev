@@ -5,6 +5,7 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 
+# var = raw_input("Please enter something: ")
 
 # word forms estimate: 986000 (exluding unseen lemmas)
 # xml files: 61,529
@@ -74,6 +75,7 @@ def decode_xml_file(filename, filepath):
 
             # ignore null lemmas, null types, and illegal characters and types
             if all([t, lemma, pos, isalpha(t), pos not in invalid_types]):
+
                 # convert words that are not proper nouns into lowercase
                 t = t.lower() if pos != 'Proper' else t
                 lemma = lemma.lower() if pos != 'Proper' else lemma
@@ -100,11 +102,7 @@ def decode_xml_file(filename, filepath):
                 tokenized_text.append(t)
 
         # create document instance
-        doc = finnsyll.Document(filename, tokenized_text)
-
-        # add related objects
-        for word in tokens:
-            doc.tokens.append(word)
+        doc = finnsyll.Document(filename, tokenized_text, tokens)
 
         finnsyll.db.session.add(doc)
 
