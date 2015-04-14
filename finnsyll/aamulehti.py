@@ -23,7 +23,7 @@ def find_token(orth, lemma=None, msd=None, pos=None):
         # ilike queries are case insensitive
         token = finnsyll.Token.query.filter(finnsyll.Token.orth.ilike(orth)).\
             filter_by(lemma=lemma).filter_by(msd=msd).\
-            filter_by(pos=pos).first()
+            filter_by(pos=pos).one()
 
         return token
 
