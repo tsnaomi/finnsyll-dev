@@ -11,8 +11,9 @@
 
 <br>
 
-
 {{ TEXT|safe }}
+
+<br>
 
 {% if not doc.reviewed %}
 <form class='entrance' method='POST' action="{{ url_for('approve_doc_view', id=doc.id) }}{{ doc_id }}"> 

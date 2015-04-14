@@ -47,8 +47,7 @@ li a:hover {
     }
 
 nav.fixed-nav-bar {
-    font-size: 18px;
-    /*text-align: left;*/
+    font-size: 19px;
     text-align: center;
     text-transform: lowercase;
     min-height: 50px; 
@@ -70,7 +69,6 @@ nav.fixed-nav-bar {
 nav ul {
     padding: 13px;
     margin: auto;
-    /*margin-left: 80px;*/
     list-style: none;
     position: relative;
     display: inline-block;
@@ -87,7 +85,7 @@ nav ul ul {
     display: none;
     position: absolute;
     left: 0;
-    width: 124px;
+    width: 128px;
     margin-left: -18px;
     }
     
@@ -118,7 +116,7 @@ nav ul ul li:hover {
 /* Main -------------------------------------------------------------------------------------- */
 
 div.stats {
-    font-size: 18px;
+    font-size: 19px;
     text-align: left;
     line-height: 40px;
     margin-left: 10%;
@@ -138,7 +136,7 @@ div.doc-title {
     }
 
 div.doc-text {
-    font-size: 20px;
+    font-size: 22px;
     line-height: 144%;
     width: 60%;
     margin: 20px auto;
@@ -166,10 +164,7 @@ a.word {
 
 span.punct {
     color: #4D4D4D;
-    /* color: #666666;*/
     font-weight: bold;
-    /*background: #F0F8FF;*/
-    /*background: #FAFDFF;*/
     }
 
 a.word:hover {
@@ -178,7 +173,7 @@ a.word:hover {
     }
 
 .good {
-    background: #F0F8FF;
+    background: #D1EDFF;
     }
 
 .bad {
@@ -186,7 +181,7 @@ a.word:hover {
     }
 
 .compound {
-    border-bottom: 1px #FF7F50 dashed;
+    border-bottom: 2px #FF7F50 dashed;
     }
 
 /* Modal -------------------- */
