@@ -279,7 +279,10 @@ class Document(db.Model):
                 if t == u'.':
                     html += u'<br><br>'
 
-        html = html[:-8] + u'</div>'  # fencepost
+        if html.endswith(u'<br><br>'):
+            html = html[:-8]  # fencepost
+
+        html += u'</div>'
 
         return html
 
