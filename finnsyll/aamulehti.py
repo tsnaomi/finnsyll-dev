@@ -5,8 +5,6 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 
-from timeit import timeit
-
 
 # word forms estimate: 986000 (exluding unseen lemmas)
 
@@ -15,7 +13,8 @@ invalid_types = ['Delimiter', 'Abbrev', 'Code']
 
 
 def isalpha(word):
-    return all([1 if i in characters else 0 for i in word])
+    if word != word.upper():  # NOTE
+        return all([1 if i in characters else 0 for i in word])
 
 
 def find_token(orth, lemma=None, msd=None, pos=None):
@@ -32,21 +31,24 @@ def find_token(orth, lemma=None, msd=None, pos=None):
         return None
 
 
-def populate_db_from_aamulehti_1999(DIR=None):
+def populate_db_from_aamulehti_1999(DIR):
+    if not DIR:
+        raise ValueError('Please specify a directory.')
+
     for tup in os.walk('../aamulehti-1999'):
         dirpath, dirname, filenames = tup
 
         if dirpath == '../aamulehti-1999':
             continue
 
-        if DIR and not dirpath.endswith(DIR):
+        if not dirpath.endswith(DIR):
             continue
 
         for f in filenames:
             filepath = dirpath + '/' + f
             decode_xml_file(f, filepath)
 
-            break  # TODO
+            # break
 
         print dirpath
 
@@ -68,9 +70,6 @@ def decode_xml_file(filename, filepath):
             msd = w.attrib['msd']
             pos = w.attrib['type']
             t = w.text or ''
-
-            if t == t.upper():  # NOTE
-                continue
 
             # ignore null lemmas, null types, and illegal characters and types
             if all([t, lemma, msd, pos, isalpha(t), pos not in invalid_types]):
@@ -137,15 +136,7 @@ def syllabify_unseen_lemmas():
 
 if __name__ == '__main__':
     DIR = sys.argv[1] if sys.argv[1:] else None
+    populate_db_from_aamulehti_1999(DIR=DIR)
 
-    test_time = timeit(
-        'populate_db_from_aamulehti_1999(DIR=DIR)',
-        setup='from __main__ import populate_db_from_aamulehti_1999, DIR',
-        number=1,
-        )
-
-    corpus_time = round((((test_time / 12.0) * 61529.0) / 60) / 60, 2)
-    test_time = round(test_time, 2)
-
-    print 'test time: %s seconds' % str(test_time)  # 46.21
-    print 'estimated corpus time: %s hours' % str(corpus_time)  # 65.82
+    # test time: 44.73 seconds
+    # estimated corpus time: 63.70 hours
