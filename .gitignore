@@ -6,6 +6,5 @@ aamulehti-1999/
 migrations/
 syllabifier/falk
 
-finnsyll_config.py
 start.py
 start.txt
