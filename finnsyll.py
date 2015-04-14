@@ -254,7 +254,7 @@ class Document(db.Model):
                     gold_class(word),
                     word.test_syll,
                     word.applied_rules,
-                    word.syll,
+                    word.syll or word.test_syll,
                     word.alt_syll1,
                     word.alt_syll2,
                     word.alt_syll3,
