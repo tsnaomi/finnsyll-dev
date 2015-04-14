@@ -28,8 +28,6 @@
                     </ul>
                     <span class="bar">|</span>
                 </li>
-                <li><a href="{{ url_for('unverified_view') }}" class="nav {% if kw == 'unverified' %}highlight{% endif %}">Unverified</a> <span class="bar">|</span></li>
-                <li><a href="{{ url_for('good_view') }}" class="nav {% if kw == 'good' %}highlight{% endif %}">Good</a> <span class="bar">|</span></li>
                 <li><a href="{{ url_for('bad_view') }}" class="nav {% if kw == 'bad' %}highlight{% endif %}">Bad</a> <span class="bar">|</span></li>
                 <li><a href="{{ url_for('logout_view') }}" class="nav">Sign Out</a></li>
             </ul>

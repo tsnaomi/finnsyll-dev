@@ -48,6 +48,7 @@ li a:hover {
 
 nav.fixed-nav-bar {
     font-size: 18px;
+    /*text-align: left;*/
     text-align: center;
     text-transform: lowercase;
     min-height: 50px; 
@@ -69,6 +70,7 @@ nav.fixed-nav-bar {
 nav ul {
     padding: 13px;
     margin: auto;
+    /*margin-left: 80px;*/
     list-style: none;
     position: relative;
     display: inline-block;
@@ -117,8 +119,9 @@ nav ul ul li:hover {
 
 div.stats {
     font-size: 18px;
-    text-align: center;
+    text-align: left;
     line-height: 40px;
+    margin-left: 10%;
     }
 
 /* Doc --------------------------------------------------------------------------------------- */

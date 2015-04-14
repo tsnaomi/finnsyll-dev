@@ -477,44 +477,6 @@ def approve_doc_view(id):
     return redirect(url_for('doc_view', id=id))
 
 
-@app.route('/unverified', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/unverified/page/<int:page>')
-@login_required
-def unverified_view(page):
-    '''List all unverified Tokens and process corrections.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
-    tokens = get_unverified_tokens()
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='unverified',
-        pagination=pagination,
-        )
-
-
-@app.route('/good', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/good/page/<int:page>')
-@login_required
-def good_view(page):
-    '''List all correctly syllabified Tokens and process corrections.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
-    tokens = get_good_tokens()
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='good',
-        pagination=pagination,
-        )
-
-
 @app.route('/bad', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/bad/page/<int:page>')
 def bad_view(page):
