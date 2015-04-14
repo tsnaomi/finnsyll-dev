@@ -13,7 +13,7 @@ invalid_types = ['Delimiter', 'Abbrev', 'Code']
 
 
 def isalpha(word):
-    if word != word.upper():  # NOTE
+    if word != word.upper():
         return all([1 if i in characters else 0 for i in word])
 
 
