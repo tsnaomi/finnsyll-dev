@@ -3,9 +3,9 @@
 research/
 aamulehti-1999/
 
-finnsyll/migrations/
-finnsyll/syllabifier/falk
+migrations/
+syllabifier/falk
 
-finnsyll/finnsyll_config.py
-finnsyll/start.py
-finnsyll/start.txt
+finnsyll_config.py
+start.py
+start.txt
