@@ -141,3 +141,5 @@ if __name__ == '__main__':
 
     # test time: 44.73 seconds
     # estimated corpus time: 63.70 hours
+
+    # last loaded doc: al4586.xml
