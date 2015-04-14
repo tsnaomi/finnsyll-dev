@@ -34,7 +34,7 @@
 
         <form class='doc-tokens' method='POST' onsubmit="window.location.assign('#close')">
 
-            <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+            <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'><br>
 
             <span class='modal-label'>Orthography: </span>
             <input type='text' id='orth' name='orth' class='orth' value=''><br>
