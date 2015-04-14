@@ -217,7 +217,6 @@ class Document(db.Model):
         'Token',
         secondary=DocTokens,
         backref=db.backref('documents', lazy='dynamic'),
-        # order_by='',  # self.tokens.filter_by(is_gold=None).count()
         )
 
     def __init__(self, filename, tokenized_text):
@@ -286,24 +285,13 @@ class Document(db.Model):
 
         return html
 
-    def query_tokens(self):
-        '''Return a list of the Tokens that appear in the text.'''
-        # tokens = []
-
-        # for ID in self.tokens:
-        #     token = Token.query.get(ID)
-        #     tokens.append(token)
-
-        # return tokens
-        return Token.query.filter(Token.documents.any(id=self.id)).all()
-
     def verify_all_unverified_tokens(self):
         '''For all of the text's unverified Tokens, set syll equal to test_syll.
 
         This function is intended for when all uverified Tokens have been
         correctly syllabified in test_syll. Proceed with caution.
         '''
-        tokens = self.query_tokens()
+        tokens = self.tokens
 
         for token in tokens:
             if token.is_gold is None:
@@ -314,7 +302,7 @@ class Document(db.Model):
 
     def update_document_review(self):
         '''Set reviewed to True if all of the Tokens have been verified.'''
-        tokens = self.query_tokens()
+        tokens = self.tokens
         unverified_count = 0
 
         for t in tokens:
