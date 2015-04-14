@@ -356,19 +356,23 @@ def get_unverified_tokens():
     return Token.query.filter_by(is_gold=None).order_by(Token.lemma)
 
 
-def get_unreviewed_documents():
+def get_unreviewed_documents():  # OPTIMIZE
     '''Return all unreviewed documents.'''
     # order documents by # of tokens left to review (descending)
-    query = (db.session.query(
-        Document,
-        func.count(Token.id).label('total')
-        ).join(DocTokens).join(Token)
-        .filter(Token.is_gold.is_(None))
-        .group_by(Document)
-        .order_by('total DESC')
-        ).limit(10)
+    # sadly, too slow...
 
-    query = [i[0] for i in query]
+    # query = (db.session.query(
+    #     Document,
+    #     func.count(Token.id).label('total')
+    #     ).join(DocTokens).join(Token)
+    #     .filter(Token.is_gold.is_(None))
+    #     .group_by(Document)
+    #     .order_by('total DESC')
+    #     ).limit(10)
+
+    # query = [i[0] for i in query]
+
+    query = Document.query.limit(10)
 
     return query
 
