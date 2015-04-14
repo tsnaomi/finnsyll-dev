@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 
 
 # word forms estimate: 986000 (exluding unseen lemmas)
+# xml files: 61,529
 
 characters = u'aAbBcCDdeEfFGgHhiIjJkKLlMmnNoOpPqQRrSsTtUuVvWwxXyYzZ -äöÄÖ'
 invalid_types = ['Delimiter', 'Abbrev', 'Code']
