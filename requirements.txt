@@ -10,6 +10,7 @@ MarkupSafe==0.23
 SQLAlchemy==0.9.8
 Werkzeug==0.10
 alembic==0.7.4
+gunicorn==19.3.0
 itsdangerous==0.24
 psycopg2==2.5.4
 py-bcrypt==0.4
