@@ -73,8 +73,7 @@ def decode_xml_file(filename, filepath):
             t = w.text or ''
 
             # ignore null lemmas, null types, and illegal characters and types
-            if all([t, lemma, msd, pos, isalpha(t), pos not in invalid_types]):
-
+            if all([t, lemma, pos, isalpha(t), pos not in invalid_types]):
                 # convert words that are not proper nouns into lowercase
                 t = t.lower() if pos != 'Proper' else t
                 lemma = lemma.lower() if pos != 'Proper' else lemma
