@@ -1,0 +1,1 @@
+web: gunicorn finnsyll/finnsyll:app
