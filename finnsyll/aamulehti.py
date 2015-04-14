@@ -5,6 +5,8 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 
+from timeit import timeit
+
 
 # word forms estimate: 986000 (exluding unseen lemmas)
 
@@ -30,21 +32,25 @@ def find_token(orth, lemma=None, msd=None, pos=None):
         return None
 
 
-def populate_db_from_aamulehti_1999(test=False):
+def populate_db_from_aamulehti_1999(DIR=None):
     for tup in os.walk('../aamulehti-1999'):
         dirpath, dirname, filenames = tup
 
         if dirpath == '../aamulehti-1999':
             continue
 
+        if DIR and not dirpath.endswith(DIR):
+            continue
+
         for f in filenames:
             filepath = dirpath + '/' + f
             decode_xml_file(f, filepath)
 
-            if test:
-                break
+            break  # TODO
 
         print dirpath
+
+    finnsyll.db.session.commit()
 
     print '%s tokens' % finnsyll.Token.query.count()
 
@@ -62,6 +68,9 @@ def decode_xml_file(filename, filepath):
             msd = w.attrib['msd']
             pos = w.attrib['type']
             t = w.text or ''
+
+            if t == t.upper():  # NOTE
+                continue
 
             # ignore null lemmas, null types, and illegal characters and types
             if all([t, lemma, msd, pos, isalpha(t), pos not in invalid_types]):
@@ -83,9 +92,8 @@ def decode_xml_file(filename, filepath):
                 word.freq += 1
 
                 finnsyll.db.session.add(word)
-                finnsyll.db.session.commit()
 
-                tokens.add(word.id)
+                tokens.add(word)
                 tokenized_text.append(word.id)
 
             # keep punctuation, acronyms, and numbers as strings
@@ -93,10 +101,13 @@ def decode_xml_file(filename, filepath):
                 tokenized_text.append(t)
 
         # create document instance
-        doc = finnsyll.Document(filename, list(tokens), tokenized_text)
-        finnsyll.db.session.add(doc)
+        doc = finnsyll.Document(filename, tokenized_text)
 
-        finnsyll.db.session.commit()
+        # add related objects
+        for word in tokens:
+            doc.tokens.append(word)
+
+        finnsyll.db.session.add(doc)
 
     except Exception as E:
         print filename, E
@@ -125,5 +136,16 @@ def syllabify_unseen_lemmas():
 
 
 if __name__ == '__main__':
-    test = True if '-test' in sys.argv[1:] else False
-    populate_db_from_aamulehti_1999(test=test)
+    DIR = sys.argv[1] if sys.argv[1:] else None
+
+    test_time = timeit(
+        'populate_db_from_aamulehti_1999(DIR=DIR)',
+        setup='from __main__ import populate_db_from_aamulehti_1999, DIR',
+        number=1,
+        )
+
+    corpus_time = round((((test_time / 12.0) * 61529.0) / 60) / 60, 2)
+    test_time = round(test_time, 2)
+
+    print 'test time: %s seconds' % str(test_time)  # 46.21
+    print 'estimated corpus time: %s hours' % str(corpus_time)  # 65.82

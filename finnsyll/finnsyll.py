@@ -17,6 +17,7 @@ from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
 from math import ceil
+from sqlalchemy import func
 from syllabifier.phonology import get_sonorities, get_weights
 from syllabifier.v2 import syllabify
 
@@ -38,6 +39,13 @@ flask_bcrypt = Bcrypt(app)
 
 
 # Models ----------------------------------------------------------------------
+
+DocTokens = db.Table(
+    'DocTokens',
+    db.Column('token_id', db.Integer, db.ForeignKey('Token.id')),
+    db.Column('document_id', db.Integer, db.ForeignKey('Document.id')),
+    )
+
 
 class Linguist(db.Model):
     __tablename__ = 'Linguist'
@@ -199,23 +207,22 @@ class Document(db.Model):
     # the name of the xml file in the Aamulehti-1999 corpus
     filename = db.Column(db.Text, unique=True)
 
-    # a list of IDs for each word as they appear in the text
-    tokens = db.Column(db.PickleType)
+    # a boolean indicating if all of the document's words have been reviewed
+    reviewed = db.Column(db.Boolean, default=False)
 
     # the text as a tokenized list, incl. Token IDs and punctuation strings
     tokenized_text = db.Column(db.PickleType)
 
-    # a boolean indicating if all of the document's words have been reviewed
-    reviewed = db.Column(db.Boolean, default=False)
+    tokens = db.relationship(
+        'Token',
+        secondary=DocTokens,
+        backref=db.backref('documents', lazy='dynamic'),
+        # order_by='',  # self.tokens.filter_by(is_gold=None).count()
+        )
 
-    # number of unique Tokens that appear in the text
-    unique_count = db.Column(db.Integer)
-
-    def __init__(self, filename, tokens, tokenized_text):
+    def __init__(self, filename, tokenized_text):
         self.filename = filename
-        self.tokens = tokens
         self.tokenized_text = tokenized_text
-        self.unique_count = len(tokens)
 
     def __repr__(self):
         return self.filename
@@ -278,13 +285,14 @@ class Document(db.Model):
 
     def query_tokens(self):
         '''Return a list of the Tokens that appear in the text.'''
-        tokens = []
+        # tokens = []
 
-        for ID in self.tokens:
-            token = Token.query.get(ID)
-            tokens.append(token)
+        # for ID in self.tokens:
+        #     token = Token.query.get(ID)
+        #     tokens.append(token)
 
-        return tokens
+        # return tokens
+        return Token.query.filter(Token.documents.any(id=self.id)).all()
 
     def verify_all_unverified_tokens(self):
         '''For all of the text's unverified Tokens, set syll equal to test_syll.
@@ -331,14 +339,6 @@ def syllabify_tokens():
         token.syllabify()
 
 
-def update_document_reviews():
-    '''Mark Documents as reviewed if all of their Tokens have been verified.'''
-    docs = Document.query.filter_by(reviewed=False)
-
-    for doc in docs:
-        doc.update_document_review()
-
-
 def find_token(orth):
     '''Retrieve token by its orthography.'''
     try:
@@ -367,10 +367,19 @@ def get_unverified_tokens():
 
 def get_unreviewed_documents():
     '''Return all unreviewed documents.'''
-    docs = Document.query.filter_by(reviewed=False)
-    docs = docs.order_by(Document.unique_count.desc()).limit(10)
+    # order documents by # of tokens left to review (descending)
+    query = (db.session.query(
+        Document,
+        func.count(Token.id).label('total')
+        ).join(DocTokens).join(Token)
+        .filter(Token.is_gold.is_(None))
+        .group_by(Document)
+        .order_by('total DESC')
+        ).limit(10)
 
-    return docs
+    query = [i[0] for i in query]
+
+    return query
 
 
 def get_numbers():
