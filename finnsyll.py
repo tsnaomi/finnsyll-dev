@@ -17,7 +17,6 @@ from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
 from math import ceil
-from sqlalchemy import func
 from syllabifier.phonology import get_sonorities, get_weights
 from syllabifier.v2 import syllabify
 
