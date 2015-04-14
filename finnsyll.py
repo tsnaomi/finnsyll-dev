@@ -361,18 +361,18 @@ def get_unreviewed_documents():  # OPTIMIZE
     # order documents by # of tokens left to review (descending)
     # sadly, too slow...
 
-    # query = (db.session.query(
-    #     Document,
-    #     func.count(Token.id).label('total')
-    #     ).join(DocTokens).join(Token)
-    #     .filter(Token.is_gold.is_(None))
-    #     .group_by(Document)
-    #     .order_by('total DESC')
-    #     ).limit(10)
+    query = (db.session.query(
+        Document,
+        func.count(Token.id).label('total')
+        ).join(DocTokens).join(Token)
+        .filter(Token.is_gold.is_(None))
+        .group_by(Document)
+        .order_by('total DESC')
+        ).limit(10)
 
-    # query = [i[0] for i in query]
+    query = [i[0] for i in query]
 
-    query = Document.query.limit(10)
+    # query = Document.query.limit(10)
 
     return query
 
