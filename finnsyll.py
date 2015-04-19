@@ -103,15 +103,12 @@ class Token(db.Model):
     # a boolean indicating if the algorithm has estimated correctly
     is_gold = db.Column(db.Boolean, default=None)
 
-    def __init__(self, orth):
+    def __init__(self, orth, lemma, msd, pos, freq):
         self.orth = orth
-
-        # convert orth to Unicode prior to syllabifications
-        db.session.add(self)
-        db.session.commit()
-
-        # populate self.test_syll
-        self.syllabify()
+        self.lemma = lemma
+        self.msd = msd
+        self.pos = pos
+        self.freq = freq
 
     def __repr__(self):
         return self.orth
@@ -144,7 +141,7 @@ class Token(db.Model):
 
     def is_lemma(self):
         '''Return True if the word is in its citation form, else False.'''
-        return self.orth.lower() == self.lemma.lower()
+        return self.orth.lower() == self.lemma.replace('_', ' ').lower()
 
     # Syllabification methods -------------------------------------------------
 
@@ -188,7 +185,7 @@ class Token(db.Model):
             if hasattr(self, attr):
                 setattr(self, attr, value)
 
-        db.session.commit()
+        # db.session.commit()  # TODO
         self.update_gold()
 
 
@@ -332,6 +329,8 @@ def syllabify_tokens():
 
     for token in tokens:
         token.syllabify()
+
+    db.session.commit()
 
 
 def find_token(orth):

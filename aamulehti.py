@@ -21,10 +21,10 @@ TOKENS = []
 
 
 def populate_db_tokens_from_aamulehti_1999():
-    for tup in os.walk('../finnsyll/aamulehti-1999'):
+    for tup in os.walk('aamulehti-1999'):
         dirpath, dirname, filenames = tup
 
-        if dirpath == '../finnsyll/aamulehti-1999':
+        if dirpath == 'aamulehti-1999':
             continue
 
         for f in filenames:
@@ -100,10 +100,10 @@ INDICES = {}
 def populate_db_docs_from_aamulehti_1999():
     collect_token_ids()
 
-    for tup in os.walk('../finnsyll/aamulehti-1999'):
+    for tup in os.walk('aamulehti-1999'):
         dirpath, dirname, filenames = tup
 
-        if dirpath == '../finnsyll/aamulehti-1999':
+        if dirpath == 'aamulehti-1999':
             continue
 
         for f in filenames:
@@ -183,9 +183,8 @@ def syllabify_unseen_lemmas():
 
     # create Tokens for unseen lemmas
     for t in unseen:
-        word = finn.Token(t[0].replace('_', ' '))
-        word.lemma = t[0]
-        word.pos = t[1]
+        word = finn.Token(t[0].replace('_', ' '), t[0], '', t[1], 0)
+        word.syllabify()
         finn.db.session.add(word)
         finn.db.session.commit()
 
