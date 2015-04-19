@@ -2,7 +2,7 @@ import os
 
 from datetime import timedelta
 
-local_database = 'postgresql:///finnsyll'
+local_database = 'postgresql:///aamulehti'
 
 PERMANENT_SESSION_LIFETIME = timedelta(days=4)
 SECRET_KEY = os.environ.get('SECRET_KEY') or '31415926535'

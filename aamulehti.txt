@@ -1,0 +1,8 @@
+rm nohup.out
+rm -rf migrations
+dropdb aamulehti
+createdb aamulehti
+python finnsyll.py db init
+python finnsyll.py db migrate
+python finnsyll.py db upgrade
+nohup python aamulehti.py &
