@@ -369,6 +369,11 @@ def get_unverified_tokens():
     return Token.query.filter_by(is_gold=None).order_by(Token.lemma)
 
 
+def get_unseen_lemmas():
+    '''Return unseen lemmas with uncertain syllabfications.'''
+    return Token.query.filter_by(freq=0).order_by(Token.lemma)
+
+
 def get_unreviewed_documents():
     '''Return all unreviewed documents.'''
     docs = Document.query.filter_by(reviewed=False)
@@ -508,6 +513,24 @@ def bad_view(page):
         'tokens.html',
         tokens=tokens,
         kw='bad',
+        pagination=pagination,
+        )
+
+
+@app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/lemma/page/<int:page>')
+def lemma_view(page):
+    '''List all unverified unseen lemmas and process corrections.'''
+    if request.method == 'POST':
+        apply_form(request.form)
+
+    tokens = get_unseen_lemmas()
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='lemma',
         pagination=pagination,
         )
 
