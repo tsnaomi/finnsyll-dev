@@ -5,9 +5,8 @@ import os
 import xml.etree.ElementTree as ET
 
 from collections import Counter, namedtuple
-from timeit import timeit
 
-# word forms estimate: 986000 (exluding unseen lemmas)
+# word forms: 991730 (exluding unseen lemmas)
 # xml files: 61,529
 
 
@@ -189,28 +188,11 @@ def syllabify_unseen_lemmas():
         finn.db.session.commit()
 
 
-# Timeit ----------------------------------------------------------------------
-
-def timeit_test(Tokens=True):
-    t = 'tokens' if Tokens else 'docs'
-
-    test_time = timeit(
-        'populate_db_%s_from_aamulehti_1999()' % t,
-        setup='from __main__ import populate_db_%s_from_aamulehti_1999' % t,
-        number=1,
-        )
-
-    corpus_time = round((((test_time / 12.0) * 61529.0) / 60) / 60, 2)
-    test_time = round(test_time, 2)
-
-    print 'test time: %s seconds' % str(test_time)
-    print 'estimated corpus time: %s hours' % str(corpus_time)  # 4.62 + 3.97
-
+# -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    # populate_db_tokens_from_aamulehti_1999()
-    # populate_db_docs_from_aamulehti_1999()
+    # populate_db_tokens_from_aamulehti_1999()  # 13114.48 seconds
+    # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
 
-    timeit_test()
-    timeit_test(Tokens=False)
+    pass
