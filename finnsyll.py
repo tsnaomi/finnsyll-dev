@@ -239,9 +239,11 @@ class Document(db.Model):
             if isinstance(t, int):
                 word = Token.query.get(t)
                 html += u' <a href="#modal"'
+
                 html += (
                     u' onclick="populatemodal(\'%s\', \'%s\', \'%s\', \'%s\','
-                    u' \'%s\', \'%s\', \'%s\', \'%s\', \'%s\');"') % (
+                    u' \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\');"') % (
+                    word.id,
                     word.orth,
                     gold_class(word),
                     word.test_syll,
@@ -442,7 +444,7 @@ def apply_form(http_form):
         alt_syll3 = http_form['alt_syll3'] or ''
         is_compound = bool(http_form.getlist('is_compound'))
         is_stopword = bool(http_form.getlist('is_stopword'))
-        token = find_token(orth)
+        token = Token.query.get(http_form['find'])
 
         token.correct(
             orth=orth,

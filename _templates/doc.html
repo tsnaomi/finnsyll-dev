@@ -62,6 +62,8 @@
             <span class='modal-label'>Compound:</span>
             <input type='checkbox' id='compound' name='is_compound' value=1 ><br><br>
 
+            <input type='hidden' name='find' id='find' value=''><br>
+
             <input type='submit' class='OK' value='OK!'><br>
 
         </form>
@@ -71,7 +73,7 @@
 <!-- /Modal -->
 
 <script>
-    function populatemodal(orth, gold, test, rules, syll, alt1, alt2, alt3, compound) {
+    function populatemodal(find, orth, gold, test, rules, syll, alt1, alt2, alt3, compound) {
         $('#orth').val(orth);
         $('#test').val(test);
         $('#test').addClass(gold);
@@ -80,10 +82,12 @@
         $('#alt1').val(alt1);
         $('#alt2').val(alt2);
         $('#alt3').val(alt3);
+        $('#find').val(find);
         if (compound == 'checked') {
              $('#compound').prop('checked', true);
         }
     }
 </script>
+
 
 {% endblock %}

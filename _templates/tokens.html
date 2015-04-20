@@ -38,6 +38,7 @@
         <input type='text' name='alt_syll3' class='okii' value='{{ token.alt_syll3 }}'>
         <input type='checkbox' name='is_compound' class='chisaii' value=1 {% if token.is_compound %}checked{% endif %}>
         <input type='submit' class='OK' class='chisaii' value='OK!'>
+        <input type='hidden' name='find' id='find' value={{ token.id }}><br>
     </form>
 
     {% endfor %}
