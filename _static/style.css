@@ -327,11 +327,11 @@ a.word:hover {
     font-size: 15px;
     font-style: italic;
     text-transform: capitalize;
-    margin-top: -6px;
+    margin-top: -7.5px;
     margin-left: 20px;
     padding: 20px 20px 48px 44px;
     background-color: #fff;
-    border-top: 1px #E6E6E6 solid;
+    border-top: 1px #fff solid;
     }
 
 .table-header > span.okii {

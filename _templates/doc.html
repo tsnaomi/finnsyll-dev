@@ -18,7 +18,7 @@
 
         <a 
             href='#modal' 
-            onclick="populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.test_syll }}', '{{ t.sonorities }}', '{{ t.weights }}', '{{ t.applied_rules }}', '{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}', '{% if t.is_stopword %}checked{% else %} {% endif %}');"
+            onclick="populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.test_syll }}', '{{ t.applied_rules }}', '{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}');"
             class='
                 word
                 {{ t|goldclass }}

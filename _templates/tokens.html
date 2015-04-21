@@ -30,7 +30,7 @@
     <form class='tokens' method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
         <input type='hidden' id='active{{ loop.index }}' name='active' value={% if token.active %}1{% endif %}>
-        <input type='text' name='orth' class='okii orth' value='{{ token.orth }}' title='Rules: {{ token.applied_rules }}&#10;&#10;Lemma: {{ token.lemma }}&#10;&#10;Part of speech: {{ token.pos }}&#10;&#10;Morpho-syntactic description: {{ token.msd }}&#10;&#10;Sonority: {{ token.sonorities }}&#10;&#10;Weight: {{ token.weights }}'readonly>
+        <input type='text' name='orth' class='okii orth' value='{{ token.orth }}' title='Rules: {{ token.applied_rules }}&#10;&#10;Lemma: {{ token.lemma }}&#10;&#10;Part of speech: {{ token.pos }}&#10;&#10;Morpho-syntactic description: {{ token.msd }}&#10;&#10;Sonority: {{ token.sonorities }}&#10;&#10;Weight: {{ token.weights }}' readonly>
         <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' readonly>
         <input type='text' name='syll' class='okii' value='{{ token.syll }}'>
         <input type='text' name='alt_syll1' class='okii' value='{{ token.alt_syll1 }}'>
