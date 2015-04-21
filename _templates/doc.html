@@ -6,12 +6,12 @@
 <script>
     {% if scroll %}
         $(document).ready(function () {
-            $('html, body').scrollTop( $('#{{ scroll }}').offset().top -200, 'fast'
+            $('html, body').scrollTop( $('#{{ scroll }}').offset().top -180, 'fast'
             );
         });
     {% endif %}
     function Scroll() {
-        $('html, body').scrollTop( $(window.backwards).offset().top -200, 'fast'
+        $('html, body').scrollTop( $(window.backwards).offset().top -180, 'fast'
         );
     };
 </script>
@@ -25,6 +25,57 @@
 <br>
 
 <div class="doc-text">
+
+    <!-- Modal -->
+    <div class='modal' id='modal' aria-hidden='true'>
+      <div class='modal-dialog'>
+
+        <div class='modal-header'>
+          <a href='#close' class='btn-close' onclick='Scroll()' aria-hidden='true'>x</a>
+        </div>
+
+        <div class='modal-body'>
+
+            <form class='doc-tokens' method='POST' onsubmit="window.location.assign('#close')">
+
+                <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'><br>
+
+                <span class='modal-label'>Orthography: </span>
+                <input type='text' id='orth' name='orth' class='orth' value=''><br>
+
+                <span class='modal-label'>Test Syll: </span>
+                <input type='text' id='test' name='test_syll' class='' value='' readonly='True' title=''><br>
+
+                <span class='modal-label'>Rules:
+                    <span class='rules' id='rules'></span>
+                </span><br><br>
+
+                <span class='modal-label'>Correct Syll: </span>
+                <input type='text' id='syll' name='syll' placeholder='correct syll' value=''><br>
+
+                <span class='modal-label'>Alt Syll 1: </span>
+                <input type='text' id='alt1' name='alt_syll1' placeholder='alternative syll 1' value=''><br>
+
+                <span class='modal-label'>Alt Syll 2: </span>
+                <input type='text' id='alt2' name='alt_syll2' placeholder='alternative syll 2' value=''><br>
+
+                <span class='modal-label'>Alt Syll 3: </span>
+                <input type='text' id='alt3' name='alt_syll3' placeholder='alternative syll 3' value=''><br>
+
+                <span class='modal-label'>Compound:</span>
+                <input type='checkbox' id='compound' name='is_compound' value=1 ><br><br>
+
+                <input type='hidden' name='find' id='find' value=''>
+                <input type='hidden' name='scroll' id='scroll' value=''>
+
+                <input type='submit' class='OK' value='OK!'><br>
+
+            </form>
+        </div>
+      </div>
+    </div>
+    <!-- /Modal -->
+
 {% for t in TEXT %}
 
     {% if t is token %}
@@ -60,56 +111,6 @@
 </form>
 {% endif %}
 
-
-<!-- Modal -->
-<div class='modal' id='modal' aria-hidden='true'>
-  <div class='modal-dialog'>
-
-    <div class='modal-header'>
-      <a href='#close' class='btn-close' onclick='Scroll()' aria-hidden='true'>x</a>
-    </div>
-
-    <div class='modal-body'>
-
-        <form class='doc-tokens' method='POST' onsubmit="window.location.assign('#close')">
-
-            <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'><br>
-
-            <span class='modal-label'>Orthography: </span>
-            <input type='text' id='orth' name='orth' class='orth' value=''><br>
-
-            <span class='modal-label'>Test Syll: </span>
-            <input type='text' id='test' name='test_syll' class='' value='' readonly='True' title=''><br>
-
-            <span class='modal-label'>Rules:
-                <span class='rules' id='rules'></span>
-            </span><br><br>
-
-            <span class='modal-label'>Correct Syll: </span>
-            <input type='text' id='syll' name='syll' placeholder='correct syll' value=''><br>
-
-            <span class='modal-label'>Alt Syll 1: </span>
-            <input type='text' id='alt1' name='alt_syll1' placeholder='alternative syll 1' value=''><br>
-
-            <span class='modal-label'>Alt Syll 2: </span>
-            <input type='text' id='alt2' name='alt_syll2' placeholder='alternative syll 2' value=''><br>
-
-            <span class='modal-label'>Alt Syll 3: </span>
-            <input type='text' id='alt3' name='alt_syll3' placeholder='alternative syll 3' value=''><br>
-
-            <span class='modal-label'>Compound:</span>
-            <input type='checkbox' id='compound' name='is_compound' value=1 ><br><br>
-
-            <input type='hidden' name='find' id='find' value=''>
-            <input type='hidden' name='scroll' id='scroll' value=''>
-
-            <input type='submit' class='OK' value='OK!'><br>
-
-        </form>
-    </div>
-  </div>
-</div>
-<!-- /Modal -->
 
 <script>
     function populatemodal(find, orth, gold, test, rules, syll, alt1, alt2, alt3, compound, scroll) {
