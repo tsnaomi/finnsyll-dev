@@ -6,13 +6,12 @@
 <script>
     {% if scroll %}
         $(document).ready(function () {
-            $('html, body').scrollTop( $('#{{ scroll }}').offset().top -100, 'fast'
+            $('html, body').scrollTop( $('#{{ scroll }}').offset().top -200, 'fast'
             );
         });
     {% endif %}
     function Scroll() {
-        $('html, body').scrollTop( $(window.backwards).offset().top -100,
-            'fast'
+        $('html, body').scrollTop( $(window.backwards).offset().top -200, 'fast'
         );
     };
 </script>
