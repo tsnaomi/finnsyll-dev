@@ -441,7 +441,15 @@ def doc_view(id):
     doc = Document.query.get_or_404(id)
     TEXT = doc.query_document()
 
-    return render_template('doc.html', doc=doc, TEXT=TEXT, kw='doc')
+    scroll = request.form.get('scroll', None)
+
+    return render_template(
+        'doc.html',
+        doc=doc,
+        TEXT=TEXT,
+        kw='doc',
+        scroll=scroll,
+        )
 
 
 @app.route('/approve/approve/approve/doc/<id>', methods=['POST', ])

@@ -3,6 +3,15 @@
 {% block head %}
 <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
 <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+{% if scroll %}
+<script>
+    $(document).ready(function () {
+    $('html, body').animate({
+        scrollTop: $('#{{ scroll }}').offset().top -100
+    }, 'very fast');
+});
+</script>
+{% endif %}
 {% endblock %}
 
 {% block body %}
@@ -18,7 +27,8 @@
 
         <a 
             href='#modal' 
-            onclick="populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.test_syll }}', '{{ t.applied_rules }}', '{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}');"
+            onclick="populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.test_syll }}', '{{ t.applied_rules }}', '{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}', '{{ loop.index }}');"
+            id='{{ loop.index }}'
             class='
                 word
                 {{ t|goldclass }}
@@ -86,7 +96,8 @@
             <span class='modal-label'>Compound:</span>
             <input type='checkbox' id='compound' name='is_compound' value=1 ><br><br>
 
-            <input type='hidden' name='find' id='find' value=''><br>
+            <input type='hidden' name='find' id='find' value=''>
+            <input type='hidden' name='scroll' id='scroll' value=''>
 
             <input type='submit' class='OK' value='OK!'><br>
 
@@ -97,7 +108,7 @@
 <!-- /Modal -->
 
 <script>
-    function populatemodal(find, orth, gold, test, rules, syll, alt1, alt2, alt3, compound) {
+    function populatemodal(find, orth, gold, test, rules, syll, alt1, alt2, alt3, compound, scroll) {
         $('#orth').val(orth);
         $('#test').val(test);
         $('#test').addClass(gold);
@@ -107,6 +118,7 @@
         $('#alt2').val(alt2);
         $('#alt3').val(alt3);
         $('#find').val(find);
+        $('#scroll').val(scroll);
         if (compound == 'checked') {
              $('#compound').prop('checked', true);
         }
