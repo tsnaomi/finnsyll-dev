@@ -3,15 +3,20 @@
 {% block head %}
 <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
 <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-{% if scroll %}
 <script>
-    $(document).ready(function () {
-    $('html, body').animate({
-        scrollTop: $('#{{ scroll }}').offset().top -100
-    }, 'very fast');
-});
+    {% if scroll %}
+        $(document).ready(function () {
+            $('html, body').scrollTop( $('#{{ scroll }}').offset().top -100, 'fast'
+            );
+        });
+    {% endif %}
+    function Scroll() {
+        $('html, body').scrollTop( $(window.backwards).offset().top -100,
+            'fast'
+        );
+    };
 </script>
-{% endif %}
+
 {% endblock %}
 
 {% block body %}
@@ -62,7 +67,7 @@
   <div class='modal-dialog'>
 
     <div class='modal-header'>
-      <a href='#close' class='btn-close' aria-hidden='true'>x</a>
+      <a href='#close' class='btn-close' onclick='Scroll()' aria-hidden='true'>x</a>
     </div>
 
     <div class='modal-body'>
@@ -121,7 +126,8 @@
         $('#scroll').val(scroll);
         if (compound == 'checked') {
              $('#compound').prop('checked', true);
-        }
+        };
+        backwards = '#' + scroll;
     }
 </script>
 
