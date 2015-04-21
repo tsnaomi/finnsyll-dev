@@ -338,12 +338,16 @@ def get_numbers():
     '''Generate statistics.'''
 
     class Stats(object):
-        _token_count = Token.query.count()
+        # _token_count = Token.query.count()
+        # _doc_count = Document.query.count()
+
+        _token_count = 991730.0  # one less ping to the database
+        _doc_count = 61529.0  # one less ping to the database
+
         _verified = Token.query.filter(Token.is_gold.isnot(None)).count()
         _gold = Token.query.filter_by(is_gold=True).count()
         _accuracy = (float(_gold) / _verified) * 100 if _gold else 0
         _remaining = _token_count - _verified
-        _doc_count = Document.query.count()
         _reviewed = Document.query.filter_by(reviewed=True).count()
 
         token_count = format(_token_count, ',d')
