@@ -220,63 +220,15 @@ class Document(db.Model):
     def __unicode__(self):
         return self.__repr__()
 
-    def render_html(self):
-        '''Return text as an html string to be rendered on the frontend.
-
-        This html string includes a modal for each word in the text. Each modal
-        contains a form that will allow Arto to edit the word's Token, i.e.,
-        Token.syll, Token.alt_syll1-3, and Token.is_compound.
-        '''
-
-        def gold_class(word):
-            gold = word.is_gold
-            return 'good' if gold else 'unverified' if gold is None else 'bad'
-
-        html = u'<div class="doc-text">'
+    def query_document(self):
+        '''Return a list of Tokens and puncts as they appear in the text.'''
+        doc = []
 
         for t in self.tokenized_text:
+            t = Token.query.get(t) if isinstance(t, int) else t
+            doc.append(t)
 
-            if isinstance(t, int):
-                word = Token.query.get(t)
-                html += u' <a href="#modal"'
-
-                html += (
-                    u' onclick="populatemodal(\'%s\', \'%s\', \'%s\', \'%s\','
-                    u' \'%s\', \'%s\', \'%s\', \'%s\', \'%s\', \'%s\');"') % (
-                    word.id,
-                    word.orth,
-                    gold_class(word),
-                    word.test_syll,
-                    word.applied_rules,
-                    word.syll or word.test_syll,
-                    word.alt_syll1,
-                    word.alt_syll2,
-                    word.alt_syll3,
-                    word.is_compound,
-                    )
-
-                html += u' class="word %s' % gold_class(word)
-
-                if word.is_compound:
-                    html += u' compound'
-
-                if word.alt_syll1 or word.alt_syll2 or word.alt_syll3:
-                    html += u' alt'
-
-                html += u'"> %s </a>' % word.test_syll
-
-            else:
-                html += u'<span class="punct">%s</span>' % t
-
-                if t == u'.':
-                    html += u'<br><br>'
-
-        if html.endswith(u'<br><br>'):
-            html = html[:-8]  # fencepost
-
-        html += u'</div>'
-
-        return html
+        return doc
 
     def get_tokens(self):
         '''Return a list of the Tokens that appear in the text.'''
@@ -484,7 +436,7 @@ def doc_view(id):
         apply_form(request.form)
 
     doc = Document.query.get_or_404(id)
-    TEXT = doc.render_html()
+    TEXT = doc.query_document()
 
     return render_template('doc.html', doc=doc, TEXT=TEXT, kw='doc')
 
@@ -629,6 +581,17 @@ def url_for_other_page(page):
     return url_for(request.endpoint, **args)
 
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+
+
+# Jinja2 ----------------------------------------------------------------------
+
+def goldclass(t):
+    gold = t.is_gold
+    return u'good' if gold else u'unverified' if gold is None else u'bad'
+
+
+app.jinja_env.filters['goldclass'] = goldclass
+app.jinja_env.tests['token'] = lambda t: hasattr(t, 'syll')
 
 
 # -----------------------------------------------------------------------------

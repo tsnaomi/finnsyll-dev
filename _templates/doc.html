@@ -11,7 +11,31 @@
 
 <br>
 
-{{ TEXT|safe }}
+<div class="doc-text">
+{% for t in TEXT %}
+
+    {% if t is token %}
+
+        <a 
+            href='#modal' 
+            onclick="populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.test_syll }}', '{{ t.sonorities }}', '{{ t.weights }}', '{{ t.applied_rules }}', '{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}', '{% if t.is_stopword %}checked{% else %} {% endif %}');"
+            class='
+                word
+                {{ t|goldclass }}
+                {% if t.is_compound %} compound {% endif %}
+                {% if t.alt_syll1 or t.alt_syll2 or t.alt_syll3 %} alt {% endif %}
+                '> {{ t.test_syll }} </a>
+            
+    {% elif t == '.' %}
+        <br><br>
+
+    {% else %}
+        <span class='punct'>{{ t }}</span>
+
+    {% endif %}
+
+{% endfor %}
+</div>
 
 <br>
 
