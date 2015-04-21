@@ -340,9 +340,8 @@ def get_numbers():
     class Stats(object):
         # _token_count = Token.query.count()
         # _doc_count = Document.query.count()
-
-        _token_count = 991730.0  # one less ping to the database
-        _doc_count = 61529.0  # one less ping to the database
+        _token_count = 991730  # one less ping to the database
+        _doc_count = 61529  # one less ping to the database
 
         _verified = Token.query.filter(Token.is_gold.isnot(None)).count()
         _gold = Token.query.filter_by(is_gold=True).count()
