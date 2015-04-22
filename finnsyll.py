@@ -229,9 +229,7 @@ class Document(db.Model):
 
     def get_tokens(self):
         '''Return a list of the Tokens that appear in the text.'''
-        tokens = [Token.query.get(ID) for ID in self.tokens]
-
-        return tokens
+        return db.session.query(Token).filter(Token.id.in_(self.tokens)).all()
 
     def verify_all_unverified_tokens(self):
         '''For all of the text's unverified Tokens, set syll equal to test_syll.
