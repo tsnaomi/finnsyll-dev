@@ -122,12 +122,12 @@ class Token(db.Model):
     def syllable_count(self):
         '''Return the number of syllables the word contains.'''
         if self.syll:
-            return self.syll.count('.') + 1
+            return self.syll.count('.') + 1  # TODO
 
     @property
     def syllables(self):
         '''Return a list of the word's syllables.'''
-        return self.test_syll.split('.')
+        return self.test_syll.split('.')  # TODO
 
     @property
     def weights(self):
@@ -229,11 +229,7 @@ class Document(db.Model):
 
     def get_tokens(self):
         '''Return a list of the Tokens that appear in the text.'''
-        tokens = []
-
-        for ID in self.tokens:
-            token = Token.query.get(ID)
-            tokens.append(token)
+        tokens = [Token.query.get(ID) for ID in self.tokens]
 
         return tokens
 
@@ -260,6 +256,7 @@ class Document(db.Model):
         for t in tokens:
             if t.is_gold is None:
                 unverified_count += 1
+                break
 
         # if there are no unverified tokens but the document isn't marked as
         # reviewed, mark the document as reviewed; this would be the case if
@@ -596,7 +593,6 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 def goldclass(t):
     gold = t.is_gold
     return u'good' if gold else u'unverified' if gold is None else u'bad'
-
 
 app.jinja_env.filters['goldclass'] = goldclass
 app.jinja_env.tests['token'] = lambda t: hasattr(t, 'syll')
