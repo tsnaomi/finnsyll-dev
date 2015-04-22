@@ -222,11 +222,8 @@ class Document(db.Model):
 
     def query_document(self):
         '''Return a list of Tokens and puncts as they appear in the text.'''
-        doc = []
-
-        for t in self.tokenized_text:
-            t = Token.query.get(t) if isinstance(t, int) else t
-            doc.append(t)
+        tokens = {t.id: t for t in self.get_tokens()}
+        doc = [tokens.get(t, t) for t in self.tokenized_text]
 
         return doc
 

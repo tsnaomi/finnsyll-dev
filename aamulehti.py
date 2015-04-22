@@ -191,8 +191,8 @@ def syllabify_unseen_lemmas():
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    populate_db_tokens_from_aamulehti_1999()  # 13114.48 seconds
-    populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
+    # populate_db_tokens_from_aamulehti_1999()  # 13114.48 seconds
+    # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
 
     pass
