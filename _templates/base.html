@@ -1,9 +1,7 @@
 <!DOCTYPE html>
 
 <html lang='en'>
-
     <title>FinnSyll {% if config.TESTING %}- Development{% endif %}</title>
-
     <head>
         <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
         {% if config.TESTING %}
@@ -13,17 +11,15 @@
         {% endif %}
         {% block head %}{% endblock %}
     </head>
-
     <body>
-
         <nav class='fixed-nav-bar'>
             <ul>
                 <li><a href="{{ url_for('main_view') }}" class="nav {% if kw == 'main' %}highlight{% endif %}">Main &#8623;</a>
                     <ul>
                         {% for doc in docs %}
-                            <li><a href="{{ url_for('doc_view', id=doc.id) }}" class='doc-title'>{{ doc.filename }}</a></li>
+                        <li><a href="{{ url_for('doc_view', id=doc.id) }}" class='doc-title'>{{ doc.filename }}</a></li>
                         {% else %}
-                            <li class='no-docs'><a href="#">...</a></li>
+                        <li class='no-docs'><a href="#">...</a></li>
                         {% endfor %}
                     </ul>
                     <span class="bar">|</span>
@@ -34,18 +30,13 @@
             </ul>
             {% block toolbar %}{% endblock %}
         </nav>
-
         <br>
-
         <div class='block-body'>
             {% block body %}{% endblock %}
         </div>
-
         <br>
         <br>
         <br>
         <br>
-
     </body>
-
 </html>
