@@ -3,6 +3,8 @@
 {% block head %}
 <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
 <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='custombox.min.css') }}">
+<script src="{{ url_for('static', filename='custombox.min.js') }}"></script>
 {% if scroll %}
 <script>
     $(document).ready(function () {
@@ -15,10 +17,54 @@
 {% block body %}
 <div class='doc-title'>{{ doc.filename }}</div>
 <br>
-<div class="doc-text">   
+<div class="doc-text"> 
+    <!-- Modal -->
+    <div class='modal' id='modal' style='display: none;'>
+        <div class='modal-dialog'>
+            <div class='modal-header'>
+                <button type="button" class="btn-close" onclick="Custombox.close('first');">x</button>
+            </div>
+            <div class='modal-body'>
+                <form class='doc-tokens' method='POST' onsubmit="window.location.assign('#close')">
+                    <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+                    <br>
+                    <span class='modal-label'>Orthography: </span>
+                    <input type='text' id='orth' name='orth' class='orth' value=''>
+                    <br>
+                    <span class='modal-label'>Test Syll: </span>
+                    <input type='text' id='test' name='test_syll' class='' value='' readonly='True' title=''>
+                    <br>
+                    <span class='modal-label'>Rules:
+                        <span class='rules' id='rules'></span>
+                    </span>
+                    <br>
+                    <br>
+                    <span class='modal-label'>Correct Syll: </span>
+                    <input type='text' id='syll' name='syll' placeholder='correct syll' value=''>
+                    <br>
+                    <span class='modal-label'>Alt Syll 1: </span>
+                    <input type='text' id='alt1' name='alt_syll1' placeholder='alternative syll 1' value=''>
+                    <br>
+                    <span class='modal-label'>Alt Syll 2: </span>
+                    <input type='text' id='alt2' name='alt_syll2' placeholder='alternative syll 2' value=''>
+                    <br>
+                    <span class='modal-label'>Alt Syll 3: </span>
+                    <input type='text' id='alt3' name='alt_syll3' placeholder='alternative syll 3' value=''>
+                    <br>
+                    <span class='modal-label'>Compound:</span>
+                    <input type='checkbox' id='compound' name='is_compound' value=1>
+                    <br>
+                    <br>
+                    <input type='hidden' name='find' id='find' value=''>
+                    <input type='hidden' name='scroll' id='scroll' value=''>
+                    <input type='submit' class='OK' value='OK!'><br>
+                </form>
+            </div>
+        </div>
+    </div>  
 {% for t in TEXT %}
     {% if t is token %}
-    <a href='#modal' onclick="window.scroll = $(window).scrollTop(); populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.test_syll }}', '{{ t.applied_rules }}', '{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}');" id='{{ loop.index }}' class='word {{ t|goldclass }}{% if t.is_compound %} compound {% endif %}{% if t.alt_syll1 or t.alt_syll2 or t.alt_syll3 %} alt {% endif %}'> {{ t.test_syll }} </a>     
+    <a href='#' id='{{ loop.index }}' class='word {{ t|goldclass }}{% if t.is_compound %} compound {% endif %}{% if t.alt_syll1 or t.alt_syll2 or t.alt_syll3 %} alt {% endif %}' onclick="window.scroll = $(window).scrollTop(); populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.test_syll }}', '{{ t.applied_rules }}', '{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}');"> {{ t.test_syll }} </a> 
     {% elif t == '.' %}
     <span class='punct'>.</span>
     <br>
@@ -33,50 +79,6 @@
     <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
     <input type='submit' class='BIG-OK' value='OK!'  onclick="return confirm('Are you positive you want to approve all of the syllabifications in this document?\n\n(This does not include any syllabifications previously marked as incorrect.)');">
 </form>
-<!-- Modal -->
-<div class='modal' id='modal' aria-hidden='true'>
-    <div class='modal-dialog'>
-        <div class='modal-header'>
-            <a href='#close' class='btn-close' onclick='$(window).scrollTop(scroll);' aria-hidden='true'>x</a>
-        </div>
-        <div class='modal-body'>
-            <form class='doc-tokens' method='POST' onsubmit="window.location.assign('#close')">
-                <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-                <br>
-                <span class='modal-label'>Orthography: </span>
-                <input type='text' id='orth' name='orth' class='orth' value=''>
-                <br>
-                <span class='modal-label'>Test Syll: </span>
-                <input type='text' id='test' name='test_syll' class='' value='' readonly='True' title=''>
-                <br>
-                <span class='modal-label'>Rules:
-                    <span class='rules' id='rules'></span>
-                </span>
-                <br>
-                <br>
-                <span class='modal-label'>Correct Syll: </span>
-                <input type='text' id='syll' name='syll' placeholder='correct syll' value=''>
-                <br>
-                <span class='modal-label'>Alt Syll 1: </span>
-                <input type='text' id='alt1' name='alt_syll1' placeholder='alternative syll 1' value=''>
-                <br>
-                <span class='modal-label'>Alt Syll 2: </span>
-                <input type='text' id='alt2' name='alt_syll2' placeholder='alternative syll 2' value=''>
-                <br>
-                <span class='modal-label'>Alt Syll 3: </span>
-                <input type='text' id='alt3' name='alt_syll3' placeholder='alternative syll 3' value=''>
-                <br>
-                <span class='modal-label'>Compound:</span>
-                <input type='checkbox' id='compound' name='is_compound' value=1>
-                <br>
-                <br>
-                <input type='hidden' name='find' id='find' value=''>
-                <input type='hidden' name='scroll' id='scroll' value=''>
-                <input type='submit' class='OK' value='OK!'><br>
-            </form>
-        </div>
-    </div>
-</div>
 <script>
     function populatemodal(find, orth, gold, test, rules, syll, alt1, alt2, alt3, compound) {
         $('#orth').val(orth);
@@ -92,7 +94,21 @@
         if (compound == 'checked') {
              $('#compound').prop('checked', true);
         };
-        backwards = '#' + scroll;
+        $('#modal').trigger('launchModal')
     }
+    $(function () {
+        $('#modal').on('launchModal', function ( e ) {
+            Custombox.open({
+                target: '#modal',
+                effect: 'slide',
+                // effect: 'slide',
+                speed: 400,
+                overlayOpacity: 0.6,
+                width: 360,
+                complete: function () { $(window).scrollTop(scroll) },
+            });
+            e.preventDefault();
+        });
+    });
 </script>
 {% endblock %}

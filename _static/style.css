@@ -185,88 +185,33 @@ a.word:hover {
     }
 
 /* Modal -------------------- */
-/* http://codepen.io/maccadb7/pen/nbHEg?editors=110 */
-
-.btn {
-    background: #428bca;
-    border: #357ebd solid 1px;
-    border-radius: 3px;
-    color: #fff;
-    display: inline-block;
-    font-size: 14px;
-    padding: 8px 15px;
-    text-decoration: none;
-    text-align: center;
-    min-width: 60px;
-    position: relative;
-    transition: color .1s ease;
-    }
-
-.btn:hover {
-    background: #357ebd;
-    }
-
-.btn.btn-big {
-    font-size: 18px;
-    padding: 15px 20px;
-    min-width: 100px;
-    }
 
 .btn-close {
     color: #aaaaaa;
+    background: #fff;
+    border: none;
     font-size: 24px;
     text-decoration: none;
     position: absolute;
     right: 10px;
-    top: 0;
+    top: 5px;
     }
 
 .btn-close:hover {
     color: #919191;
-    }
-
-.modal:before {
-    content: "";
-    display: none;
-    /*background: rgba(0, 0, 0, 0.6);*/
-    background: rgba(204, 255, 229, 0.94);
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 10;
-    }
-
-.modal:target:before {
-    display: block;
-    }
-
-.modal:target .modal-dialog {
-  -webkit-transform: translate(0, 0);
-    -ms-transform: translate(0, 0);
-    transform: translate(0, 0);
-    top: 20%;
+    border: none;
     }
 
 .modal-dialog {
     background: #fefefe;
-    /*border: #333333 solid 1px;*/
-    border: #c7c7c7 solid 1px;
+    border: #333333 solid 1px;
     border-radius: 5px;
     margin-left: -200px;
-    position: fixed;
+    position: relative;
     left: 50%;
     top: -100%;
     z-index: 11;
     width: 360px;
-    -webkit-transform: translate(0, -500%);
-    -ms-transform: translate(0, -500%);
-    transform: translate(0, -500%);
-    -webkit-transition: -webkit-transform 0.3s ease-out;
-    -moz-transition: -moz-transform 0.3s ease-out;
-    -o-transition: -o-transform 0.3s ease-out;
-    transition: transform 0.3s ease-out;
     }
 
 .modal-body {
@@ -275,13 +220,8 @@ a.word:hover {
     }
 
 .modal-header {
-    padding: 10px 20px;
+    padding: 20px 20px;
     font-size: 20px;
-    }
-
-/* added to stop scrolling to top*/
-#close {
-    display: none;
     }
 
 .doc-tokens > input[type=text],
@@ -292,8 +232,9 @@ a.word:hover {
     }
 
 .modal-label {
+    left: 20px;
     position: absolute;
-    text-transform: uppercase
+    text-transform: uppercase;
     }
 
 .doc-tokens > input[type=text],
@@ -312,7 +253,7 @@ a.word:hover {
     }
 
 .doc-tokens > input[type=checkbox] {
-    margin-left: 128px;
+    margin-left: -44px;
     }
 
 /* Tokens ------------------------------------------------------------------------------------ */
