@@ -187,38 +187,13 @@ a.word:hover {
 /* Modal -------------------- */
 /* http://codepen.io/maccadb7/pen/nbHEg?editors=110 */
 
-.btn {
-    background: #428bca;
-    border: #357ebd solid 1px;
-    border-radius: 3px;
-    color: #fff;
-    display: inline-block;
-    font-size: 14px;
-    padding: 8px 15px;
-    text-decoration: none;
-    text-align: center;
-    min-width: 60px;
-    position: relative;
-    transition: color .1s ease;
-    }
-
-.btn:hover {
-    background: #357ebd;
-    }
-
-.btn.btn-big {
-    font-size: 18px;
-    padding: 15px 20px;
-    min-width: 100px;
-    }
-
 .btn-close {
     color: #aaaaaa;
     font-size: 24px;
     text-decoration: none;
     position: absolute;
-    right: 10px;
-    top: 0;
+    right: 14px;
+    top: 5px;
     }
 
 .btn-close:hover {
@@ -273,7 +248,7 @@ a.word:hover {
     }
 
 .modal-header {
-    padding: 10px 20px;
+    padding: 20px 20px;
     font-size: 20px;
     }
 
