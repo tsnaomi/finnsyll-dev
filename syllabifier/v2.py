@@ -118,7 +118,7 @@ def _split_consonants_and_vowels(word):
 
 def apply_T2(word):
     '''There is a syllable boundary within a sequence VV of two nonidentical
-    that are not a genuine diphthong, e.g., [ta.e], [ko.et.taa].'''
+    vowels that are not a genuine diphthong, e.g., [ta.e], [ko.et.taa].'''
     T2 = ''
     WORD = word.split('.')
 

@@ -10,6 +10,7 @@ from flask import (
     session,
     url_for,
     )
+from flaskext.markdown import Markdown
 from flask.ext.migrate import Migrate, MigrateCommand
 from flask.ext.seasurf import SeaSurf
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -35,6 +36,7 @@ manager.add_command('db', MigrateCommand)
 
 csrf = SeaSurf(app)
 flask_bcrypt = Bcrypt(app)
+markdown = Markdown(app)
 
 
 # Models ----------------------------------------------------------------------
@@ -421,6 +423,14 @@ def main_view():
     stats = get_numbers()
 
     return render_template('main.html', stats=stats, kw='main')
+
+
+@app.route('/rules', methods=['GET', ])
+@login_required
+def rules_view():
+    '''List syllabification rules.'''
+
+    return render_template('rules.html', kw='rules')
 
 
 @app.route('/doc/<id>', methods=['GET', 'POST'])

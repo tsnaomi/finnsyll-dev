@@ -122,6 +122,19 @@ div.stats {
     margin-left: 10%;
     }
 
+/* Rules ------------------------------------------------------------------------------------- */
+
+div.markdown {
+    font-size: 19px;
+    text-align: left;
+    margin: 0 20%;
+}
+
+div.markdown > h1,
+div.markdown > p {
+    margin-bottom: 28px;
+}
+
 /* Doc --------------------------------------------------------------------------------------- */
 
 div.doc-title,

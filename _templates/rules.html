@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<!-- <script type='text/javascript' src='//tinymce.cachefly.net/4.0/tinymce.min.js'></script>
+<script type='text/javascript'>
+    tinymce.init({
+        selector:'textarea',
+        width: 800,
+        height: 500,
+        resize: true,
+        browser_spellcheck : false,
+        valid_styles: {'*': 'color, font-weight, font-style, text-decoration, text-align, margin, margin-left, margin-right, display'},
+        extended_valid_elements : 'iframe[src|title|width|height|allowfullscreen|frameborder]',
+        style_formats: [
+            {title: "Headers", items: [
+                {title: "Header 1", format: "h1"},
+                {title: "Header 2", format: "h2"},
+                {title: "Header 3", format: "h3"},
+                {title: "Header 4", format: "h4"},
+                {title: "Header 5", format: "h5"},
+                {title: "Header 6", format: "h6"}
+            ]},
+            {title: "Inline", items: [
+                {title: "Bold", icon: "bold", format: "bold"},
+                {title: "Italic", icon: "italic", format: "italic"},
+                {title: "Underline", icon: "underline", format: "underline"},
+                {title: "Strikethrough", icon: "strikethrough", format: "strikethrough"},
+                {title: "Superscript", icon: "superscript", format: "superscript"},
+                {title: "Subscript", icon: "subscript", format: "subscript"},
+            ]},
+            {title: "Alignment", items: [
+                {title: "Left", icon: "alignleft", format: "alignleft"},
+                {title: "Center", icon: "aligncenter", format: "aligncenter"},
+                {title: "Right", icon: "alignright", format: "alignright"},
+                {title: "Justify", icon: "alignjustify", format: "alignjustify"}
+            ]}
+        ],
+        statusbar: false,
+        menu: {
+            file: {title: 'File', items: 'newdocument | restoredraft'},
+            edit: {title: 'Edit', items: 'undo redo | cut copy paste | searchreplace'},
+            format: {title: 'Format', items: 'bold italic underline strikethrough superscript subscript | formats | removeformat'},
+            table: {title: 'Table' , items: 'inserttable tableprops deletetable | cell row column'},
+        },
+        toolbar: 'bold italic underline | forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent',
+        plugins: ['link image table paste autosave textcolor media charmap searchreplace'],
+        link_title: false,
+        target_list: false, // [
+        image_description: false,
+        image_dimensions: true,
+        autosave_interval: '20s',
+        autosave_restore_when_empty: true,
+        media_alt_source: false,
+        media_poster: true,
+        media_dimensions: true,
+        paste_as_text: true,
+    });
+</script> -->
+{% endblock %}
+
+{% block body %}
+<div class="markdown"> 
+<!-- <textarea></textarea>   -->
+{% filter markdown %}
+
+# Syllabification rules
+  
+
+**T1**:
+There is a syllable boundary in front of every CV-sequence.
+
+**T2**:
+There is a syllable boundary within a sequence VV of two nonidentical vowels that are not a genuine diphthong, e.g., [ta.e], [ko.et.taa].
+
+**T4**:
+An agglutination diphthong that ends in /u, y/ usually contains a syllable boundary when -C# or -CCV follow, e.g., [lau.ka.us], [va.ka.ut.taa].
+
+**T5**:
+If a (V)VVV-sequence contains a VV-sequence that could be an /i/-final diphthong, there is a syllable boundary between it and the third vowel, e.g., [raa.ois.sa], [huo.uim.me], [la.eis.sa], [sel.vi.äi.si], [tai.an], [säi.e], [oi.om.me].
+
+**T6**:
+If a VVV-sequence contains a long vowel, there is a syllable boundary between it and the third vowel, e.g. [kor.ke.aa], [yh.ti.öön], [ruu.an], [mää.yt.te].
+
+**T7**:
+If a VVV-sequence does not contain a potential /i/-final diphthong, there is a syllable boundary between the second and third vowels, e.g. [kau.an], [leu.an], [kiu.as].
+
+{% endfilter %}
+</div>
+<br>
+{% endblock %}
