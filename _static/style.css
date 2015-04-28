@@ -228,7 +228,8 @@ a.word:hover {
 .modal:before {
     content: "";
     display: none;
-    background: rgba(0, 0, 0, 0.6);
+    /*background: rgba(0, 0, 0, 0.6);*/
+    background: rgba(204, 255, 229, 0.94);
     position: fixed;
     top: 0;
     left: 0;
@@ -250,7 +251,8 @@ a.word:hover {
 
 .modal-dialog {
     background: #fefefe;
-    border: #333333 solid 1px;
+    /*border: #333333 solid 1px;*/
+    border: #c7c7c7 solid 1px;
     border-radius: 5px;
     margin-left: -200px;
     position: fixed;
