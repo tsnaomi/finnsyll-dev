@@ -188,7 +188,7 @@ a.word:hover {
 
 .btn-close {
     color: #aaaaaa;
-    background: #fff;
+    background: #fefefe;
     border: none;
     font-size: 24px;
     text-decoration: none;
@@ -197,7 +197,9 @@ a.word:hover {
     top: 5px;
     }
 
-.btn-close:hover {
+.btn-close:hover,
+.btn-close:active,
+.btn-close:focus {
     color: #919191;
     border: none;
     }
@@ -206,9 +208,7 @@ a.word:hover {
     background: #fefefe;
     border: #333333 solid 1px;
     border-radius: 5px;
-    margin-left: -200px;
     position: relative;
-    left: 50%;
     top: -100%;
     z-index: 11;
     width: 360px;

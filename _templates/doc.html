@@ -94,21 +94,14 @@
         if (compound == 'checked') {
              $('#compound').prop('checked', true);
         };
-        $('#modal').trigger('launchModal')
-    }
-    $(function () {
-        $('#modal').on('launchModal', function ( e ) {
-            Custombox.open({
+        Custombox.open({
                 target: '#modal',
-                // effect: 'push',
-                effect: 'fadein',
+                effect: 'slide',
                 speed: 100,
                 overlayOpacity: 0.6,
                 width: 360,
                 complete: function () { $(window).scrollTop(scroll) },
             });
-            e.preventDefault();
-        });
-    });
+    }
 </script>
 {% endblock %}
