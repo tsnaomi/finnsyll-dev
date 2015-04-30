@@ -9,23 +9,114 @@
 **T1**:
 There is a syllable boundary in front of every CV-sequence.
 
+        def apply_T1(word):
+            WORD = _split_consonants_and_vowels(word)
+            for i, v in enumerate(WORD):
+                if i == 0 and is_consonantal_onset(v):
+                    continue
+                elif is_consonant(v[0]) and i + 1 != len(WORD):
+                    WORD[i] = v[:-1] + '.' + v[-1]
+            word = ''.join(WORD)
+            return word
+
+
+        def _same_syllabic_feature(ch1, ch2):
+            # returns True if ch1 and ch2 are both vowels or both consonants
+            ch1 = 'V' if ch1 in VOWELS else 'C'
+            ch2 = 'V' if ch2 in VOWELS else 'C'
+            return ch1 == ch2
+
+
+        def _split_consonants_and_vowels(word):
+            # 'bal.loon' -> {1: 'b', 2: 'a', 3: 'l', 4: '.'. 5: 'l', 6: 'oo', 7: 'n'}
+            WORD = []
+            prev = [0, 0]  # (list indice, character)
+            for ch in word:
+                if prev[0] and _same_syllabic_feature(prev[1], ch):
+                    WORD[prev[0] - 1] += ch
+                else:
+                    WORD.append(ch)
+                    prev[0] += 1
+                    prev[1] = ch
+            return WORD
+
 **T2**:
 There is a syllable boundary within a sequence VV of two nonidentical vowels that are not a genuine diphthong, e.g., [ta.e], [ko.et.taa].
+
+        def apply_T2(word):
+            WORD = word.split('.')
+            for i, v in enumerate(WORD):
+                if not contains_diphthong(v):
+                    VV = contains_VV(v)
+                    if VV:
+                        I = v.find(VV) + 1
+                        WORD[i] = v[:I] + '.' + v[I:]
+            word = '.'.join(WORD)
+            return word
 
 **T4**:
 An agglutination diphthong that ends in /u, y/ usually contains a syllable boundary when -C# or -CCV follow, e.g., [lau.ka.us], [va.ka.ut.taa].
 
+        def apply_T4(word):
+            WORD = word.split('.')
+            for i, v in enumerate(WORD):
+                if is_consonant(v[-1]):
+                    if i + 1 == len(WORD) or is_consonant(WORD[i + 1][0]):
+                        if contains_Vu_diphthong(v):
+                            I = v.rfind('u')
+                            WORD[i] = v[:I] + '.' + v[I:]
+                        elif contains_Vy_diphthong(v):
+                            I = v.rfind('y')
+                            WORD[i] = v[:I] + '.' + v[I:]
+            word = '.'.join(WORD)
+            return word
+
 **T5**:
 If a (V)VVV-sequence contains a VV-sequence that could be an /i/-final diphthong, there is a syllable boundary between it and the third vowel, e.g., [raa.ois.sa], [huo.uim.me], [la.eis.sa], [sel.vi.äi.si], [tai.an], [säi.e], [oi.om.me].
+
+        def apply_T5(word):
+            WORD = word.split('.')
+            for i, v in enumerate(WORD):
+                if contains_VVV(v) and any(i for i in i_DIPHTHONGS if i in v):
+                    I = v.rfind('i') - 1
+                    WORD[i] = v[:I] + '.' + v[I:]
+            word = '.'.join(WORD)
+            return word
 
 **T6**:
 If a VVV-sequence contains a long vowel, there is a syllable boundary between it and the third vowel, e.g. [kor.ke.aa], [yh.ti.öön], [ruu.an], [mää.yt.te].
 
+        def apply_T6(word):
+            WORD = word.split('.')
+            for i, v in enumerate(WORD):
+                if contains_VVV(v):
+                    VV = [v.find(j) for j in LONG_VOWELS if v.find(j) > 0]
+                    if VV:
+                        I = VV[0]
+                        if I + 2 == len(v) or is_vowel(v[I + 2]):
+                            WORD[i] = v[:I] + '.' + v[I:]
+                        else:
+                            WORD[i] = v[:I + 1] + '.' + v[I + 1:]
+            word = '.'.join(WORD)
+            return word
+
 **T7**:
 If a VVV-sequence does not contain a potential /i/-final diphthong, there is a syllable boundary between the second and third vowels, e.g. [kau.an], [leu.an], [kiu.as].
 
-## TODO
-Do not apply T4 to stressed syllables (particulary the first syllable).
+        def apply_T7(word):
+            WORD = word.split('.')
+            for i, v in enumerate(WORD):
+                if contains_VVV(v):
+                    for I, V in enumerate(v[::-1]):
+                        if is_vowel(V):
+                            WORD[i] = v[:I] + '.' + v[I:]
+            word = '.'.join(WORD)
+            return word, T7  
+  
+# Notes  
+
+- Do not apply T4 to syllables that should be stressed.
+- Consider flipping rule order (i.e., do not alter a boundary once it is imposed).
 
 {% endfilter %}
 </div>
@@ -35,3 +126,5 @@ Do not apply T4 to stressed syllables (particulary the first syllable).
 so.pe.ut.ti
 te.ra.peut.ti -- third syllable receives secondary
 le.uh.ka --> leuh.ka
+ta.[k]us.taa
+

@@ -135,6 +135,17 @@ div.markdown > p {
     margin-bottom: 28px;
 }
 
+pre {
+    line-height: 1.5;
+    font-size: 13px;
+    background-color: #f4f4f4;
+    padding: 20px 0;
+}
+
+code {
+    font-family: Menlo;
+}
+
 /* Doc --------------------------------------------------------------------------------------- */
 
 div.doc-title,
