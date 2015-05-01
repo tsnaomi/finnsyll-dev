@@ -1,5 +1,6 @@
 # coding=utf-8
 
+from datetime import datetime
 from flask import (
     abort,
     flash,
@@ -268,7 +269,7 @@ class Document(db.Model):
 # Database functions ----------------------------------------------------------
 
 def syllabify_tokens():
-    '''Algorithmically syllabify all Tokens.
+    '''Algorithmically syllabify all tokens.
 
     This is done anytime a Token is instantiated. It *should* also be done
     anytime the syllabifying algorithm is updated.'''
@@ -280,27 +281,53 @@ def syllabify_tokens():
     db.session.commit()
 
 
-def transition_syllabifiers():
+def transition():
+    '''Syllabify tokens and create a transition report.'''
     tokens = Token.query.filter(Token.is_gold.isnot(None))
-    pre_good = tokens.filter_by(is_gold=True)
-    pre_bad = tokens.filter_by(is_gold=False)
+    parse = lambda t: (t, '%s %s' % (t.test_syll, t.applied_rules))
+
+    PRE = {
+        'good':
+        dict([parse(t) for t in tokens.filter_by(is_gold=True).yield_per(5)]),
+        'bad':
+        dict([parse(t) for t in tokens.filter_by(is_gold=False).yield_per(5)]),
+        }
 
     syllabify_tokens()
 
-    import pdb
-    pdb.set_trace()
+    POST = {
+        'good':
+        dict([parse(t) for t in tokens.filter_by(is_gold=True).yield_per(5)]),
+        'bad':
+        dict([parse(t) for t in tokens.filter_by(is_gold=False).yield_per(5)]),
+        }
 
-    tokens = Token.query.filter(Token.is_gold.isnot(None))
-    post_good = tokens.filter_by(is_gold=True)
-    post_bad = tokens.filter_by(is_gold=False)
+    if PRE['good'] != POST['good']:
+        good = set(PRE['bad'].keys()).intersection(POST['good'].keys())
+        bad = set(PRE['good'].keys()).intersection(POST['bad'].keys())
 
-    pdb.set_trace()
+        pattern = '%s\t > \t%s %s\n'
 
-    if pre_good != post_good:
-        bad_to_good = list(set(pre_good).intersection(post_bad))
-        good_to_bad = list(set(pre_bad).intersection(post_good))
+        report = 'FROM BAD TO GOOD (%s)\n' % len(good)
 
-    pdb.set_trace()
+        for t in good:
+            report += pattern % (PRE['bad'][t], t.test_syll, t.applied_rules)
+
+        report += '\nFROM GOOD TO BAD (%s)\n' % len(bad)
+
+        for t in bad:
+            report += pattern % (PRE['good'][t], t.test_syll, t.applied_rules)
+
+        filename = 'syllabifier/reports/%s.txt' % str(datetime.utcnow())
+
+        if app.config['TESTING']:
+            print report
+
+        else:
+            with open(filename, 'w') as f:
+                f.write(report)
+
+    print len(POST['bad'])
 
 
 def find_token(orth):
@@ -323,17 +350,17 @@ def update_documents():
 
 
 def get_bad_tokens():
-    '''Return all of the Tokens that are incorrectly syllabified.'''
+    '''Return all of the tokens that are incorrectly syllabified.'''
     return Token.query.filter_by(is_gold=False).order_by(Token.lemma)
 
 
 def get_good_tokens():
-    '''Return all of the Tokens that are correctly syllabified.'''
+    '''Return all of the tokens that are correctly syllabified.'''
     return Token.query.filter_by(is_gold=True).order_by(Token.lemma)
 
 
 def get_unverified_tokens():
-    '''Return Tokens with uncertain syllabifications.'''
+    '''Return tokens with uncertain syllabifications.'''
     return Token.query.filter_by(is_gold=None).order_by(Token.lemma)
 
 
