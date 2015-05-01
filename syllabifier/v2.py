@@ -148,7 +148,9 @@ def apply_T4(word):
 
     for i, v in enumerate(WORD):
 
-        if is_consonant(v[-1]):
+        # i % 2 != 0 prevents this rule from applying to first, third, etc.
+        # syllables, which receive stress (WSP)
+        if is_consonant(v[-1]) and i % 2 != 0:
 
             if i + 1 == len(WORD) or is_consonant(WORD[i + 1][0]):
 
@@ -230,7 +232,7 @@ def apply_T6(word):
 def apply_T7(word):
     '''If a VVV-sequence does not contain a potential /i/-final diphthong,
     there is a syllable boundary between the second and third vowels, e.g.
-    # [kau.an], [leu.an], [kiu.as].'''
+    [kau.an], [leu.an], [kiu.as].'''
     T7 = ''
     WORD = word.split('.')
 
