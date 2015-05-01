@@ -187,7 +187,6 @@ class Token(db.Model):
             if hasattr(self, attr):
                 setattr(self, attr, value)
 
-        # db.session.commit()  # TODO
         self.update_gold()
 
 
@@ -279,6 +278,29 @@ def syllabify_tokens():
         token.syllabify()
 
     db.session.commit()
+
+
+def transition_syllabifiers():
+    tokens = Token.query.filter(Token.is_gold.isnot(None))
+    pre_good = tokens.filter_by(is_gold=True)
+    pre_bad = tokens.filter_by(is_gold=False)
+
+    syllabify_tokens()
+
+    import pdb
+    pdb.set_trace()
+
+    tokens = Token.query.filter(Token.is_gold.isnot(None))
+    post_good = tokens.filter_by(is_gold=True)
+    post_bad = tokens.filter_by(is_gold=False)
+
+    pdb.set_trace()
+
+    if pre_good != post_good:
+        bad_to_good = list(set(pre_good).intersection(post_bad))
+        good_to_bad = list(set(pre_bad).intersection(post_good))
+
+    pdb.set_trace()
 
 
 def find_token(orth):
@@ -409,6 +431,8 @@ def apply_form(http_form):
             is_compound=is_compound,
             is_stopword=is_stopword,
             )
+
+        db.session.commit()
 
     except (AttributeError, KeyError, LookupError):
         pass
