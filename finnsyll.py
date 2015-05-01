@@ -429,8 +429,20 @@ def main_view():
 @login_required
 def rules_view():
     '''List syllabification rules.'''
-
     return render_template('rules.html', kw='rules')
+
+
+@app.route('/find', methods=['GET', 'POST'])
+@login_required
+def find_view():
+    '''Search for tokens by word and/or citation form.'''
+    results = None
+
+    if request.method == 'POST':
+        find = request.form['find']
+        results = Token.query.filter(Token.orth.ilike(find))
+
+    return render_template('find.html', kw='find', results=results)
 
 
 @app.route('/doc/<id>', methods=['GET', 'POST'])

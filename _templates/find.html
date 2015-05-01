@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class="search"> 
+    <form class='search' method='POST'>
+        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+        <input type='text' name='find' class='find' placeholder='type in a word...'>
+        <input type='submit' class='find' value='FIND'>
+    </form>
+    <br>
+    {% if results is not none %}
+        {% for t in results %}
+    <span class='finding'>{{ t.orth }}</span><br>
+    <span class='attr'>test</span> <span class='{{ t|goldclass }} {% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span><br>
+    {% if t.syll %}<span class='attr'>gold</span> {{ t.syll }}<br>{% endif %}
+    {% if t.alt_syll1 %}<span class='attr'>alt</span> {{ t.alt_syll1 }}<br>{% endif %}
+    {% if t.alt_syll2 %}<span class='attr'>alt</span> {{ t.alt_syll2 }}<br>{% endif %}
+    {% if t.alt_syll3 %}<span class='attr'>alt</span> {{ t.alt_syll3 }}<br>{% endif %}
+    <span class='attr'>rules</span> {{ t.applied_rules }}<br>
+    <span class='attr'>pos</span> {{ t.pos }}<br>
+    <span class='attr'>msd</span> {{ t.msd }}<br>
+    <span class='attr'>lemma</span> {{ t.lemma }}<br><br>
+        {% else %}
+    <span class='no-matches'>No matches found.</span>
+        {% endfor %}
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -146,6 +146,64 @@ code {
     font-family: Menlo;
 }
 
+/* Find -------------------------------------------------------------------------------------- */
+
+div.search {
+    font-size: 19px;
+    text-align: left;
+    margin: 0 20%;
+}
+
+form.search {
+    width: 100%;
+    position: relative;
+    display: block;
+    text-align: center;
+    margin: 20px 0;
+}
+
+input.find {
+    height: 40px;
+    width: 300px;
+    display: inline-block;
+    border: 1px solid #E0E0E0;
+    padding: 0 0 0 5px;
+    margin: 0 0 5px;
+}
+
+input.find[type='submit'] {
+    font-size: 19px;
+    height: 42px;
+    width: 80px;
+    padding: 0;
+}
+
+input.find:focus,
+input.find[type='submit']:hover {
+    border: 1px solid #C7C7C7;
+    }
+
+.no-matches {
+    font-family: 'Pacifico', garamond, cursive;
+    font-size: 19px;
+    position: relative;
+    display: block;
+    text-align: center;
+}
+
+.finding {
+    font-style: italic;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.attr {
+    color: #C7C7C7;
+    font-style: italic;
+    width: 80px;
+    display: inline-block;
+}
+
 /* Doc --------------------------------------------------------------------------------------- */
 
 div.doc-title,
