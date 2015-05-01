@@ -16,4 +16,5 @@ gunicorn==19.3.0
 itsdangerous==0.24
 psycopg2==2.5.4
 py-bcrypt==0.4
+tabulate==0.7.5
 wsgiref==0.1.2

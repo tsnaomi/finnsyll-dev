@@ -21,6 +21,7 @@ from functools import wraps
 from math import ceil
 from syllabifier.phonology import get_sonorities, get_weights
 from syllabifier.v2 import syllabify
+from tabulate import tabulate
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
 app.config.from_pyfile('finnsyll_config.py')
@@ -271,7 +272,7 @@ def syllabify_tokens():
 
     This is done anytime a Token is instantiated. It *should* also be done
     anytime the syllabifying algorithm is updated.'''
-    for token in db.session.query(Token).yield_per(1000):
+    for token in db.session.query(Token).yield_per(10):  # OPTIMIZE
         token.syllabify()
 
     db.session.commit()
@@ -280,50 +281,43 @@ def syllabify_tokens():
 def transition():
     '''Syllabify tokens and create a transition report.'''
     tokens = Token.query.filter(Token.is_gold.isnot(None))
-    parse = lambda t: (t, '%s %s' % (t.test_syll, t.applied_rules))
+    parse = lambda t: (t, [t.test_syll, t.applied_rules])
 
     PRE = {
-        'good': dict(
-            [parse(t) for t in tokens.filter_by(is_gold=True).yield_per(1000)]
-            ),
-        'bad': dict(
-            [parse(t) for t in tokens.filter_by(is_gold=False).yield_per(1000)]
-            ), }
+        'good': dict([parse(t) for t in tokens.filter_by(is_gold=True)]),
+        'bad': dict([parse(t) for t in tokens.filter_by(is_gold=False)]),
+        }
 
-    syllabify_tokens()
+    for t in tokens:
+        t.syllabify()
 
     POST = {
-        'good': dict(
-            [parse(t) for t in tokens.filter_by(is_gold=True).yield_per(1000)]
-            ),
-        'bad': dict(
-            [parse(t) for t in tokens.filter_by(is_gold=False).yield_per(1000)]
-            ), }
+        'good': dict([parse(t) for t in tokens.filter_by(is_gold=True)]),
+        'bad': dict([parse(t) for t in tokens.filter_by(is_gold=False)]),
+        }
 
     if PRE['good'] != POST['good']:
         good = set(PRE['bad'].keys()).intersection(POST['good'].keys())
         bad = set(PRE['good'].keys()).intersection(POST['bad'].keys())
-        pattern = '%s\t > \t%s %s\n'
+        # filename = 'syllabifier/reports/%s.txt' % str(datetime.utcnow())
+
+        table1 = [
+            PRE['bad'][t] + ['>', t.test_syll, t.applied_rules] for t in good]
+        table2 = [
+            PRE['good'][t] + ['>', t.test_syll, t.applied_rules] for t in bad]
+
         report = 'FROM BAD TO GOOD (%s)\n' % len(good)
+        report += tabulate(table1)
+        report += '\n\nFROM GOOD TO BAD (%s)\n' % len(bad)
+        report += tabulate(table2)
+        report += '\n\n%s BAD TOKENS' % len(POST['bad'])
 
-        for t in good:
-            report += pattern % (PRE['bad'][t], t.test_syll, t.applied_rules)
+    # with open(filename, 'w') as f:
+    #     f.write(report.encode('utf-8'))
 
-        report += '\nFROM GOOD TO BAD (%s)\n' % len(bad)
+    print report
 
-        for t in bad:
-            report += pattern % (PRE['good'][t], t.test_syll, t.applied_rules)
-
-        filename = 'syllabifier/reports/%s.txt' % str(datetime.utcnow())
-
-        if app.config['TESTING']:
-            print report
-
-        else:
-            with open(filename, 'w') as f:
-                f.write(report)
-
-    print len(POST['bad'])
+    db.session.rollback()
 
 
 def find_token(orth):
