@@ -167,7 +167,6 @@ class Token(db.Model):
                 is_gold = self.test_syll == self.alt_syll3
 
             self.is_gold = is_gold
-            db.session.commit()
 
             return is_gold
 
@@ -263,7 +262,6 @@ class Document(db.Model):
         # all of the documents's tokens were verified in previous documents
         if unverified_count == 0:
             self.reviewed = True
-            db.session.commit()
 
 
 # Database functions ----------------------------------------------------------
@@ -273,9 +271,7 @@ def syllabify_tokens():
 
     This is done anytime a Token is instantiated. It *should* also be done
     anytime the syllabifying algorithm is updated.'''
-    tokens = Token.query.all()
-
-    for token in tokens:
+    for token in db.session.query(Token).yield_per(1000):
         token.syllabify()
 
     db.session.commit()
@@ -287,27 +283,27 @@ def transition():
     parse = lambda t: (t, '%s %s' % (t.test_syll, t.applied_rules))
 
     PRE = {
-        'good':
-        dict([parse(t) for t in tokens.filter_by(is_gold=True).yield_per(5)]),
-        'bad':
-        dict([parse(t) for t in tokens.filter_by(is_gold=False).yield_per(5)]),
-        }
+        'good': dict(
+            [parse(t) for t in tokens.filter_by(is_gold=True).yield_per(1000)]
+            ),
+        'bad': dict(
+            [parse(t) for t in tokens.filter_by(is_gold=False).yield_per(1000)]
+            ), }
 
     syllabify_tokens()
 
     POST = {
-        'good':
-        dict([parse(t) for t in tokens.filter_by(is_gold=True).yield_per(5)]),
-        'bad':
-        dict([parse(t) for t in tokens.filter_by(is_gold=False).yield_per(5)]),
-        }
+        'good': dict(
+            [parse(t) for t in tokens.filter_by(is_gold=True).yield_per(1000)]
+            ),
+        'bad': dict(
+            [parse(t) for t in tokens.filter_by(is_gold=False).yield_per(1000)]
+            ), }
 
     if PRE['good'] != POST['good']:
         good = set(PRE['bad'].keys()).intersection(POST['good'].keys())
         bad = set(PRE['good'].keys()).intersection(POST['bad'].keys())
-
         pattern = '%s\t > \t%s %s\n'
-
         report = 'FROM BAD TO GOOD (%s)\n' % len(good)
 
         for t in good:
@@ -347,6 +343,8 @@ def update_documents():
 
     for doc in docs:
         doc.update_review()
+
+    db.seees.commit()
 
 
 def get_bad_tokens():
