@@ -440,6 +440,7 @@ def find_view():
 
     if request.method == 'POST':
         find = request.form['find']
+        find = find.translate({ord('.'): None, })  # strip periods
         results = Token.query.filter(Token.orth.ilike(find))
 
     return render_template('find.html', kw='find', results=results)
