@@ -67,7 +67,7 @@ An agglutination diphthong that ends in /u, y/ usually contains a syllable bound
                         if contains_Vu_diphthong(v):
                             I = v.rfind('u')
                             WORD[i] = v[:I] + '.' + v[I:]
-                        elif contains_Vy_diphthong(v):
+                        elif contains_Vy_dipghthong(v):
                             I = v.rfind('y')
                             WORD[i] = v[:I] + '.' + v[I:]
             word = '.'.join(WORD)
@@ -117,7 +117,8 @@ If a VVV-sequence does not contain a potential /i/-final diphthong, there is a s
   
 # Notes  
 
-- Do not apply T4 to syllables that should be stressed.
+- ~~Do not apply T4 to syllables that should be stressed.~~
+- *.aie.m.min* > *ai.em.min*
 - Consider flipping rule order (i.e., do not alter a boundary once it is imposed).
 
 {% endfilter %}
