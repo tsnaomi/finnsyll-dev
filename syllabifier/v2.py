@@ -183,9 +183,9 @@ def apply_T5(word):  # BROKEN
     WORD = word.split('.')
 
     for i, v in enumerate(WORD):
-
         if contains_VVV(v) and any(i for i in i_DIPHTHONGS if i in v):
             I = v.rfind('i') - 1 or 2
+            I = I + 2 if is_consonant(v[I - 1]) else I
             WORD[i] = v[:I] + '.' + v[I:]
             T5 = ' T5'
 
@@ -213,16 +213,16 @@ def apply_T6(word):
 
             if VV:
                 I = VV[0]
+                T6 = ' T6'
 
                 if I + 2 == len(v) or is_vowel(v[I + 2]):
-                    WORD[i] = v[:I] + '.' + v[I:]
-                    T6 = ' T6'
+                    WORD[i] = v[:I + 2] + '.' + v[I + 2:]  # TODO
 
                 else:
-                    WORD[i] = v[:I + 1] + '.' + v[I + 1:]  # TODO
-                    T6 = ' T6'
+                    WORD[i] = v[:I] + '.' + v[I:]
 
     word = '.'.join(WORD)
+    word = word.strip('.')  # TODO
 
     return word, T6
 
@@ -264,19 +264,38 @@ if __name__ == '__main__':
                 print syllabify(arg) + '\n'
 
     else:
-        # test syllabifications -- from Arto's finnish_syllabification.txt
         words = [
-            # (u'kala', u'ka.la'),  # T-1
-            # (u'järjestäminenkö', u'jär.jes.tä.mi.nen.kö'),  # T-1, 1, 1, 1, 1
-            # (u'kärkkyä', u'kärk.ky.ä'),  # T-1, 2
-            # (u'värväytyä', u'vär.väy.ty.ä'),  # T-1, 1, 2
-            # (u'pamaushan', u'pa.ma.us.han'),  # T-1, 4, 1
-            # (u'värväyttää', u'vär.vä.yt.tää'),  # T-1, 4, 1
-            # (u'haluaisin', u'ha.lu.ai.sin'),  # T-1, 5
-            # (u'hyöyissä', u'hyö.yis.sä'),  # T-5, 1
-            # (u'saippuaa', u'saip.pu.aa'),  # T-1, 6
-            # (u'touon', u'tou.on'),  # T-7
+            (u'tae', u'ta.e'),
+            (u'koettaa', u'ko.et.taa'),
+            (u'hain', u'hain (ha.in)'),
+            (u'laukaus', u'lau.ka.us'),
+            (u'vakauttaa', u'va.ka.ut.taa'),
+            (u'raaoissa', u'raa.ois.sa'),
+            (u'huouimme', u'huo.uim.me'),
+            (u'laeissa', u'la.eis.sa'),
+            (u'selviäisi', u'sel.vi.äi.si'),
+            (u'taian', u'tai.an'),
+            (u'säie', u'säi.e'),
+            (u'oiomme', u'oi.om.me'),
+            (u'korkeaa', u'kor.ke.aa'),
+            (u'yhtiöön', u'yh.ti.öön'),
+            (u'ruuan', u'ruu.an'),
+            (u'määytte', u'mää.yt.te'),
+            (u'kauan', u'kau.an'),
+            (u'leuan', u'leu.an'),
+            (u'kiuas', u'kiu.as'),
+            (u'haluaisin', u'ha.lu.ai.sin'),
+            (u'hyöyissä', u'hyö.yis.sä'),
+            (u'pamaushan', u'pa.ma.us.han'),
+            (u'saippuaa', u'saip.pu.aa'),
+            (u'joissa', u'jois.sa (jo.is.sa)'),
+            (u'tae', u'ta.e'),
+            (u'kärkkyä', u'kärk.ky.ä'),
+            (u'touon', u'tou.on'),
+            (u'värväytyä', u'vär.väy.ty.ä'),
+            (u'värväyttää', u'vär.vä.yt.tää'),
             ]
 
         for word in words:
-            print u'TRY: %s\nYEA: %s\n' % (syllabify(word[0])[0], word[1])
+            syll = syllabify(word[0])
+            print u'TRY: %s  %s\nYEA: %s\n' % (syll[0], syll[1], word[1])
