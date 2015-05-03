@@ -298,4 +298,5 @@ if __name__ == '__main__':
 
         for word in words:
             syll = syllabify(word[0])
-            print u'TRY: %s  %s\nYEA: %s\n' % (syll[0], syll[1], word[1])
+            # print u'TRY: %s  %s\nYEA: %s\n' % (syll[0], syll[1], word[1])
+            print u'TEST: %s\nGOLD: %s\n' % (syll[0], word[1])
