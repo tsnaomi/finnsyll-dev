@@ -174,7 +174,7 @@ def apply_T4(word):
 i_DIPHTHONGS = ['ai', 'ei', 'oi', 'Ai', 'Oi', 'ui', 'yi']
 
 
-def apply_T5(word):
+def apply_T5(word):  # BROKEN
     '''If a (V)VVV-sequence contains a VV-sequence that could be an /i/-final
     diphthong, there is a syllable boundary between it and the third vowel,
     e.g., [raa.ois.sa], [huo.uim.me], [la.eis.sa], [sel.vi.äi.si], [tai.an],
@@ -185,7 +185,7 @@ def apply_T5(word):
     for i, v in enumerate(WORD):
 
         if contains_VVV(v) and any(i for i in i_DIPHTHONGS if i in v):
-            I = v.rfind('i') - 1
+            I = v.rfind('i') - 1 or 2
             WORD[i] = v[:I] + '.' + v[I:]
             T5 = ' T5'
 
@@ -266,17 +266,17 @@ if __name__ == '__main__':
     else:
         # test syllabifications -- from Arto's finnish_syllabification.txt
         words = [
-            (u'kala', u'ka.la'),  # T-1
-            (u'järjestäminenkö', u'jär.jes.tä.mi.nen.kö'),  # T-1, 1, 1, 1, 1
-            (u'kärkkyä', u'kärk.ky.ä'),  # T-1, 2
-            (u'värväytyä', u'vär.väy.ty.ä'),  # T-1, 1, 2
-            (u'pamaushan', u'pa.ma.us.han'),  # T-1, 4, 1
-            (u'värväyttää', u'vär.vä.yt.tää'),  # T-1, 4, 1
-            (u'haluaisin', u'ha.lu.ai.sin'),  # T-1, 5
-            (u'hyöyissä', u'hyö.yis.sä'),  # T-5, 1
-            (u'saippuaa', u'saip.pu.aa'),  # T-1, 6
-            (u'touon', u'tou.on'),  # T-7
+            # (u'kala', u'ka.la'),  # T-1
+            # (u'järjestäminenkö', u'jär.jes.tä.mi.nen.kö'),  # T-1, 1, 1, 1, 1
+            # (u'kärkkyä', u'kärk.ky.ä'),  # T-1, 2
+            # (u'värväytyä', u'vär.väy.ty.ä'),  # T-1, 1, 2
+            # (u'pamaushan', u'pa.ma.us.han'),  # T-1, 4, 1
+            # (u'värväyttää', u'vär.vä.yt.tää'),  # T-1, 4, 1
+            # (u'haluaisin', u'ha.lu.ai.sin'),  # T-1, 5
+            # (u'hyöyissä', u'hyö.yis.sä'),  # T-5, 1
+            # (u'saippuaa', u'saip.pu.aa'),  # T-1, 6
+            # (u'touon', u'tou.on'),  # T-7
             ]
 
         for word in words:
-            print u'TRY: %s\nYEA: %s\n' % (syllabify(word[0]), word[1])
+            print u'TRY: %s\nYEA: %s\n' % (syllabify(word[0])[0], word[1])
