@@ -1,3 +1,5 @@
+Fixed T4 to account for WSP.
+
 FROM BAD TO GOOD (10)
 -------------------  --------  -  ------------------  -----
 nä.yt.täi.si         T1 T4     >  näyt.täi.si         T1
@@ -14,7 +16,7 @@ a.us.ter             T1 T4     >  aus.ter             T1
 
 FROM GOOD TO BAD (1)
 ---------  -----  -  --------  --
-ta.us.taa  T1 T4  >  taus.taa  T1   # UR: ta.[k]us.taa [stopword?] [potentially taus.taa is correct]
+ta.us.taa  T1 T4  >  taus.taa  T1   [UR: ta.[k]us.taa] [taus.taa is potentially correct] [potential stopword]
 ---------  -----  -  --------  --
 
 70 BAD TOKENS
