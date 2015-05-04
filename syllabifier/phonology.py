@@ -125,8 +125,8 @@ def is_inseparable_vowels(chars):
     return is_diphthong(chars) or is_long(chars)
 
 
-def is_consonantal_onset(chars):
-    return is_cluster(chars) or is_consonant(chars)
+# def is_consonantal_onset(chars):
+#     return is_cluster(chars) or is_consonant(chars)
 
 
 # Sonority functions ----------------------------------------------------------

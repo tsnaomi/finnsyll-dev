@@ -7,7 +7,6 @@ from phonology import (
     contains_Vy_diphthong,
     contains_VVV,
     is_consonant,
-    is_consonantal_onset,
     is_vowel,
     replace_umlauts,
     VOWELS
@@ -66,7 +65,7 @@ def apply_T1(word):
 
     for i, v in enumerate(WORD):
 
-        if i == 0 and is_consonantal_onset(v):
+        if i == 0 and is_consonant(v[0][0]):
             continue
 
         elif is_consonant(v[0]) and i + 1 != len(WORD):
