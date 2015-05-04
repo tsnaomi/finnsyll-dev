@@ -74,7 +74,7 @@ class Token(db.Model):
     test_syll = db.Column(db.String(80, convert_unicode=True), default='')
 
     # a string of the rules applied in the test syllabfication
-    applied_rules = db.Column(db.String(80, convert_unicode=True), default='')
+    rules = db.Column(db.String(80, convert_unicode=True), default='')
 
     # the correct syllabification (hand-verified)
     syll = db.Column(db.String(80, convert_unicode=True), default='')
@@ -177,7 +177,7 @@ class Token(db.Model):
         '''Algorithmically syllabify Token based on its orthography.'''
         # syllabifcations do not preserve capitalization
         token = self.orth.lower()
-        self.test_syll, self.applied_rules = syllabify(token)
+        self.test_syll, self.rules = syllabify(token)
 
         if self.syll:
             self.update_gold()
@@ -268,20 +268,33 @@ class Document(db.Model):
 # Database functions ----------------------------------------------------------
 
 def syllabify_tokens():
-    '''Algorithmically syllabify all tokens.
+    '''Algorithmically syllabify all tokens.'''
+    print 'Syllabifying...'
 
-    This is done anytime a Token is instantiated. It *should* also be done
-    anytime the syllabifying algorithm is updated.'''
-    for token in db.session.query(Token).yield_per(1000):  # OPTIMIZE
+    count = Token.query.count()
+    start = 0
+    end = x = 1000
+
+    while start + x < count:
+
+        for token in Token.query.slice(start, end):
+            token.syllabify()
+
+        start = end
+        end += x
+
+    for token in Token.query.slice(start, count):
         token.syllabify()
 
     db.session.commit()
 
+    print 'Syllabifications complete.'
 
-def transition():
+
+def transition(pdf=False):
     '''Syllabify tokens and create a transition report.'''
     tokens = Token.query.filter(Token.is_gold.isnot(None))
-    parse = lambda t: (t, [t.test_syll, t.applied_rules])
+    parse = lambda t: (t, [t.test_syll, t.rules])
 
     PRE = {
         'good': dict([parse(t) for t in tokens.filter_by(is_gold=True)]),
@@ -299,23 +312,21 @@ def transition():
     if PRE['good'] != POST['good']:
         good = set(PRE['bad'].keys()).intersection(POST['good'].keys())
         bad = set(PRE['good'].keys()).intersection(POST['bad'].keys())
-        # filename = 'syllabifier/reports/%s.txt' % str(datetime.utcnow())
-
-        table1 = [
-            PRE['bad'][t] + ['>', t.test_syll, t.applied_rules] for t in good]
-        table2 = [
-            PRE['good'][t] + ['>', t.test_syll, t.applied_rules] for t in bad]
-
+        table1 = [PRE['bad'][t] + ['>', t.test_syll, t.rules] for t in good]
+        table2 = [PRE['good'][t] + ['>', t.test_syll, t.rules] for t in bad]
         report = 'FROM BAD TO GOOD (%s)\n' % len(good)
         report += tabulate(table1)
         report += '\n\nFROM GOOD TO BAD (%s)\n' % len(bad)
         report += tabulate(table2)
         report += '\n\n%s BAD TOKENS' % len(POST['bad'])
 
-    # with open(filename, 'w') as f:
-    #     f.write(report.encode('utf-8'))
+        if pdf:
+            filename = 'syllabifier/reports/%s.txt' % str(datetime.utcnow())
 
-    print report
+            with open(filename, 'w') as f:
+                f.write(report.encode('utf-8'))
+
+        print report
 
     db.session.rollback()
 

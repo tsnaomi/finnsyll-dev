@@ -2,6 +2,7 @@
 
 import finnsyll as finn
 import os
+import sys
 import xml.etree.ElementTree as ET
 
 from collections import Counter, namedtuple
@@ -194,6 +195,6 @@ if __name__ == '__main__':
     # populate_db_tokens_from_aamulehti_1999()  # 13114.48 seconds
     # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
-    finn.transition()
+    finn.transition(pdf='--pdf' in sys.argv)
 
     pass

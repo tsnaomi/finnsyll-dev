@@ -67,11 +67,12 @@ An agglutination diphthong that ends in /u, y/ usually contains a syllable bound
                         if contains_Vu_diphthong(v):
                             I = v.rfind('u')
                             WORD[i] = v[:I] + '.' + v[I:]
-                        elif contains_Vy_dipghthong(v):
+                        elif contains_Vy_diphthong(v):
                             I = v.rfind('y')
                             WORD[i] = v[:I] + '.' + v[I:]
             word = '.'.join(WORD)
             return word
+
 
 **T5**:
 If a (V)VVV-sequence contains a VV-sequence that could be an /i/-final diphthong, there is a syllable boundary between it and the third vowel, e.g., [raa.ois.sa], [huo.uim.me], [la.eis.sa], [sel.vi.äi.si], [tai.an], [säi.e], [oi.om.me].
@@ -80,7 +81,8 @@ If a (V)VVV-sequence contains a VV-sequence that could be an /i/-final diphthong
             WORD = word.split('.')
             for i, v in enumerate(WORD):
                 if contains_VVV(v) and any(i for i in i_DIPHTHONGS if i in v):
-                    I = v.rfind('i') - 1
+                    I = v.rfind('i') - 1 or 2
+                    I = I + 2 if is_consonant(v[I - 1]) else I
                     WORD[i] = v[:I] + '.' + v[I:]
             word = '.'.join(WORD)
             return word
@@ -89,18 +91,19 @@ If a (V)VVV-sequence contains a VV-sequence that could be an /i/-final diphthong
 If a VVV-sequence contains a long vowel, there is a syllable boundary between it and the third vowel, e.g. [kor.ke.aa], [yh.ti.öön], [ruu.an], [mää.yt.te].
 
         def apply_T6(word):
-            WORD = word.split('.')
-            for i, v in enumerate(WORD):
-                if contains_VVV(v):
-                    VV = [v.find(j) for j in LONG_VOWELS if v.find(j) > 0]
-                    if VV:
-                        I = VV[0]
-                        if I + 2 == len(v) or is_vowel(v[I + 2]):
-                            WORD[i] = v[:I] + '.' + v[I:]
-                        else:
-                            WORD[i] = v[:I + 1] + '.' + v[I + 1:]
-            word = '.'.join(WORD)
-            return word
+                WORD = word.split('.')
+                for i, v in enumerate(WORD):
+                    if contains_VVV(v):
+                        VV = [v.find(j) for j in LONG_VOWELS if v.find(j) > 0]
+                        if VV:
+                            I = VV[0]
+                            if I + 2 == len(v) or is_vowel(v[I + 2]):
+                                WORD[i] = v[:I + 2] + '.' + v[I + 2:]  # TODO
+                            else:
+                                WORD[i] = v[:I] + '.' + v[I:]
+                word = '.'.join(WORD)
+                word = word.strip('.')  # TODO
+                return word
 
 **T7**:
 If a VVV-sequence does not contain a potential /i/-final diphthong, there is a syllable boundary between the second and third vowels, e.g. [kau.an], [leu.an], [kiu.as].
@@ -117,8 +120,6 @@ If a VVV-sequence does not contain a potential /i/-final diphthong, there is a s
   
 # Notes  
 
-- ~~Do not apply T4 to syllables that should be stressed.~~
-- *.aie.m.min* > *ai.em.min*
 - Consider flipping rule order (i.e., do not alter a boundary once it is imposed).
 
 {% endfilter %}
