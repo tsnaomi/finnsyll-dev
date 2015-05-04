@@ -276,14 +276,14 @@ def syllabify_tokens():
     end = x = 1000
 
     while start + x < count:
-
-        for token in Token.query.slice(start, end):
+        for token in Token.query.order_by(Token.id).slice(start, end):
             token.syllabify()
 
+        db.session.commit()
         start = end
         end += x
 
-    for token in Token.query.slice(start, count):
+    for token in Token.query.order_by(Token.id).slice(start, count):
         token.syllabify()
 
     db.session.commit()
@@ -295,19 +295,17 @@ def transition(pdf=False):
     '''Syllabify tokens and create a transition report.'''
     tokens = Token.query.filter(Token.is_gold.isnot(None))
     parse = lambda t: (t, [t.test_syll, t.rules])
-
-    PRE = {
+    Dict = lambda tokens=tokens: {
         'good': dict([parse(t) for t in tokens.filter_by(is_gold=True)]),
         'bad': dict([parse(t) for t in tokens.filter_by(is_gold=False)]),
         }
+
+    PRE = Dict()
 
     for t in tokens:
         t.syllabify()
 
-    POST = {
-        'good': dict([parse(t) for t in tokens.filter_by(is_gold=True)]),
-        'bad': dict([parse(t) for t in tokens.filter_by(is_gold=False)]),
-        }
+    POST = Dict()
 
     if PRE['good'] != POST['good']:
         good = set(PRE['bad'].keys()).intersection(POST['good'].keys())
