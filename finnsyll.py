@@ -272,7 +272,7 @@ def syllabify_tokens():
 
     This is done anytime a Token is instantiated. It *should* also be done
     anytime the syllabifying algorithm is updated.'''
-    for token in db.session.query(Token).yield_per(10):  # OPTIMIZE
+    for token in db.session.query(Token).yield_per(1000):  # OPTIMIZE
         token.syllabify()
 
     db.session.commit()
