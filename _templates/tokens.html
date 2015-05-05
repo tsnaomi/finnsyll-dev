@@ -1,40 +1,21 @@
 {% extends 'base.html' %}
 
-{% block head %}
-<script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
-<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
-{% endblock %}
-
-{% block toolbar %}
-<div class='table-header'>
-    <span class='okii'>Orthography</span>
-    <span class='okii'>Test *</span>
-    <span class='okii'>Correct</span>
-    <span class='okii'>Alternative 1</span>
-    <span class='okii'>Alternative 2</span>
-    <span class='okii'>Alternative 3</span>
-    <span class='chisaii'>Compound</span>
-</div>
-{% endblock %}
-
 {% block body %}
-<div class='token-table'>
+<div class='bad-tokens'>
+    <span class='bad-attr-label'>orth</span>
+    <span class='mini-bad-attr-label'>rules</span>
+    <span class='bad-attr-label'>test</span>
+    <span class='bad-attr-label'>gold</span>
+    <br><br>
+    {% for t in tokens %}
+    <span class='bad-attr' title='Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'>{{ t.orth }}</span>
+    <span class='mini-bad-attr'>{{ t.rules }}</span>
+    <span class='bad-attr'><span class='{% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span></span>
+    <span class='bad-attr'>{{ t.syll }}</span>
+    <span class='bad-attr'>{{ t.alt_syll1 }}</span>
+    <span class='bad-attr'>{{ t.alt_syll2 }}</span>
+    <span class='bad-attr'>{{ t.alt_syll3 }}</span>
     <br>
-    {% for token in tokens %}
-    <form class='tokens' method='POST'>
-        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-        <input type='hidden' id='active{{ loop.index }}' name='active' value={% if token.active %}1{% endif %}>
-        <input type='text' name='orth' class='okii orth' value='{{ token.orth }}' title='Rules: {{ token.rules }}&#10;&#10;Lemma: {{ token.lemma }}&#10;&#10;Part of speech: {{ token.pos }}&#10;&#10;Morpho-syntactic description: {{ token.msd }}&#10;&#10;Sonority: {{ token.sonorities }}&#10;&#10;Weight: {{ token.weights }}' readonly>
-        <input type='text' name='test_syll'class='okii test' value='{{ token.test_syll }}' readonly>
-        <input type='text' name='syll' class='okii' value='{{ token.syll }}'>
-        <input type='text' name='alt_syll1' class='okii' value='{{ token.alt_syll1 }}'>
-        <input type='text' name='alt_syll2' class='okii' value='{{ token.alt_syll2 }}'>
-        <input type='text' name='alt_syll3' class='okii' value='{{ token.alt_syll3 }}'>
-        <input type='checkbox' name='is_compound' class='chisaii' value=1 {% if token.is_compound %}checked{% endif %}>
-        <input type='submit' class='OK' class='chisaii' value='OK!'>
-        <input type='hidden' name='find' id='find' value={{ token.id }}>
-        <br>
-    </form>
     {% endfor %}
 </div>
 <br>

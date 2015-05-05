@@ -146,6 +146,39 @@ code {
     font-family: Menlo;
 }
 
+/* Bad tokens ---------------------------------------------------------------------------------- */
+
+div.bad-tokens {
+    font-size: 15px;
+    text-align: left;
+    margin: 0 12%;
+}
+
+.bad-attr,
+.bad-attr-label,
+.mini-bad-attr,
+.mini-bad-attr-label {
+    width: 220px;
+    display: inline-block;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+.mini-bad-attr,
+.mini-bad-attr-label {
+    width: 140px;
+    display: inline-block;
+}
+
+.bad-attr-label,
+.mini-bad-attr-label {
+    color: #C7C7C7;
+    font-style: italic;
+}
+
+.bad-attr > .compound {
+    border-bottom: 2px #ffd8ca dashed;
+}
+
 /* Find -------------------------------------------------------------------------------------- */
 
 div.search {
@@ -202,6 +235,13 @@ input.find[type='submit']:hover {
     font-style: italic;
     width: 80px;
     display: inline-block;
+}
+
+.search > .unverified,
+.search > .good,
+.search > .bad {
+    padding: 4px;
+    margin: -4px;
 }
 
 /* Doc --------------------------------------------------------------------------------------- */
@@ -370,7 +410,7 @@ a.word:hover {
     margin-left: 128px;
     }
 
-/* Tokens ------------------------------------------------------------------------------------ */
+/* Lemmas ------------------------------------------------------------------------------------ */
 
 .token-table,
 .tokens {

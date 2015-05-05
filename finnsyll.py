@@ -441,7 +441,7 @@ def redirect_url(default='main_view'):
 def apply_form(http_form):
     # Apply changes to Token instance based on POST request
     try:
-        orth = http_form['orth']
+        orth = http_form.get('orth')
         syll = http_form['syll'] or http_form['test_syll']
         alt_syll1 = http_form['alt_syll1'] or ''
         alt_syll2 = http_form['alt_syll2'] or ''
@@ -451,7 +451,7 @@ def apply_form(http_form):
         token = Token.query.get(http_form['find'])
 
         token.correct(
-            orth=orth,
+            orth=orth or token.orth,
             syll=syll,
             alt_syll1=alt_syll1,
             alt_syll2=alt_syll2,
@@ -491,9 +491,14 @@ def find_view():
     results = None
 
     if request.method == 'POST':
-        find = request.form['find']
-        find = find.translate({ord('.'): None, })  # strip periods
+
+        if request.form.get('syll'):
+            apply_form(request.form)
+
+        find = request.form.get('search') or request.form['syll']
+        find = find.strip().translate({ord('.'): None, })  # strip periods
         results = Token.query.filter(Token.orth.ilike(find))
+        results = results.order_by(Token.is_gold)
 
     return render_template('find.html', kw='find', results=results)
 
@@ -547,7 +552,7 @@ def bad_view(page):
         )
 
 
-@app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
+# @app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/lemma/page/<int:page>')
 def lemma_view(page):
     '''List all unverified unseen lemmas and process corrections.'''
