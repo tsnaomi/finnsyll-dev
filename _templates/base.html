@@ -27,7 +27,6 @@
                 <li><a href="{{ url_for('rules_view') }}" class="nav {% if kw == 'rules' %}highlight{% endif %}">Rules</a> <span class="bar">|</span></li>
                 <li><a href="{{ url_for('find_view') }}" class="nav {% if kw == 'find' %}highlight{% endif %}">Find</a> <span class="bar">|</span></li>
                 <li><a href="{{ url_for('bad_view') }}" class="nav {% if kw == 'bad' %}highlight{% endif %}">Bad</a> <span class="bar">|</span></li>
-                <!-- <li><a href="{{ url_for('lemma_view') }}" class="nav {% if kw == 'lemma' %}highlight{% endif %}">Lemmas</a> <span class="bar">|</span></li> -->
                 <li><a href="{{ url_for('logout_view') }}" class="nav">Sign Out</a></li>
             </ul>
             {% block toolbar %}{% endblock %}

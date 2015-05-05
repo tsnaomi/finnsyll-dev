@@ -484,24 +484,6 @@ def rules_view():
     return render_template('rules.html', kw='rules')
 
 
-@app.route('/find', methods=['GET', 'POST'])
-@login_required
-def find_view():
-    '''Search for tokens by word and/or citation form.'''
-    results = None
-
-    if request.method == 'POST':
-
-        if request.form.get('syll'):
-            apply_form(request.form)
-
-        find = request.form.get('search') or request.form['syll']
-        find = find.strip().translate({ord('.'): None, })  # strip periods
-        results = Token.query.filter(Token.orth.ilike(find))
-        results = results.order_by(Token.is_gold)
-
-    return render_template('find.html', kw='find', results=results)
-
 
 @app.route('/doc/<id>', methods=['GET', 'POST'])
 @login_required
@@ -534,13 +516,29 @@ def approve_doc_view(id):
     return redirect(url_for('doc_view', id=id))
 
 
+@app.route('/find', methods=['GET', 'POST'])
+@login_required
+def find_view():
+    '''Search for tokens by word and/or citation form.'''
+    results = None
+
+    if request.method == 'POST':
+
+        if request.form.get('syll'):
+            apply_form(request.form)
+
+        find = request.form.get('search') or request.form['syll']
+        find = find.strip().translate({ord('.'): None, })  # strip periods
+        results = Token.query.filter(Token.orth.ilike(find))
+        results = results.order_by(Token.is_gold)
+
+    return render_template('find.html', kw='find', results=results)
+
+
 @app.route('/bad', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/bad/page/<int:page>')
 def bad_view(page):
     '''List all incorrectly syllabified Tokens and process corrections.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
     tokens = get_bad_tokens()
     tokens, pagination = paginate(page, tokens)
 
