@@ -373,7 +373,7 @@ def get_unseen_lemmas():
 def get_unreviewed_documents():
     '''Return all unreviewed documents.'''
     docs = Document.query.filter_by(reviewed=False)
-    docs = docs.order_by(Document.unique_count.desc()).limit(10)
+    docs = docs.order_by(Document.unique_count).limit(10)
 
     return docs
 
@@ -482,7 +482,6 @@ def main_view():
 def rules_view():
     '''List syllabification rules.'''
     return render_template('rules.html', kw='rules')
-
 
 
 @app.route('/doc/<id>', methods=['GET', 'POST'])
