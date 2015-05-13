@@ -176,7 +176,8 @@ div.bad-tokens {
 }
 
 .bad-attr > .compound {
-    border-bottom: 2px #ffcab6 dashed;
+    /*border-bottom: 2px #ffcab6 dashed;*/
+    border-bottom: 2px #FF7F50 dashed;
 }
 
 /* Find -------------------------------------------------------------------------------------- */
