@@ -1,5 +1,6 @@
 # coding=utf-8
 
+import re
 
 # Finnish phones --------------------------------------------------------------
 
@@ -45,8 +46,8 @@ def is_diphthong(chars):
     return chars in DIPHTHONGS
 
 
-def is_long(chars):  # assumes len(chars) == 2
-    return chars[0] == chars[1]
+def is_long(chars):
+    return chars == chars[0] * len(chars)
 
 
 def contains_diphthong(chars):
@@ -54,47 +55,23 @@ def contains_diphthong(chars):
 
 
 def contains_VV(chars):
-    VV_SEQUENCE = [  # no diphthongs and no long vowels
-        'iA', 'iO', 'ia', 'io', 'eA', 'eO', 'ea', 'eo', 'Ae', 'AO', 'Aa', 'Au',
-        'Ao', 'ye', 'yA', 'ya', 'yu', 'yo', 'Oe', 'OA', 'Oa', 'Ou', 'Oo', 'ae',
-        'aA', 'ay', 'aO', 'ao', 'ue', 'uA', 'uy', 'uO', 'ua', 'oe', 'oA', 'oy',
-        'oO', 'oa']
-
-    if not contains_VVV(chars):
-        VV = [i for i in VV_SEQUENCE if i in chars]
-
-        return VV[0] if VV else False
-
-    return False
+    return re.search('^[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*$', chars)
 
 
 def contains_Vu_diphthong(chars):
-    if not contains_VVV(chars):
-        # includes genuine diphthongs
-        Vu_DIPHTHONGS = ['au', 'eu', 'ou', 'iu', 'Au', 'yu', 'Ou']
-
-        return any(i for i in Vu_DIPHTHONGS if i in chars)
-
-    return False
+    return re.search('^[^ieAyOauo]*([ieAyOao]{1}u)[^ieAyOauo]*$', chars)
 
 
 def contains_Vy_diphthong(chars):
-    if not contains_VVV(chars):
-        # includes genuine diphthongs
-        Vy_DIPHTHONGS = ['ey', 'Ay', 'Oy', 'iy', 'ay', 'uy', 'oy']
-
-        return any(i for i in Vy_DIPHTHONGS if i in chars)
-
-    return False
+    return re.search('^[^ieAyOauo]*([ieAOauo]{1}y)[^ieAyOauo]*$', chars)
 
 
 def contains_VVV(chars):
+    # return re.search('[ieAyOauo]{3}', chars)  # less efficient
     for i, c in enumerate(chars[:-2]):
 
         if is_vowel(c):
             return is_vowel(chars[i + 2])
-
-    return False
 
 
 def replace_umlauts(word, put_back=False):

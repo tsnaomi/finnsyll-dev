@@ -1,0 +1,23 @@
+syllabifier.v3
+
+Fixed T6. Does not include T8.
+
+FROM BAD TO GOOD (10)
+-----------------------------  -----------  -  ----------------------------  --------
+vir.tu.aa..li.toi.min.nois.ta  T1 T6 T7     >  vir.tu.aa.li.toi.min.nois.ta  T1 T6
+sek.su.aa..li.seen             T1 T6 T7     >  sek.su.aa.li.seen             T1 T6
+kaup.pa.uu..ti.si.a            T1 T2 T6 T7  >  kaup.pa.uu.ti.si.a            T1 T2 T6
+so.si.aa..li.nen               T1 T6 T7     >  so.si.aa.li.nen               T1 T6
+ku.lut.ta.ja.uu..ti.set        T1 T6 T7     >  ku.lut.ta.ja.uu.ti.set        T1 T6
+so.si.aa..li.vi.ras.to.ta.lon  T1 T6 T7     >  so.si.aa.li.vi.ras.to.ta.lon  T1 T6
+so.si.aa..li.vi.ras.to.ta.lo   T1 T6 T7     >  so.si.aa.li.vi.ras.to.ta.lo   T1 T6
+so.si.aa..li.vi.ras.ton        T1 T6 T7     >  so.si.aa.li.vi.ras.ton        T1 T6
+tuo.ma.ri.ää..nin              T1 T6 T7     >  tuo.ma.ri.ää.nin              T1 T6
+so.si.aa..li                   T1 T6 T7     >  so.si.aa.li                   T1 T6
+-----------------------------  -----------  -  ----------------------------  --------
+
+FROM GOOD TO BAD (0)
+
+
+
+186 BAD TOKENS
