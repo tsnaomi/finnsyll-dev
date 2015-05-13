@@ -19,43 +19,24 @@ from phonology import (
 # Syllabifier -----------------------------------------------------------------
 
 def syllabify(word):
-    # if the word is a compound
-    delimiter = '-' if '-' in word else ' ' if ' ' in word else None
+    compound = True if '-' in word or ' ' in word else None
 
-    # # if the word contains a delimiter (a hyphens or space), split the world
-    # # along the delimiter and syllabify the individual parts separately
-    # if delimiter:
-    #     WORD, RULES = [], []
-
-    #     # if both delimiters are present in the word
-    #     if delimiter != ' ' and ' ' in word:
-    #         for w in word.split(delimiter):
-    #             for w in word.split(' '):
-    #                 syll, rules = _syllabify(w)
-    #                 WORD.append(syll)
-    #                 RULES.append(rules)
-
-    #     else:
-    #         for w in word.split(delimiter):
-    #             syll, rules = _syllabify(w)
-    #             WORD.append(syll)
-    #             RULES.append(rules)
-
-    #     return delimiter.join(WORD), (' |').join(RULES)
-
-    # return _syllabify(word)
-
-    # if the word contains a delimiter (a hyphens or space), split the world
-    # along the delimiter and syllabify the individual parts separately
-    if delimiter:
+    # if the word contains a delimiter (a hyphens or space), split the word
+    # along the delimiter(s) and syllabify the individual parts separately
+    if compound:
         WORD, RULES = [], []
 
-        for w in word.split(delimiter):
-            syll, rules = _syllabify(w)
+        for w in re.split('(-| )', word):
+            if w in '- ':
+                syll, rules = w, ' |'
+
+            else:
+                syll, rules = _syllabify(w)
+
             WORD.append(syll)
             RULES.append(rules)
 
-        return delimiter.join(WORD), (' |').join(RULES)
+        return ''.join(WORD), ''.join(RULES)
 
     return _syllabify(word)
 
@@ -261,14 +242,20 @@ def apply_T7(word):
 
 # T8 --------------------------------------------------------------------------
 
+def ie_sequences(word):
+    # this regex pattern searches for /ie/ sequences that do not occur in the
+    # first syllable, and that are not directly preceded or followed by a vowel
+    return re.finditer(r'(?=\.[^ieAyOauo]*(ie)[^ieAyOauo]*($|\.))', word)
+
+
 def apply_T8(word):
-    '''Split [ie] sequences in syllables that do not take primary stress.'''
+    '''Split /ie/ sequences in syllables that do not take primary stress.'''
     WORD = word
     offset = 0
 
-    for VV in re.finditer(r'(?=\.[^ieAyOauo]*(ie)[^ieAyOauo]*($|\.))', word):
-        I = VV.start(1) + 1 + offset
-        WORD = WORD[:I] + '.' + WORD[I:]
+    for ie in ie_sequences(WORD):
+        i = ie.start(1) + 1 + offset
+        WORD = WORD[:i] + '.' + WORD[i:]
         offset += 1
 
     RULE = ' T8' if word != WORD else ''
@@ -324,6 +311,7 @@ if __name__ == '__main__':
             # (u'evankeliumeja', u'e.van.ke.li.u.me.ja'),
             (u'sosiaalinen', u'so.si.aa.li.nen'),
             (u'välierien', u'vä.li.e.ri.en'),
+            (u'lounais-suomen puhelin', u'lou.nais-suo.men pu.he.lin'),
             ]
 
         for word in words:
