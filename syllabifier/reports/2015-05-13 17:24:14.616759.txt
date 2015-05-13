@@ -1,0 +1,93 @@
+syllabifier.v3
+
+Implementation of T8 in which any 'ie' sequence not in the first syllable is split.
+In this version, the ordering is ... T2 T8 T4 ...
+
+
+FROM BAD TO GOOD (38)
+----------------------------------  ---------------  -  -----------------------------------  ------------------
+kel.mien                            T1               >  kel.mi.en                            T1 T8
+ja.vier                             T1               >  ja.vi.er                             T1 T8
+siit.tä.jien                        T1               >  siit.tä.ji.en                        T1 T8
+tuot.ta.vien                        T1               >  tuot.ta.vi.en                        T1 T8
+puu.sep.pien                        T1               >  puu.sep.pi.en                        T1 T8
+vä.lie.riin                         T1               >  vä.li.e.riin                         T1 T8
+pal.ve.lu.teh.tä.vien               T1               >  pal.ve.lu.teh.tä.vi.en               T1 T8
+oop.pe.ra.juh.lien                  T1               >  oop.pe.ra.juh.li.en                  T1 T8
+ris.kien                            T1               >  ris.ki.en                            T1 T8
+y.rit.tä.jien                       T1               >  y.rit.tä.ji.en                       T1 T8
+työt.tö.mien                        T1               >  työt.tö.mi.en                        T1 T8
+ju.ko.lan.tu.pien                   T1               >  ju.ko.lan.tu.pi.en                   T1 T8
+kun.tien                            T1               >  kun.ti.en                            T1 T8
+i.kään.ty.vien                      T1               >  i.kään.ty.vi.en                      T1 T8
+sen.so.ri.bak.tee.rien              T1               >  sen.so.ri.bak.tee.ri.en              T1 T8
+vyön.ki.ris.tys.vuo.sien            T1               >  vyön.ki.ris.tys.vuo.si.en            T1 T8
+pank.kien                           T1               >  pank.ki.en                           T1 T8
+en.sieh.to                          T1               >  en.si.eh.to                          T1 T8
+ka.na.ruo.kien                      T1               >  ka.na.ruo.ki.en                      T1 T8
+no.vel.lien                         T1               >  no.vel.li.en                         T1 T8
+ku.lut.ta.jien                      T1               >  ku.lut.ta.ji.en                      T1 T8
+vä.lie.rä.ot.te.lun                 T1 T2            >  vä.li.e.rä.ot.te.lun                 T1 T2 T8
+kurs.sien                           T1               >  kurs.si.en                           T1 T8
+lu.kien                             T1               >  lu.ki.en                             T1 T8
+jär.vien                            T1               >  jär.vi.en                            T1 T8
+mo.le.kyy.lien                      T1               >  mo.le.kyy.li.en                      T1 T8
+vä.lie.ris.tä                       T1               >  vä.li.e.ris.tä                       T1 T8
+täh.tien                            T1               >  täh.ti.en                            T1 T8
+uu.sien                             T1               >  uu.si.en                             T1 T8
+suo.mi-ruot.si-vä.lie.rä.ot.te.lun  T1 | T1 | T1 T2  >  suo.mi-ruot.si-vä.li.e.rä.ot.te.lun  T1 | T1 | T1 T2 T8
+sääs.tä.jien                        T1               >  sääs.tä.ji.en                        T1 T8
+reh.to.rien                         T1               >  reh.to.ri.en                         T1 T8
+sa.laat.tien                        T1               >  sa.laat.ti.en                        T1 T8
+eu.ro.vaa.lieh.do.kas               T1               >  eu.ro.vaa.li.eh.do.kas               T1 T8
+da.niel                             T1               >  da.ni.el                             T1 T8
+po.lii.si.moot.to.ri.pyö.rien       T1               >  po.lii.si.moot.to.ri.pyö.ri.en       T1 T8
+vä.lie.rien                         T1               >  vä.li.e.ri.en                        T1 T8
+kaik.kien                           T1               >  kaik.ki.en                           T1 T8
+----------------------------------  ---------------  -  -----------------------------------  ------------------
+
+FROM GOOD TO BAD (40)
+-------------------------------  -----  -  --------------------------------  --------
+sel.vi.tys.mies                  T1     >  sel.vi.tys.mi.es                  T1 T8
+lai.na.kier.re                   T1     >  lai.na.ki.er.re                   T1 T8
+ve.ron.kier.to                   T1     >  ve.ron.ki.er.to                   T1 T8
+toi.mit.ta.jien                  T1     >  toi.mit.ta.ji.en                  T1 T8  GOOD
+vas.ten.mie.li.si.ä              T1 T2  >  vas.ten.mi.e.li.si.ä              T1 T2 T8
+maa.mies                         T1     >  maa.mi.es                         T1 T8
+laa.tu.vies.ti                   T1     >  laa.tu.vi.es.ti                   T1 T8
+mat.ka.vies.ti                   T1     >  mat.ka.vi.es.ti                   T1 T8
+kas.va.tus.tie.teen              T1     >  kas.va.tus.ti.e.teen              T1 T8
+kas.va.tus.tie.tei.den           T1     >  kas.va.tus.ti.e.tei.den           T1 T8
+jää.kiek.koi.lun                 T1     >  jää.ki.ek.koi.lun                 T1 T8
+kas.vin.ja.los.tus.tie.teen      T1     >  kas.vin.ja.los.tus.ti.e.teen      T1 T8
+lää.ke.tie.teen                  T1     >  lää.ke.ti.e.teen                  T1 T8
+jää.kie.kok.si                   T1     >  jää.ki.e.kok.si                   T1 T8
+ko.ti.ta.lo.uk.sien              T1 T4  >  ko.ti.ta.lo.uk.si.en              T1 T8 T4  GOOD
+myyn.ti.mie.het                  T1     >  myyn.ti.mi.e.het                  T1 T8
+a.ra.bi.an.kie.lis.tä            T1 T2  >  a.ra.bi.an.ki.e.lis.tä            T1 T2 T8
+la.ki.mies                       T1     >  la.ki.mi.es                       T1 T8
+lää.ke.tie.teen                  T1     >  lää.ke.ti.e.teen                  T1 T8
+ym.pä.ris.tö.tie.dot.ta.mi.seen  T1     >  ym.pä.ris.tö.ti.e.dot.ta.mi.seen  T1 T8
+sär.kän.nie.mes.sä               T1     >  sär.kän.ni.e.mes.sä               T1 T8
+vaa.ti.vien                      T1     >  vaa.ti.vi.en                      T1 T8  GOOD
+kaup.pa.tie.tei.den              T1     >  kaup.pa.ti.e.tei.den              T1 T8
+kan.ta.tie                       T1     >  kan.ta.ti.e                       T1 T8
+len.to.a.se.man.tien             T1 T2  >  len.to.a.se.man.ti.en             T1 T2 T8
+huh.ta.nie.men                   T1     >  huh.ta.ni.e.men                   T1 T8
+maan.mie.hen.sä                  T1     >  maan.mi.e.hen.sä                  T1 T8
+sär.kän.nie.men                  T1     >  sär.kän.ni.e.men                  T1 T8
+teks.ti.vies.tis.sä              T1     >  teks.ti.vi.es.tis.sä              T1 T8
+put.ki.mie.hek.si                T1     >  put.ki.mi.e.hek.si                T1 T8
+lep.pi.nie.mi                    T1     >  lep.pi.ni.e.mi                    T1 T8
+lii.kun.ta.tie.tei.den           T1     >  lii.kun.ta.ti.e.tei.den           T1 T8
+it.kien                          T1     >  it.ki.en                          T1 T8  GOOD
+kas.vin.vil.je.ly.tie.teen       T1     >  kas.vin.vil.je.ly.ti.e.teen       T1 T8
+si.sä.pii.ri.tie.don             T1     >  si.sä.pii.ri.ti.e.don             T1 T8
+työ.kie.le.nä                    T1     >  työ.ki.e.le.nä                    T1 T8
+re.view                          T1     >  re.vi.ew                          T1 T8  BAD (ENGLISH) -- excl. 'w'
+kuok.ka.maan.tiel.lä             T1     >  kuok.ka.maan.ti.el.lä             T1 T8
+jää.kiek.koi.li.jat              T1     >  jää.ki.ek.koi.li.jat              T1 T8
+jää.kie.kon                      T1     >  jää.ki.e.kon                      T1 T8
+-------------------------------  -----  -  --------------------------------  --------
+
+188 BAD TOKENS

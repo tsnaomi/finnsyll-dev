@@ -55,15 +55,15 @@ def contains_diphthong(chars):
 
 
 def contains_VV(chars):
-    return re.search('^[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*$', chars)
+    return re.search(r'^[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*$', chars)
 
 
 def contains_Vu_diphthong(chars):
-    return re.search('^[^ieAyOauo]*([ieAyOao]{1}u)[^ieAyOauo]*$', chars)
+    return re.search(r'^[^ieAyOauo]*([ieAyOao]{1}u)[^ieAyOauo]*$', chars)
 
 
 def contains_Vy_diphthong(chars):
-    return re.search('^[^ieAyOauo]*([ieAOauo]{1}y)[^ieAyOauo]*$', chars)
+    return re.search(r'^[^ieAyOauo]*([ieAOauo]{1}y)[^ieAyOauo]*$', chars)
 
 
 def contains_VVV(chars):

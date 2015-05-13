@@ -9,7 +9,6 @@ from phonology import (
     contains_Vy_diphthong,
     contains_VVV,
     is_consonant,
-    is_diphthong,
     is_long,
     is_vowel,
     replace_umlauts,
@@ -20,7 +19,31 @@ from phonology import (
 # Syllabifier -----------------------------------------------------------------
 
 def syllabify(word):
+    # if the word is a compound
     delimiter = '-' if '-' in word else ' ' if ' ' in word else None
+
+    # # if the word contains a delimiter (a hyphens or space), split the world
+    # # along the delimiter and syllabify the individual parts separately
+    # if delimiter:
+    #     WORD, RULES = [], []
+
+    #     # if both delimiters are present in the word
+    #     if delimiter != ' ' and ' ' in word:
+    #         for w in word.split(delimiter):
+    #             for w in word.split(' '):
+    #                 syll, rules = _syllabify(w)
+    #                 WORD.append(syll)
+    #                 RULES.append(rules)
+
+    #     else:
+    #         for w in word.split(delimiter):
+    #             syll, rules = _syllabify(w)
+    #             WORD.append(syll)
+    #             RULES.append(rules)
+
+    #     return delimiter.join(WORD), (' |').join(RULES)
+
+    # return _syllabify(word)
 
     # if the word contains a delimiter (a hyphens or space), split the world
     # along the delimiter and syllabify the individual parts separately
@@ -42,14 +65,14 @@ def _syllabify(word):
     word = replace_umlauts(word)
     word, applied_rules = apply_T1(word)
 
-    if re.search('[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*', word):
+    if re.search(r'[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*', word):
         word, T2 = apply_T2(word)
-        # word, T8 = apply_T8(word)
+        word, T8 = apply_T8(word)
         word, T4 = apply_T4(word)
-        # applied_rules += T2 + T8 + T4
-        applied_rules += T2 + T4
+        applied_rules += T2 + T8 + T4
+        # applied_rules += T2 + T4
 
-    if re.search('[ieAyOauo]{3}', word):
+    if re.search(r'[ieAyOauo]{3}', word):
         word, T5 = apply_T5(word)
         word, T6 = apply_T6(word)
         word, T7 = apply_T7(word)
@@ -239,22 +262,15 @@ def apply_T7(word):
 # T8 --------------------------------------------------------------------------
 
 def apply_T8(word):
-    WORD = word.split('.')
+    '''Split [ie] sequences in syllables that do not take primary stress.'''
+    WORD = word
+    offset = 0
 
-    for i, v in enumerate(WORD):
+    for VV in re.finditer(r'(?=\.[^ieAyOauo]*(ie)[^ieAyOauo]*($|\.))', word):
+        I = VV.start(1) + 1 + offset
+        WORD = WORD[:I] + '.' + WORD[I:]
+        offset += 1
 
-        # split unstressed heavy syllables
-        if is_consonant(v[-1]) and i % 2 != 0:
-            VV = contains_VV(v)
-            # seq = VV.group(1) if VV else None
-
-            # if VV and not is_long(seq) and seq in 'ie ei':
-            if VV and not is_long(VV.group(1)):
-
-                I = VV.start(1) + 1
-                WORD[i] = v[:I] + '.' + v[I:]
-
-    WORD = '.'.join(WORD)
     RULE = ' T8' if word != WORD else ''
 
     return WORD, RULE
@@ -274,39 +290,40 @@ if __name__ == '__main__':
 
     else:
         words = [
-            # (u'tae', u'ta.e'),
-            # (u'koettaa', u'ko.et.taa'),
-            # (u'hain', u'hain (ha.in)'),
-            # (u'laukaus', u'lau.ka.us'),
-            # (u'vakauttaa', u'va.ka.ut.taa'),
-            # (u'raaoissa', u'raa.ois.sa'),
-            # (u'huouimme', u'huo.uim.me'),
-            # (u'laeissa', u'la.eis.sa'),
-            # (u'selviäisi', u'sel.vi.äi.si'),
-            # (u'taian', u'tai.an'),
-            # (u'säie', u'säi.e'),
-            # (u'oiomme', u'oi.om.me'),
-            # (u'korkeaa', u'kor.ke.aa'),
-            # (u'yhtiöön', u'yh.ti.öön'),
-            # (u'ruuan', u'ruu.an'),
-            # (u'määytte', u'mää.yt.te'),
-            # (u'kauan', u'kau.an'),
-            # (u'leuan', u'leu.an'),
-            # (u'kiuas', u'kiu.as'),
-            # (u'haluaisin', u'ha.lu.ai.sin'),
-            # (u'hyöyissä', u'hyö.yis.sä'),
-            # (u'pamaushan', u'pa.ma.us.han'),
-            # (u'saippuaa', u'saip.pu.aa'),
-            # (u'joissa', u'jois.sa (jo.is.sa)'),
-            # (u'tae', u'ta.e'),
-            # (u'kärkkyä', u'kärk.ky.ä'),
-            # (u'touon', u'tou.on'),
-            # (u'värväytyä', u'vär.väy.ty.ä'),
-            # (u'värväyttää', u'vär.vä.yt.tää'),
-            # (u'daniel', u'da.ni.el'),
+            (u'tae', u'ta.e'),
+            (u'koettaa', u'ko.et.taa'),
+            (u'hain', u'hain'),  # ha.in (alternative)
+            (u'laukaus', u'lau.ka.us'),
+            (u'vakauttaa', u'va.ka.ut.taa'),
+            (u'raaoissa', u'raa.ois.sa'),
+            (u'huouimme', u'huo.uim.me'),
+            (u'laeissa', u'la.eis.sa'),
+            (u'selviäisi', u'sel.vi.äi.si'),
+            (u'taian', u'tai.an'),
+            (u'säie', u'säi.e'),
+            (u'oiomme', u'oi.om.me'),
+            (u'korkeaa', u'kor.ke.aa'),
+            (u'yhtiöön', u'yh.ti.öön'),
+            (u'ruuan', u'ruu.an'),
+            (u'määytte', u'mää.yt.te'),
+            (u'kauan', u'kau.an'),
+            (u'leuan', u'leu.an'),
+            (u'kiuas', u'kiu.as'),
+            (u'haluaisin', u'ha.lu.ai.sin'),
+            (u'hyöyissä', u'hyö.yis.sä'),
+            (u'pamaushan', u'pa.ma.us.han'),
+            (u'saippuaa', u'saip.pu.aa'),
+            (u'joissa', u'jois.sa'),  # jo.is.sa (alternative)
+            (u'tae', u'ta.e'),
+            (u'kärkkyä', u'kärk.ky.ä'),
+            (u'touon', u'tou.on'),
+            (u'värväytyä', u'vär.väy.ty.ä'),
+            (u'värväyttää', u'vär.vä.yt.tää'),
+            (u'daniel', u'da.ni.el'),
             # (u'esseisti', u'es.se.is.ti'),
             # (u'evankeliumeja', u'e.van.ke.li.u.me.ja'),
             (u'sosiaalinen', u'so.si.aa.li.nen'),
+            (u'välierien', u'vä.li.e.ri.en'),
             ]
 
         for word in words:

@@ -355,7 +355,10 @@ def update_documents():
 
 def get_bad_tokens():
     '''Return all of the tokens that are incorrectly syllabified.'''
-    return Token.query.filter_by(is_gold=False).order_by(Token.lemma)
+    tokens = Token.query.filter_by(is_gold=False).filter_by(is_compound=False)
+    tokens = tokens.order_by(Token.lemma)
+
+    return tokens
 
 
 def get_good_tokens():
