@@ -33,7 +33,8 @@ def is_vowel(ch):
 
 
 def is_consonant(ch):
-    return ch in CONSONANTS
+    # return ch in CONSONANTS
+    return not is_vowel(ch)  # includes 'w'
 
 
 def is_cluster(ch):  # KEEP?

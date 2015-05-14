@@ -292,6 +292,7 @@ if __name__ == '__main__':
             (u'sosiaalinen', u'so.si.aa.li.nen'),
             (u'välierien', u'vä.li.e.ri.en'),
             (u'lounais-suomen puhelin', u'lou.nais-suo.men pu.he.lin'),
+            (u'powers', u'po.wers'),
             ]
 
         for word in words:
