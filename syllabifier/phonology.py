@@ -1,7 +1,5 @@
 # coding=utf-8
 
-import re
-
 # Finnish phones --------------------------------------------------------------
 
 # Finnish vowels
@@ -23,7 +21,7 @@ CONSONANTS = [
 
 
 # Finnish consonant clusters (see Karlsson 1985, #4)
-CLUSTERS = [
+CLUSTERS = [  # KEEP?
     u'bl', u'br', u'dr', u'fl', u'fr', u'gl', u'gr', u'kl', u'kr', u'kv',
     u'pl', u'pr', u'cl', u'qv', u'schm']
 
@@ -38,7 +36,7 @@ def is_consonant(ch):
     return ch in CONSONANTS
 
 
-def is_cluster(ch):
+def is_cluster(ch):  # KEEP?
     return ch in CLUSTERS
 
 
@@ -50,29 +48,7 @@ def is_long(chars):
     return chars == chars[0] * len(chars)
 
 
-def contains_diphthong(chars):
-    return any(i for i in DIPHTHONGS if i in chars)
-
-
-def contains_VV(chars):
-    return re.search(r'^[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*$', chars)
-
-
-def contains_Vu_diphthong(chars):
-    return re.search(r'^[^ieAyOauo]*([ieAyOao]{1}u)[^ieAyOauo]*$', chars)
-
-
-def contains_Vy_diphthong(chars):
-    return re.search(r'^[^ieAyOauo]*([ieAOauo]{1}y)[^ieAyOauo]*$', chars)
-
-
-def contains_VVV(chars):
-    # return re.search('[ieAyOauo]{3}', chars)  # less efficient
-    for i, c in enumerate(chars[:-2]):
-
-        if is_vowel(c):
-            return is_vowel(chars[i + 2])
-
+# Normalization functions -----------------------------------------------------
 
 def replace_umlauts(word, put_back=False):
     '''If put_back is True, put in umlauts; else, take them out!'''
@@ -96,14 +72,6 @@ def split_syllable(syllable):
     onset, nucleus, coda = syll.partition(nucleus)
 
     return (onset, nucleus, coda)
-
-
-def is_inseparable_vowels(chars):
-    return is_diphthong(chars) or is_long(chars)
-
-
-# def is_consonantal_onset(chars):
-#     return is_cluster(chars) or is_consonant(chars)
 
 
 # Sonority functions ----------------------------------------------------------

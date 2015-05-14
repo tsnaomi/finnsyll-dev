@@ -14,49 +14,29 @@
 There is a syllable boundary in front of every CV-sequence.
 
         def apply_T1(word):
-            WORD = _split_consonants_and_vowels(word)
+            # split consonants and vowels: 'balloon' -> ['b', 'a', 'll', 'oo', 'n']
+            WORD = [w for w in re.split('([ieAyOauo]+)', word) if w]
             for i, v in enumerate(WORD):
-                if i == 0 and is_consonantal_onset(v):
+                if i == 0 and is_consonant(v[0]):
                     continue
                 elif is_consonant(v[0]) and i + 1 != len(WORD):
                     WORD[i] = v[:-1] + '.' + v[-1]
-            word = ''.join(WORD)
-            return word
-
-
-        def _same_syllabic_feature(ch1, ch2):
-            # returns True if ch1 and ch2 are both vowels or both consonants
-            ch1 = 'V' if ch1 in VOWELS else 'C'
-            ch2 = 'V' if ch2 in VOWELS else 'C'
-            return ch1 == ch2
-
-
-        def _split_consonants_and_vowels(word):
-            # 'bal.loon' -> {1: 'b', 2: 'a', 3: 'l', 4: '.'. 5: 'l', 6: 'oo', 7: 'n'}
-            WORD = []
-            prev = [0, 0]  # (list indice, character)
-            for ch in word:
-                if prev[0] and _same_syllabic_feature(prev[1], ch):
-                    WORD[prev[0] - 1] += ch
-                else:
-                    WORD.append(ch)
-                    prev[0] += 1
-                    prev[1] = ch
+            WORD = ''.join(WORD)
             return WORD
 
 **T2**:
 There is a syllable boundary within a sequence VV of two nonidentical vowels that are not a genuine diphthong, e.g., [ta.e], [ko.et.taa].
 
         def apply_T2(word):
-            WORD = word.split('.')
-            for i, v in enumerate(WORD):
-                if not contains_diphthong(v):
-                    VV = contains_VV(v)
-                    if VV:
-                        I = v.find(VV) + 1
-                        WORD[i] = v[:I] + '.' + v[I:]
-            word = '.'.join(WORD)
-            return word
+            WORD = word
+            offset = 0
+            for vv in vv_sequences(WORD):
+                seq = vv.group(2)
+                if not is_diphthong(seq) and not is_long(seq):
+                    i = vv.start(2) + 1 + offset
+                    WORD = WORD[:i] + '.' + WORD[i:]
+                    offset += 1
+            return WORD
 
 **T4**:
 An agglutination diphthong that ends in /u, y/ usually contains a syllable boundary when -C# or -CCV follow, e.g., [lau.ka.us], [va.ka.ut.taa].
@@ -68,46 +48,43 @@ An agglutination diphthong that ends in /u, y/ usually contains a syllable bound
                 # syllables, which receive stress (WSP)
                 if is_consonant(v[-1]) and i % 2 != 0:
                     if i + 1 == len(WORD) or is_consonant(WORD[i + 1][0]):
-                        if contains_Vu_diphthong(v):
-                            I = v.rfind('u')
+                        vv = u_or_y_final_diphthong_vv_sequences(v)
+                        if vv and not is_long(vv.group(1)):
+                            I = vv.start(1) + 1
                             WORD[i] = v[:I] + '.' + v[I:]
-                        elif contains_Vy_diphthong(v):
-                            I = v.rfind('y')
-                            WORD[i] = v[:I] + '.' + v[I:]
-            word = '.'.join(WORD)
-            return word
+            WORD = '.'.join(WORD)
+            return WORD
 
 
 **T5**:
 If a (V)VVV-sequence contains a VV-sequence that could be an /i/-final diphthong, there is a syllable boundary between it and the third vowel, e.g., [raa.ois.sa], [huo.uim.me], [la.eis.sa], [sel.vi.äi.si], [tai.an], [säi.e], [oi.om.me].
 
         def apply_T5(word):
-            WORD = word.split('.')
-            for i, v in enumerate(WORD):
-                if contains_VVV(v) and any(i for i in i_DIPHTHONGS if i in v):
-                    I = v.rfind('i') - 1 or 2
-                    I = I + 2 if is_consonant(v[I - 1]) else I
-                    WORD[i] = v[:I] + '.' + v[I:]
-            word = '.'.join(WORD)
-            return word
+            WORD = word
+                offset = 0
+                for vi in i_final_diphthong_vvv_sequences(WORD):
+                    s = max(vi.start(1), vi.start(2))
+                    i = 2 if s + 2 < len(word) and is_vowel(word[s + 2]) else 0
+                    if not (s == i == 0):
+                        i += s + offset
+                        WORD = WORD[:i] + '.' + WORD[i:]
+                        offset += 1
+                return WORD
 
 **T6**:
 If a VVV-sequence contains a long vowel, there is a syllable boundary between it and the third vowel, e.g. [kor.ke.aa], [yh.ti.öön], [ruu.an], [mää.yt.te].
 
         def apply_T6(word):
-                WORD = word.split('.')
-                for i, v in enumerate(WORD):
-                    if contains_VVV(v):
-                        VV = [v.find(j) for j in LONG_VOWELS if v.find(j) > 0]
-                        if VV:
-                            I = VV[0]
-                            if I + 2 == len(v) or is_vowel(v[I + 2]):
-                                WORD[i] = v[:I + 2] + '.' + v[I + 2:]  # TODO
-                            else:
-                                WORD[i] = v[:I] + '.' + v[I:]
-                word = '.'.join(WORD)
-                word = word.strip('.')  # TODO
-                return word
+            WORD = word
+            offset = 0
+            for vvv in vvv_sequences(WORD):
+                seq = vvv.group(2)
+                j = 2 if is_long(seq[:2]) else 1 if is_long(seq[1:]) else 0
+                if j:
+                    i = vvv.start(2) + j + offset
+                    WORD = WORD[:i] + '.' + WORD[i:]
+                    offset += 1
+            return WORD
 
 **T7**:
 If a VVV-sequence does not contain a potential /i/-final diphthong, there is a syllable boundary between the second and third vowels, e.g. [kau.an], [leu.an], [kiu.as].
@@ -121,9 +98,21 @@ If a VVV-sequence does not contain a potential /i/-final diphthong, there is a s
                             WORD[i] = v[:I] + '.' + v[I:]
             word = '.'.join(WORD)
             return word
+
+**T8**:
+Split /ie/ sequences in syllables that do not take primary stress.
+
+        def apply_T8(word):
+            WORD = word
+            offset = 0
+            for ie in ie_sequences(WORD):
+                i = ie.start(1) + 1 + offset
+                WORD = WORD[:i] + '.' + WORD[i:]
+                offset += 1
+            return WORD
   
 # Notes  
-
+        
 - Consider flipping rule order (i.e., do not alter a boundary once it is imposed).
 
 {% endfilter %}

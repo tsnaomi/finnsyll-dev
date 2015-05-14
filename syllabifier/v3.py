@@ -3,16 +3,11 @@
 import re
 
 from phonology import (
-    contains_diphthong,
-    contains_VV,
-    contains_Vu_diphthong,
-    contains_Vy_diphthong,
-    contains_VVV,
     is_consonant,
+    is_diphthong,
     is_long,
     is_vowel,
     replace_umlauts,
-    VOWELS,
     )
 
 
@@ -27,12 +22,7 @@ def syllabify(word):
         WORD, RULES = [], []
 
         for w in re.split('(-| )', word):
-            if w in '- ':
-                syll, rules = w, ' |'
-
-            else:
-                syll, rules = _syllabify(w)
-
+            syll, rules = (w, ' |') if w in '- ' else _syllabify(w)
             WORD.append(syll)
             RULES.append(rules)
 
@@ -64,53 +54,62 @@ def _syllabify(word):
     return word, applied_rules
 
 
+# Sequences -------------------------------------------------------------------
+
+def vv_sequences(word):
+    # this pattern searches for any VV sequence that is not directly preceded
+    # or followed by a vowel
+    pattern = r'(?=(^|\.)[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*($|\.))'
+    return re.finditer(pattern, word)
+
+
+def vvv_sequences(word):
+    # this pattern searches for any VVV sequence that is not directly preceded
+    # or followed by a vowel
+    pattern = r'(?=(^|\.)[^ieAyOauo]*([ieAyOauo]{3})[^ieAyOauo]*($|\.))'
+    return re.finditer(pattern, word)
+
+
+def ie_sequences(word):
+    # this pattern searches for any /ie/ sequences that does not occur in the
+    #  first syllable, and that is not directly preceded or followed by a vowel
+    pattern = r'(?=\.[^ieAyOauo]*(ie)[^ieAyOauo]*($|\.))'
+    return re.finditer(pattern, word)
+
+
+def i_final_diphthong_vvv_sequences(word):
+    # this pattern searches for any (V)VVV sequence that contains an i-final
+    # diphthong: 'ai', 'ei', 'oi', 'Ai', 'Oi', 'ui', 'yi'
+    pattern = r'[ieAyOauo]+([eAyOauo]{1}i)[ieAyOauo]*'
+    pattern += r'|[ieAyOauo]*([eAyOauo]{1}i)[ieAyOauo]+'
+    return re.finditer(pattern, word)
+
+
+def u_or_y_final_diphthong_vv_sequences(chars):
+    # this pattern searchs for any VV sequence that ends in /u/ or /y/ (incl.
+    # long vowels), and that is not directly preceded or followed by a vowel
+    return re.search(r'^[^ieAyOauo]*([ieAyOao]{1}(u|y))[^ieAyOauo]*$', chars)
+
+
 # T1 --------------------------------------------------------------------------
 
 def apply_T1(word):
     '''There is a syllable boundary in front of every CV-sequence.'''
-    WORD = _split_consonants_and_vowels(word)
+    # split consonants and vowels: 'balloon' -> ['b', 'a', 'll', 'oo', 'n']
+    WORD = [w for w in re.split('([ieAyOauo]+)', word) if w]
 
     for i, v in enumerate(WORD):
 
-        if i == 0 and is_consonant(v[0][0]):
+        if i == 0 and is_consonant(v[0]):
             continue
 
         elif is_consonant(v[0]) and i + 1 != len(WORD):
             WORD[i] = v[:-1] + '.' + v[-1]
 
-    word = ''.join(WORD)
-    RULE = ' T1'
+    WORD = ''.join(WORD)
+    RULE = ' T1' if word != WORD else ''
 
-    return word, RULE
-
-
-def _same_syllabic_feature(ch1, ch2):
-    # returns True if ch1 and ch2 are both vowels or both consonants
-    # assumes either both ch1 and ch2 are either C or V
-    ch1 = 'V' if ch1 in VOWELS else 'C'
-    ch2 = 'V' if ch2 in VOWELS else 'C'
-
-    return ch1 == ch2
-
-
-def _split_consonants_and_vowels(word):
-    # 'balloon' -> {1: 'b', 2: 'a', 3: 'll', 4: 'oo', 5: 'n'}
-    # 'bal.loon' -> {1: 'b', 2: 'a', 3: 'l', 4: '.'. 5: 'l', 6: 'oo', 7: 'n'}
-    WORD = []
-
-    prev = [0, 0]  # (list indice, character)
-
-    for ch in word:
-
-        if prev[0] and _same_syllabic_feature(prev[1], ch):
-            WORD[prev[0] - 1] += ch
-
-        else:
-            WORD.append(ch)
-            prev[0] += 1
-            prev[1] = ch
-
-    return WORD
+    return WORD, RULE
 
 
 # T2 --------------------------------------------------------------------------
@@ -118,18 +117,17 @@ def _split_consonants_and_vowels(word):
 def apply_T2(word):
     '''There is a syllable boundary within a sequence VV of two nonidentical
     vowels that are not a genuine diphthong, e.g., [ta.e], [ko.et.taa].'''
-    WORD = word.split('.')
+    WORD = word
+    offset = 0
 
-    for i, v in enumerate(WORD):
+    for vv in vv_sequences(WORD):
+        seq = vv.group(2)
 
-        if not contains_diphthong(v):
-            VV = contains_VV(v)
+        if not is_diphthong(seq) and not is_long(seq):
+            i = vv.start(2) + 1 + offset
+            WORD = WORD[:i] + '.' + WORD[i:]
+            offset += 1
 
-            if VV and not is_long(VV.group(1)):
-                I = VV.start(1) + 1
-                WORD[i] = v[:I] + '.' + v[I:]
-
-    WORD = '.'.join(WORD)
     RULE = ' T2' if word != WORD else ''
 
     return WORD, RULE
@@ -150,10 +148,10 @@ def apply_T4(word):
         if is_consonant(v[-1]) and i % 2 != 0:
 
             if i + 1 == len(WORD) or is_consonant(WORD[i + 1][0]):
-                VV = contains_Vu_diphthong(v) or contains_Vy_diphthong(v)
+                vv = u_or_y_final_diphthong_vv_sequences(v)
 
-                if VV:
-                    I = VV.start(1) + 1
+                if vv and not is_long(vv.group(1)):
+                    I = vv.start(1) + 1
                     WORD[i] = v[:I] + '.' + v[I:]
 
     WORD = '.'.join(WORD)
@@ -164,23 +162,23 @@ def apply_T4(word):
 
 # T5 --------------------------------------------------------------------------
 
-i_DIPHTHONGS = ['ai', 'ei', 'oi', 'Ai', 'Oi', 'ui', 'yi']
-
-
-def apply_T5(word):  # BROKEN
+def apply_T5(word):
     '''If a (V)VVV-sequence contains a VV-sequence that could be an /i/-final
     diphthong, there is a syllable boundary between it and the third vowel,
     e.g., [raa.ois.sa], [huo.uim.me], [la.eis.sa], [sel.vi.äi.si], [tai.an],
     [säi.e], [oi.om.me].'''
-    WORD = word.split('.')
+    WORD = word
+    offset = 0
 
-    for i, v in enumerate(WORD):
-        if contains_VVV(v) and any(i for i in i_DIPHTHONGS if i in v):
-            I = v.rfind('i') - 1 or 2
-            I = I + 2 if is_consonant(v[I - 1]) else I
-            WORD[i] = v[:I] + '.' + v[I:]
+    for vi in i_final_diphthong_vvv_sequences(WORD):
+        s = max(vi.start(1), vi.start(2))
+        i = 2 if s + 2 < len(word) and is_vowel(word[s + 2]) else 0
 
-    WORD = '.'.join(WORD)
+        if not (s == i == 0):
+            i += s + offset
+            WORD = WORD[:i] + '.' + WORD[i:]
+            offset += 1
+
     RULE = ' T5' if word != WORD else ''
 
     return WORD, RULE
@@ -188,30 +186,22 @@ def apply_T5(word):  # BROKEN
 
 # T6 --------------------------------------------------------------------------
 
-LONG_VOWELS = [i + i for i in VOWELS]
-
-
 def apply_T6(word):
     '''If a VVV-sequence contains a long vowel, there is a syllable boundary
     between it and the third vowel, e.g. [kor.ke.aa], [yh.ti.öön], [ruu.an],
     [mää.yt.te].'''
-    WORD = word.split('.')
+    WORD = word
+    offset = 0
 
-    for i, v in enumerate(WORD):
+    for vvv in vvv_sequences(WORD):
+        seq = vvv.group(2)
+        j = 2 if is_long(seq[:2]) else 1 if is_long(seq[1:]) else 0
 
-        if contains_VVV(v):
-            VV = [v.find(j) for j in LONG_VOWELS if v.find(j) > 0]
+        if j:
+            i = vvv.start(2) + j + offset
+            WORD = WORD[:i] + '.' + WORD[i:]
+            offset += 1
 
-            if VV:
-                I = VV[0]
-
-                if i != 0 and is_vowel(v[I - 1]):  # e.g., tuaa
-                    WORD[i] = v[:I] + '.' + v[I:]
-
-                else:  # e.g., viia
-                    WORD[i] = v[:I + 2] + '.' + v[I + 2:]
-
-    WORD = '.'.join(WORD)
     RULE = ' T6' if word != WORD else ''
 
     return WORD, RULE
@@ -223,30 +213,20 @@ def apply_T7(word):
     '''If a VVV-sequence does not contain a potential /i/-final diphthong,
     there is a syllable boundary between the second and third vowels, e.g.
     [kau.an], [leu.an], [kiu.as].'''
-    WORD = word.split('.')
+    WORD = word
+    offset = 0
 
-    for i, v in enumerate(WORD):
+    for vvv in vvv_sequences(WORD):
+        i = vvv.start(2) + 2 + offset
+        WORD = WORD[:i] + '.' + WORD[i:]
+        offset += 1
 
-        if contains_VVV(v):
-
-            for I, V in enumerate(v[::-1]):
-
-                if is_vowel(V):
-                    WORD[i] = v[:I] + '.' + v[I:]
-
-    WORD = '.'.join(WORD)
     RULE = ' T7' if word != WORD else ''
 
     return WORD, RULE
 
 
 # T8 --------------------------------------------------------------------------
-
-def ie_sequences(word):
-    # this regex pattern searches for /ie/ sequences that do not occur in the
-    # first syllable, and that are not directly preceded or followed by a vowel
-    return re.finditer(r'(?=\.[^ieAyOauo]*(ie)[^ieAyOauo]*($|\.))', word)
-
 
 def apply_T8(word):
     '''Split /ie/ sequences in syllables that do not take primary stress.'''
