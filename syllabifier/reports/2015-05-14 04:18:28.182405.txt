@@ -1,6 +1,6 @@
 syllabifier.v3
 
-Fix compound splitter. Adjust T7...
+Fix compound splitter. Re-implement T7 with regexes.
 
 FROM BAD TO GOOD (5)
 ------------------------------  -------  -  -----------------------------  ------------

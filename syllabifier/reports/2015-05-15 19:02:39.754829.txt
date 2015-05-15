@@ -1,0 +1,17 @@
+syllabifier.v4
+
+Change vv_sequences pattern to exlude /ay/ sequences.
+
+FROM BAD TO GOOD (4)
+---------------  -----  -  --------------  --
+sa.tur.da.y      T1 T2  >  sa.tur.day      T1
+wed.nes.da.y     T1 T2  >  wed.nes.day     T1
+fin.la.y.so.nin  T1 T2  >  fin.lay.so.nin  T1
+fri.da.y         T1 T2  >  fri.day         T1
+---------------  -----  -  --------------  --
+
+FROM GOOD TO BAD (0)
+
+
+
+177 BAD TOKENS
