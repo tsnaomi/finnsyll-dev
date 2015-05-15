@@ -2,7 +2,7 @@
 
 from timeit import timeit
 from syllabifier.falk.finnish_syllables import make_syllables
-from syllabifier.v3 import syllabify
+from syllabifier.v4 import syllabify
 
 
 def timeit_test(words, f=False):

@@ -20,7 +20,7 @@ from flask.ext.bcrypt import Bcrypt
 from functools import wraps
 from math import ceil
 from syllabifier.phonology import get_sonorities, get_weights
-from syllabifier.v3 import syllabify
+from syllabifier.v4 import syllabify
 from tabulate import tabulate
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')

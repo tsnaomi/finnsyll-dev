@@ -57,8 +57,8 @@ def _syllabify(word):
 
 def vv_sequences(word):
     # this pattern searches for any VV sequence that is not directly preceded
-    # or followed by a vowel
-    pattern = r'(?=(^|\.)[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*($|\.))'
+    # or followed by a vowel, and will not match any /ay/ sequence
+    pattern = r'(?=(^|\.)[^ieAyOauo]*((?!ay)[ieAyOauo]{2})[^ieAyOauo]*($|\.))'
     return re.finditer(pattern, word)
 
 
