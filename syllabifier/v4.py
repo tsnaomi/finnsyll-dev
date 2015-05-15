@@ -70,7 +70,7 @@ def vvv_sequences(word):
 
 
 def ie_sequences(word):
-    # this pattern searches for any /ie/ sequences that does not occur in the
+    # this pattern searches for any /ie/ sequence that does not occur in the
     # first syllable, and that is not directly preceded or followed by a vowel
     pattern = r'(?=\.[^ieAyOauo]*(ie)[^ieAyOauo]*($|\.))'
     return re.finditer(pattern, word)
