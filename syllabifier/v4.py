@@ -84,10 +84,10 @@ def i_final_diphthong_vvv_sequences(word):
     return re.finditer(pattern, word)
 
 
-def u_or_y_final_diphthongs(chars):
+def u_or_y_final_diphthongs(word):
     # this pattern searchs for any VV sequence that ends in /u/ or /y/ (incl.
     # long vowels), and that is not directly preceded or followed by a vowel
-    return re.search(r'^[^ieAyOauo]*([ieAyOao]{1}(u|y))[^ieAyOauo]*$', chars)
+    return re.search(r'^[^ieAyOauo]*([ieAyOao]{1}(u|y))[^ieAyOauo]*$', word)
 
 
 # T1 --------------------------------------------------------------------------
