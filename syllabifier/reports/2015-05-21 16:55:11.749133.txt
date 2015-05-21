@@ -1,0 +1,35 @@
+syllabifier.v4
+
+Order T6 before T5.
+
+FROM BAD TO GOOD (22)
+-----------------------  --------  -  -----------------------  --------
+ko.fei.i.ni              T1 T5     >  ko.fe.ii.ni              T1 T6
+he.ro.oi.nen             T1 T5     >  he.roo.i.nen             T1 T6
+ma.ail.man.lop.pu        T1 T5     >  maa.il.man.lop.pu        T1 T6
+y.ri.tys.ma.ail.mas.sa   T1 T5     >  y.ri.tys.maa.il.mas.sa   T1 T6
+ma.ail.man.jär.jes.tö.ä  T1 T2 T5  >  maa.il.man.jär.jes.tö.ä  T1 T2 T6
+ma.ail.man.jär.jes.tön   T1 T5     >  maa.il.man.jär.jes.tön   T1 T6
+be.dui.i.ni              T1 T5     >  be.du.ii.ni              T1 T6
+ru.uis.sa                T1 T5     >  ruu.is.sa                T1 T6
+ma.ail.ma.en.nä.tyk.sen  T1 T2 T5  >  maa.il.ma.en.nä.tyk.sen  T1 T2 T6
+ma.ail.man.so.ta         T1 T5     >  maa.il.man.so.ta         T1 T6
+ma.ail.ma                T1 T5     >  maa.il.ma                T1 T6
+nais.ma.ail.mas.sa       T1 T5     >  nais.maa.il.mas.sa       T1 T6
+ma.ail.mas.sa            T1 T5     >  maa.il.mas.sa            T1 T6
+mo.sai.ik.ki             T1 T5     >  mo.sa.iik.ki             T1 T6
+ma.ail.maa               T1 T5     >  maa.il.maa               T1 T6
+ma.ail.man               T1 T5     >  maa.il.man               T1 T6
+ma.ail.mal.la            T1 T5     >  maa.il.mal.la            T1 T6
+ma.ail.ma                T1 T5     >  maa.il.ma                T1 T6
+he.roi.i.ni              T1 T5     >  he.ro.ii.ni              T1 T6
+ma.ail.man.so.dan        T1 T5     >  maa.il.man.so.dan        T1 T6
+ma.ail.mas.ta            T1 T5     >  maa.il.mas.ta            T1 T6
+mal.li.ma.ail.mas.ta     T1 T5     >  mal.li.maa.il.mas.ta     T1 T6
+-----------------------  --------  -  -----------------------  --------
+
+FROM GOOD TO BAD (0)
+
+
+
+263 BAD TOKENS

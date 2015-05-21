@@ -43,8 +43,8 @@ def _syllabify(word):
         applied_rules += T2 + T8 + T4
 
     if re.search(r'[ieAyOauo]{3}', word):
-        word, T5 = apply_T5(word)
         word, T6 = apply_T6(word)
+        word, T5 = apply_T5(word)
         word, T7 = apply_T7(word)
         applied_rules += T5 + T6 + T7
 

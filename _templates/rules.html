@@ -67,6 +67,20 @@ An agglutination diphthong that ends in /u, y/ usually contains a syllable bound
             WORD = '.'.join(WORD)
             return WORD
 
+**T6**:
+If a VVV-sequence contains a long vowel, there is a syllable boundary between it and the third vowel, e.g. [kor.ke.aa], [yh.ti.öön], [ruu.an], [mää.yt.te].
+
+        def apply_T6(word):
+            WORD = word
+            offset = 0
+            for vvv in vvv_sequences(WORD):
+                seq = vvv.group(2)
+                j = 2 if is_long(seq[:2]) else 1 if is_long(seq[1:]) else 0
+                if j:
+                    i = vvv.start(2) + j + offset
+                    WORD = WORD[:i] + '.' + WORD[i:]
+                    offset += 1
+            return WORD
 
 **T5**:
 If a (V)VVV-sequence contains a VV-sequence that could be an /i/-final diphthong, there is a syllable boundary between it and the third vowel, e.g., [raa.ois.sa], [huo.uim.me], [la.eis.sa], [sel.vi.äi.si], [tai.an], [säi.e], [oi.om.me].
@@ -82,21 +96,6 @@ If a (V)VVV-sequence contains a VV-sequence that could be an /i/-final diphthong
                         WORD = WORD[:i] + '.' + WORD[i:]
                         offset += 1
                 return WORD
-
-**T6**:
-If a VVV-sequence contains a long vowel, there is a syllable boundary between it and the third vowel, e.g. [kor.ke.aa], [yh.ti.öön], [ruu.an], [mää.yt.te].
-
-        def apply_T6(word):
-            WORD = word
-            offset = 0
-            for vvv in vvv_sequences(WORD):
-                seq = vvv.group(2)
-                j = 2 if is_long(seq[:2]) else 1 if is_long(seq[1:]) else 0
-                if j:
-                    i = vvv.start(2) + j + offset
-                    WORD = WORD[:i] + '.' + WORD[i:]
-                    offset += 1
-            return WORD
 
 **T7**:
 If a VVV-sequence does not contain a potential /i/-final diphthong, there is a syllable boundary between the second and third vowels, e.g. [kau.an], [leu.an], [kiu.as].
