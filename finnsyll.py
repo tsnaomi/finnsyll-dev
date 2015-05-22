@@ -385,23 +385,33 @@ def get_numbers():
     '''Generate statistics.'''
 
     class Stats(object):
-        # _token_count = Token.query.count()
+        # _token_count = tokens.count()
         # _doc_count = Document.query.count()
         _token_count = 991730  # one less ping to the database
         _doc_count = 61529  # one less ping to the database
 
+        # caculate accuracy excluding compounds
+        _non_compound_verified = Token.query.filter(Token.is_gold.isnot(None)) \
+            .filter_by(is_compound=False).count()
+        _non_compound_gold = Token.query.filter_by(is_gold=True) \
+            .filter_by(is_compound=False).count()
+        _accuracy = (float(_non_compound_gold) / _non_compound_verified) * 100
+
+        # calculate accuracy including compounds
         _verified = Token.query.filter(Token.is_gold.isnot(None)).count()
         _gold = Token.query.filter_by(is_gold=True).count()
-        _accuracy = (float(_gold) / _verified) * 100 if _gold else 0
+        _compound_accuracy = (float(_gold) / _verified) * 100
+
         _remaining = _token_count - _verified
         _reviewed = Document.query.filter_by(reviewed=True).count()
 
         token_count = format(_token_count, ',d')
+        doc_count = format(_doc_count, ',d')
         verified = format(_verified, ',d')
         gold = format(_gold, ',d')
         accuracy = round(_accuracy, 2)
+        compound_accuracy = round(_compound_accuracy, 2)
         remaining = format(_remaining, ',d')
-        doc_count = format(_doc_count, ',d')
         reviewed = format(_reviewed, ',d')
 
     stats = Stats()
