@@ -3,9 +3,7 @@
 {% block body %}
 <div class='stats'>
     <br><b>{{ stats.gold }}</b> / <b>{{ stats.verified }}</b> word forms correctly syllabified
-    <br><b>{{ stats.accuracy }}</b>% accuracy
-    <br>
-    <br><b>{{ stats.compound_accuracy }}</b>% accuracy including compounds
+    <br><b>{{ stats.compound_accuracy }}</b>% accuracy (<b>{{ stats.accuracy }}</b>% excluding compounds)
     <br>
     <br><b>{{ stats.reviewed }}</b> / <b>{{ stats.doc_count }}</b> documents reviewed
     <br> 
