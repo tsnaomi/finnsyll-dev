@@ -2,6 +2,7 @@
 
 import re
 
+# from compound import splitter
 from phonology import (
     is_consonant,
     is_diphthong,
@@ -14,15 +15,15 @@ from phonology import (
 # Syllabifier -----------------------------------------------------------------
 
 def syllabify(word):
-    compound = True if '-' in word or ' ' in word else None
+    compound = True if re.search(r'-| ', word) else False
 
     # if the word contains a delimiter (a hyphens or space), split the word
     # along the delimiter(s) and syllabify the individual parts separately
     if compound:
         WORD, RULES = [], []
 
-        for w in re.split('(-| )', word):
-            syll, rules = (w, ' |') if w in '- ' else _syllabify(w)
+        for w in re.split(r'(-| |\.)', word):
+            syll, rules = (w, ' |') if w in '- .' else _syllabify(w)
             WORD.append(syll)
             RULES.append(rules)
 
@@ -290,6 +291,8 @@ if __name__ == '__main__':
             (u'välierien', u'vä.li.e.ri.en'),
             (u'lounais-suomen puhelin', u'lou.nais-suo.men pu.he.lin'),
             (u'powers', u'po.wers'),
+            (u'uusivuosi', u'uu.si.vuo.si'),
+            (u'elämäntyömerkki', u'e.lä.män.työ.merk.ki')
             ]
 
         for word in words:

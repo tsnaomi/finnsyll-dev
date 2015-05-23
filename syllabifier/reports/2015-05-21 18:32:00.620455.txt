@@ -1,0 +1,105 @@
+syllabifier.v4
+
+Add /uo/ and /yO/ to ie_sequences.
+
+All of the words below are compounds.
+Syllables containing /uo/ and /yO/ nuclei are always word-initial -- good for sussing out compounds!
+
+
+FROM BAD TO GOOD (5)
+------------------------------  -----  -  -------------------------------  --------
+lop.puot.te.lu.a                T1 T2  >  lop.pu.ot.te.lu.a                T1 T2 T8
+lop.puot.te.lut                 T1     >  lop.pu.ot.te.lut                 T1 T8
+las.ket.te.luon.net.to.muu.den  T1     >  las.ket.te.lu.on.net.to.muu.den  T1 T8
+ur.hei.luo.pis.tol.la           T1     >  ur.hei.lu.o.pis.tol.la           T1 T8
+ha.kuoh.jel.mat                 T1     >  ha.ku.oh.jel.mat                 T1 T8
+------------------------------  -----  -  -------------------------------  --------
+
+FROM GOOD TO BAD (83)
+-------------------------------------------  ----------  -  --------------------------------------------  -------------
+uu.si.vuo.si                                 T1          >  uu.si.vu.o.si                                 T1 T8
+ta.ka.vuo.si.en                              T1 T8       >  ta.ka.vu.o.si.en                              T1 T8
+vä.ri.kuo.ren                                T1          >  vä.ri.ku.o.ren                                T1 T8
+nuo.ri.so.työt.tö.mi.ä                       T1 T2       >  nuo.ri.so.ty.öt.tö.mi.ä                       T1 T2 T8
+kak.si.vuo.ti.nen                            T1          >  kak.si.vu.o.ti.nen                            T1 T8
+kol.mi.vuo.tis.kau.den                       T1          >  kol.mi.vu.o.tis.kau.den                       T1 T8
+ka.te.vuon                                   T1          >  ka.te.vu.on                                   T1 T8
+lin.ko.suon                                  T1          >  lin.ko.su.on                                  T1 T8
+vii.si.vuo.tis.kau.den                       T1          >  vii.si.vu.o.tis.kau.den                       T1 T8
+näl.kä.kuo.le.mi.a                           T1 T2       >  näl.kä.ku.o.le.mi.a                           T1 T2 T8
+e.lä.män.työ.merk.ki                         T1          >  e.lä.män.ty.ö.merk.ki                         T1 T8
+pu.heen.vuo.ro                               T1          >  pu.heen.vu.o.ro                               T1 T8
+pa.lo.suo                                    T1          >  pa.lo.su.o                                    T1 T8
+sil.mä.puo.li.a                              T1 T2       >  sil.mä.pu.o.li.a                              T1 T2 T8
+maan.puo.lus.tus.työ                         T1          >  maan.pu.o.lus.tus.ty.ö                        T1 T8
+sil.ta.vuo.ri                                T1          >  sil.ta.vu.o.ri                                T1 T8
+kes.kus.hyök.kää.jä                          T1          >  kes.kus.hy.ök.kää.jä                          T1 T8
+ra.ken.nus.tuo.te.te.ol.li.suu.teen          T1 T2       >  ra.ken.nus.tu.o.te.te.ol.li.suu.teen          T1 T2 T8
+rat.ti.juo.pol.le                            T1          >  rat.ti.ju.o.pol.le                            T1 T8
+li.sä.työ.voi.maa                            T1          >  li.sä.ty.ö.voi.maa                            T1 T8
+y.leis.suun.ni.tel.ma.luon.nok.si.a          T1 T2       >  y.leis.suun.ni.tel.ma.lu.on.nok.si.a          T1 T2 T8
+kri.mi.naa.li.huol.to.kes.kus-ni.mi.sen      T1 | T1     >  kri.mi.naa.li.hu.ol.to.kes.kus-ni.mi.sen      T1 T8 | T1
+puo.li.huo.li.mat.to.mas.sa                  T1          >  puo.li.hu.o.li.mat.to.mas.sa                  T1 T8
+ra.ken.nus.työt                              T1          >  ra.ken.nus.ty.öt                              T1 T8
+ra.ta.juok.sun                               T1          >  ra.ta.ju.ok.sun                               T1 T8
+lin.ko.suo-yh.ti.öit.ten                     T1 | T1 T5  >  lin.ko.su.o-yh.ti.öit.ten                     T1 T8 | T1 T5
+ka.te.vuo                                    T1          >  ka.te.vu.o                                    T1 T8
+myyn.ti.työn                                 T1          >  myyn.ti.ty.ön                                 T1 T8
+va.sem.mis.to.puo.lu.een.sa                  T1 T6       >  va.sem.mis.to.pu.o.lu.een.sa                  T1 T8 T6
+e.lo.ku.va.tuot.ta.ja                        T1          >  e.lo.ku.va.tu.ot.ta.ja                        T1 T8
+kes.kus.ta.puo.lu.een                        T1 T6       >  kes.kus.ta.pu.o.lu.een                        T1 T8 T6
+rat.ti.juop.po                               T1          >  rat.ti.ju.op.po                               T1 T8
+yh.teis.työ.so.pi.muk.sen                    T1          >  yh.teis.ty.ö.so.pi.muk.sen                    T1 T8
+ko.ti.mark.ki.na.tuot.tei.ta                 T1          >  ko.ti.mark.ki.na.tu.ot.tei.ta                 T1 T8
+va.ra.tuo.ma.rin                             T1          >  va.ra.tu.o.ma.rin                             T1 T8
+luun.muo.dos.tuk.seen                        T1          >  luun.mu.o.dos.tuk.seen                        T1 T8
+toi.min.ta.vuo.den                           T1          >  toi.min.ta.vu.o.den                           T1 T8
+luot.to.luo.ki.tus                           T1          >  luot.to.lu.o.ki.tus                           T1 T8
+kol.mi.vuo.tis.kau.dek.si                    T1          >  kol.mi.vu.o.tis.kau.dek.si                    T1 T8
+ra.ken.nus.työ.maal.ta                       T1          >  ra.ken.nus.ty.ö.maal.ta                       T1 T8
+maas.to.pyö.räi.ly                           T1          >  maas.to.py.ö.räi.ly                           T1 T8
+säh.kö.työ.ka.lut                            T1          >  säh.kö.ty.ö.ka.lut                            T1 T8
+pit.kä.ai.kais.työt.tö.mi.ä                  T1 T2 T5    >  pit.kä.ai.kais.ty.öt.tö.mi.ä                  T1 T2 T8 T5
+poh.jois.puo.lel.la                          T1          >  poh.jois.pu.o.lel.la                          T1 T8
+lop.pu.vuo.des.ta                            T1          >  lop.pu.vu.o.des.ta                            T1 T8
+työ.vä.en.luok.ka                            T1 T2       >  työ.vä.en.lu.ok.ka                            T1 T2 T8
+huu.me.puo.li                                T1          >  huu.me.pu.o.li                                T1 T8
+ra.ken.nus.tuo.te.te.ol.li.suus              T1 T2       >  ra.ken.nus.tu.o.te.te.ol.li.suus              T1 T2 T8
+ko.ko.nais.tuo.tan.non                       T1          >  ko.ko.nais.tu.o.tan.non                       T1 T8
+kri.mi.naa.li.huol.to.yh.dis.tys             T1 T2       >  kri.mi.naa.li.hu.ol.to.yh.dis.tys             T1 T2 T8
+ra.ken.nus.työ.ka.lut                        T1          >  ra.ken.nus.ty.ö.ka.lut                        T1 T8
+vas.ta.puo.lel.la                            T1          >  vas.ta.pu.o.lel.la                            T1 T8
+kes.ki.luok.kais.ta                          T1          >  kes.ki.lu.ok.kais.ta                          T1 T8
+luot.to.luo.ki.tus.lai.tos                   T1          >  luot.to.lu.o.ki.tus.lai.tos                   T1 T8
+sil.ta.vuo.ri                                T1          >  sil.ta.vu.o.ri                                T1 T8
+kon.ser.va.tii.vi.puo.lu.een                 T1 T6       >  kon.ser.va.tii.vi.pu.o.lu.een                 T1 T8 T6
+luot.to.luo.ki.tus.ta                        T1          >  luot.to.lu.o.ki.tus.ta                        T1 T8
+työ.vä.en.luok.kaan                          T1 T2       >  työ.vä.en.lu.ok.kaan                          T1 T2 T8
+o.sa.puo.let                                 T1          >  o.sa.pu.o.let                                 T1 T8
+sil.ta.vuo.ren                               T1          >  sil.ta.vu.o.ren                               T1 T8
+o.sa.vuo.si.kat.sa.uk.si.a                   T1 T2 T4    >  o.sa.vu.o.si.kat.sauk.si.a                    T1 T2 T8
+brut.to.kan.san.tuo.te                       T1          >  brut.to.kan.san.tu.o.te                       T1 T8
+pää.ruo.ka.la.jin                            T1          >  pää.ru.o.ka.la.jin                            T1 T8
+va.ra.tuo.ma.ri                              T1          >  va.ra.tu.o.ma.ri                              T1 T8
+po.lii.si.moot.to.ri.pyö.ri.en               T1 T8       >  po.lii.si.moot.to.ri.py.ö.ri.en               T1 T8
+rat.ti.juo.pu.mus                            T1          >  rat.ti.ju.o.pu.mus                            T1 T8
+vyön.ki.ris.tys.vuo.si.en                    T1 T8       >  vyön.ki.ris.tys.vu.o.si.en                    T1 T8
+yh.teis.työ.kump.pa.nim.me                   T1          >  yh.teis.ty.ö.kump.pa.nim.me                   T1 T8
+kri.mi.naa.li.huol.to                        T1          >  kri.mi.naa.li.hu.ol.to                        T1 T8
+ul.ko.puo.lel.ta                             T1          >  ul.ko.pu.o.lel.ta                             T1 T8
+o.sa.vuo.si.kat.sa.uk.sen.sa                 T1 T4       >  o.sa.vu.o.si.kat.sauk.sen.sa                  T1 T8
+ka.na.ruo.ki.en                              T1 T8       >  ka.na.ru.o.ki.en                              T1 T8
+kes.to.suo.sik.ki                            T1          >  kes.to.su.o.sik.ki                            T1 T8
+rat.ti.juo.pu.muk.ses.ta                     T1          >  rat.ti.ju.o.pu.muk.ses.ta                     T1 T8
+tis.ki.vuo.rot                               T1          >  tis.ki.vu.o.rot                               T1 T8
+o.sa.vuo.si.kat.sa.uk.sen.sa                 T1 T4       >  o.sa.vu.o.si.kat.sauk.sen.sa                  T1 T8
+ter.vey.den.huol.to.sää.ti.ö                 T1 T2       >  ter.vey.den.hu.ol.to.sää.ti.ö                 T1 T2 T8
+lain.suo.jat.to.man                          T1          >  lain.su.o.jat.to.man                          T1 T8
+ter.vey.den.huol.lon                         T1          >  ter.vey.den.hu.ol.lon                         T1 T8
+lin.ja-au.to.tuo.tan.toon                    T1 | T1     >  lin.ja-au.to.tu.o.tan.toon                    T1 | T1 T8
+al.ku.vuo.den                                T1          >  al.ku.vu.o.den                                T1 T8
+si.säl.tö.tuo.tan.to-toi.mi.a.la.ra.port.ti  T1 | T1 T2  >  si.säl.tö.tu.o.tan.to-toi.mi.a.la.ra.port.ti  T1 T8 | T1 T2
+e.ner.gi.an.tuo.tan.to.a                     T1 T2       >  e.ner.gi.an.tu.o.tan.to.a                     T1 T2 T8
+-------------------------------------------  ----------  -  --------------------------------------------  -------------
+
+341 BAD TOKENS
