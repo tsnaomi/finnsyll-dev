@@ -50,6 +50,21 @@ Split /ie/ sequences in syllables that do not take primary stress.
                 offset += 1
             return WORD
 
+**T9**:
+Split /iu/ sequences that do not appear in the first, second, or final syllables.
+        
+        def apply_T9(word):
+            WORD = word
+            index = 0
+            offset = 0
+            for iu in iu_sequences(WORD):
+                if iu.start(1) != index:
+                    i = iu.start(1) + 1 + offset
+                    WORD = WORD[:i] + '.' + WORD[i:]
+                    index = iu.start(1)
+                    offset += 1
+            return WORD, RULE
+
 **T4**:
 An agglutination diphthong that ends in /u, y/ usually contains a syllable boundary when -C# or -CCV follow, e.g., [lau.ka.us], [va.ka.ut.taa].
 
@@ -110,6 +125,21 @@ If a VVV-sequence does not contain a potential /i/-final diphthong, there is a s
             word = '.'.join(WORD)
             return word
 
+**T2**:
+There is a syllable boundary within a sequence VV of two nonidentical vowels that are not a genuine diphthong, e.g., [ta.e], [ko.et.taa].
+
+        def apply_T2(word):
+            WORD = word
+            offset = 0
+            for vv in vv_sequences(WORD):
+                seq = vv.group(2)
+                if not is_diphthong(seq) and not is_long(seq):
+                    i = vv.start(2) + 1 + offset
+                    WORD = WORD[:i] + '.' + WORD[i:]
+                    offset += 1
+            return WORD
+
+
 **Regular expression patterns**:
 
         def vv_sequences(word):
@@ -132,6 +162,12 @@ If a VVV-sequence does not contain a potential /i/-final diphthong, there is a s
             pattern = r'(?=\.[^ieAyOauo]*(ie)[^ieAyOauo]*($|\.))'
             return re.finditer(pattern, word)
 
+        def iu_sequences(word):
+            # this pattern searches for any /iu/ sequence that does do occur in the
+            # first, second, or final syllables, and that is not directly preceded or
+            # followed by a vowel
+            pattern = r'\..+\.[^ieAyOauo]*(iu)[^ieAyOauo]*\.'
+            return re.finditer(pattern, word)
 
         def i_final_diphthong_vvv_sequences(word):
             # this pattern searches for any (V)VVV sequence that contains an i-final
@@ -146,17 +182,7 @@ If a VVV-sequence does not contain a potential /i/-final diphthong, there is a s
             # long vowels), and that is not directly preceded or followed by a vowel
             return re.search(r'^[^ieAyOauo]*([ieAyOao]{1}(u|y))[^ieAyOauo]*$', word)
   
-# Notes  
-        
-- Consider flipping rule order (i.e., do not alter a boundary once it is imposed).
-
 {% endfilter %}
 </div>
 <br>
 {% endblock %}
-
-so.pe.ut.ti
-te.ra.peut.ti -- third syllable receives secondary
-le.uh.ka --> leuh.ka
-ta.[k]us.taa
-

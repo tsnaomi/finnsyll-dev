@@ -1,0 +1,20 @@
+syllabifier.v4
+
+Apply T2 once more at the end and include 'oy' in diphthongs.
+
+FROM BAD TO GOOD (7)
+----------------------------------  -------------  -  -----------------------------------  ----------------
+a.vio.e.ron                         T1 T7          >  a.vi.o.e.ron                         T1 T7 T2
+cow.bo.y                            T1 T2          >  cow.boy                              T1
+sin.fo.nia.or.kes.te.rei.den        T1 T7          >  sin.fo.ni.a.or.kes.te.rei.den        T1 T7 T2
+bi.o.tek.no.lo.gia.y.ri.tyk.sis.sä  T1 T2 T7       >  bi.o.tek.no.lo.gi.a.y.ri.tyk.sis.sä  T1 T2 T7 T2
+mul.ti.me.dia.y.ri.tyk.siin         T1 T7          >  mul.ti.me.di.a.y.ri.tyk.siin         T1 T7 T2
+a.vio.e.ro-on.ne.a                  T1 T7 | T1 T2  >  a.vi.o.e.ro-on.ne.a                  T1 T7 T2 | T1 T2
+uus.me.dia.y.ri.tyk.set             T1 T7          >  uus.me.di.a.y.ri.tyk.set             T1 T7 T2
+----------------------------------  -------------  -  -----------------------------------  ----------------
+
+FROM GOOD TO BAD (0)
+
+
+
+421 BAD TOKENS

@@ -2,7 +2,6 @@
 
 import re
 
-# from compound import splitter
 from phonology import (
     is_consonant,
     is_diphthong,
@@ -10,6 +9,8 @@ from phonology import (
     is_vowel,
     replace_umlauts,
     )
+
+# Notes -----------------------------------------------------------------------
 
 
 # Syllabifier -----------------------------------------------------------------
@@ -40,14 +41,16 @@ def _syllabify(word):
     if re.search(r'[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*', word):
         word, T2 = apply_T2(word)
         word, T8 = apply_T8(word)
+        word, T9 = apply_T9(word)
         word, T4 = apply_T4(word)
-        applied_rules += T2 + T8 + T4
+        applied_rules += T2 + T8 + T9 + T4
 
     if re.search(r'[ieAyOauo]{3}', word):
         word, T6 = apply_T6(word)
         word, T5 = apply_T5(word)
         word, T7 = apply_T7(word)
-        applied_rules += T5 + T6 + T7
+        word, T2 = apply_T2(word)  # ordering T2 last
+        applied_rules += T5 + T6 + T7 + T2
 
     word = replace_umlauts(word, put_back=True)
 
@@ -77,6 +80,14 @@ def ie_sequences(word):
     return re.finditer(pattern, word)
 
 
+def iu_sequences(word):
+    # this pattern searches for any /iu/ sequence that does do occur in the
+    # first, second, or final syllables, and that is not directly preceded or
+    # followed by a vowel
+    pattern = r'\..+\.[^ieAyOauo]*(iu)[^ieAyOauo]*\.'
+    return re.finditer(pattern, word)
+
+
 def i_final_diphthong_vvv_sequences(word):
     # this pattern searches for any (V)VVV sequence that contains an i-final
     # diphthong: 'ai', 'ei', 'oi', 'Ai', 'Oi', 'ui', 'yi'
@@ -85,7 +96,7 @@ def i_final_diphthong_vvv_sequences(word):
     return re.finditer(pattern, word)
 
 
-def u_or_y_final_diphthongs(word):
+def u_y_final_diphthongs(word):
     # this pattern searchs for any VV sequence that ends in /u/ or /y/ (incl.
     # long vowels), and that is not directly preceded or followed by a vowel
     return re.search(r'^[^ieAyOauo]*([ieAyOao]{1}(u|y))[^ieAyOauo]*$', word)
@@ -148,7 +159,7 @@ def apply_T4(word):
         if is_consonant(v[-1]) and i % 2 != 0:
 
             if i + 1 == len(WORD) or is_consonant(WORD[i + 1][0]):
-                vv = u_or_y_final_diphthongs(v)
+                vv = u_y_final_diphthongs(v)
 
                 if vv and not is_long(vv.group(1)):
                     I = vv.start(1) + 1
@@ -243,6 +254,27 @@ def apply_T8(word):
     return WORD, RULE
 
 
+# T9 --------------------------------------------------------------------------
+
+def apply_T9(word):
+    '''Split /iu/ sequences that do not appear in the first, second, or final
+    syllables.'''
+    WORD = word
+    index = 0
+    offset = 0
+
+    for iu in iu_sequences(WORD):
+        if iu.start(1) != index:
+            i = iu.start(1) + 1 + offset
+            WORD = WORD[:i] + '.' + WORD[i:]
+            index = iu.start(1)
+            offset += 1
+
+    RULE = ' T9' if word != WORD else ''
+
+    return WORD, RULE
+
+
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
@@ -292,7 +324,8 @@ if __name__ == '__main__':
             (u'lounais-suomen puhelin', u'lou.nais-suo.men pu.he.lin'),
             (u'powers', u'po.wers'),
             (u'uusivuosi', u'uu.si.vuo.si'),
-            (u'elämäntyömerkki', u'e.lä.män.työ.merk.ki')
+            (u'elämäntyömerkki', u'e.lä.män.työ.merk.ki'),
+            (u'imperiumiin', u'im.pe.ri.u.miin'),
             ]
 
         for word in words:

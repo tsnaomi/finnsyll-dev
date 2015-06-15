@@ -11,7 +11,7 @@ VOWELS = [u'i', u'e', u'A', u'y', u'O', u'a', u'u', u'o']
 # Finnish diphthongs
 DIPHTHONGS = [
     u'ai', u'ei', u'oi', u'Ai', u'Oi', u'au', u'eu', u'ou', u'ey', u'Ay',
-    u'Oy', u'ui', u'yi', u'iu', u'iy', u'ie', u'uo', u'yO']
+    u'Oy', u'ui', u'yi', u'iu', u'iy', u'ie', u'uo', u'yO', u'oy']
 
 
 # Finnish consonants

@@ -1,41 +1,66 @@
 {% extends 'base.html' %}
 
 {% block body %}
-<div class='bad-tokens'>
-    <span class='bad-attr-label'>orth</span>
-    <span class='mini-bad-attr-label'>rules</span>
-    <span class='bad-attr-label'>test</span>
-    <span class='bad-attr-label'>gold</span>
-    <br><br>
-    {% for t in tokens %}
-    <span class='bad-attr' title='Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'>{{ t.orth }}</span>
-    <span class='mini-bad-attr'>{{ t.rules }}</span>
-    <span class='bad-attr'><span class='{% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span></span>
-    <span class='bad-attr'>{{ t.syll }}</span>
-    <span class='bad-attr'>{{ t.alt_syll1 }}</span>
-    <span class='bad-attr'>{{ t.alt_syll2 }}</span>
-    <span class='bad-attr'>{{ t.alt_syll3 }}</span>
+
+{% if kw == 'bad' %}
+    <div class='bad-tokens'>
+        <span class='bad-attr-label'>orth</span>
+        <span class='mini-bad-attr-label'>rules</span>
+        <span class='bad-attr-label'>test</span>
+        <span class='bad-attr-label'>gold</span>
+        <br><br>
+        {% for t in tokens %}
+        <span class='bad-attr' title='Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'>{{ t.orth }}</span>
+        <span class='mini-bad-attr'>{{ t.rules }}</span>
+        <span class='bad-attr'><span class='{% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span></span>
+        <span class='bad-attr'>{{ t.syll }}</span>
+        <span class='bad-attr'>{{ t.alt_syll1 }}</span>
+        <span class='bad-attr'>{{ t.alt_syll2 }}</span>
+        <span class='bad-attr'>{{ t.alt_syll3 }}</span>
+        <br>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class='unverified-tokens'>
+        <span class='mini-unverified-attr-label'>freq</span>
+        <span class='unverified-attr-label'>test</span>
+        <span class='unverified-attr-label'>syll 1</span>
+        <span class='unverified-attr-label'>syll 2</span>
+        <span class='mini-unverified-attr-label'>compound</span>
+        <span class='mini-unverified-attr-label'>save</span>
+        <br><br>
+        {% for t in tokens %}
+        <form method='POST'>
+            <span class='mini-unverified-attr' style='color: #E1E1E1;'>{{ t.freq }}</span>
+            <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+            <input type='hidden' name='find' value='{{ t.id }}'>
+            <span class='unverified-attr editab'><input type='text' id='test' name='test_syll' readonly='True' value='{{ t.test_syll }}' title='Rules: {{ t.rules }}&#10;&#10;Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'></span>
+            <span class='unverified-attr editable'><input type='text' id='syll' name='syll' value='{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}'></span>
+            <span class='unverified-attr editable'><input type='text' id='alt1' name='alt_syll1' value='{{ t.alt_syll1 }}'></span>
+            <span class='mini-unverified-attr'><input type='checkbox' id='compound' name='is_compound' value=1 {% if t.is_compound %} checked{% endif %}></span>
+            <input type='submit' class='OK' value='OK!'>
+        </form>
+        {% endfor %}
+    </div>
+{% endif %}
     <br>
-    {% endfor %}
-</div>
-<br>
-<div class='pagination'>
-    {% if pagination.has_prev %}
-    <a href="{{ url_for_other_page(pagination.page - 1) }}">&laquo; Previous</a>
-    {% endif %}
-    {% for page in pagination.iter_pages() %}
-    {% if page %}
-    {% if page != pagination.page %}
-    <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
-    {% else %}
-    <strong>{{ page }}</strong>
-    {% endif %}
-    {% else %}
-    <span class='ellipsis'>…</span>
-    {% endif %}
-    {% endfor %}
-    {% if pagination.has_next %}
-    <a href="{{ url_for_other_page(pagination.page + 1) }}">Next &raquo;</a>
-    {% endif %}
-</div>
+    <div class='pagination'>
+        {% if pagination.has_prev %}
+        <a href="{{ url_for_other_page(pagination.page - 1) }}">&laquo; Previous</a>
+        {% endif %}
+        {% for page in pagination.iter_pages() %}
+        {% if page %}
+        {% if page != pagination.page %}
+        <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+        {% else %}
+        <strong>{{ page }}</strong>
+        {% endif %}
+        {% else %}
+        <span class='ellipsis'>…</span>
+        {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <a href="{{ url_for_other_page(pagination.page + 1) }}">Next &raquo;</a>
+        {% endif %}
+    </div>
 {% endblock %}

@@ -196,5 +196,3 @@ if __name__ == '__main__':
     # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
     finn.transition(pdf='--pdf' in sys.argv)
-
-    pass

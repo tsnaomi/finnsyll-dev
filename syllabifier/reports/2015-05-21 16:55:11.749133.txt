@@ -2,6 +2,30 @@ syllabifier.v4
 
 Order T6 before T5.
 
+NOTES:
+    There seems to be a rule ordering problem:
+
+    T6: If a VVV-sequence contains a long vowel, there is a syllable
+    boundary between it and the third vowel, e.g. [kor.ke.aa],
+    [yh.ti.öön], [ruu.an], [mää.yt.te].
+
+    However, I saw syllabification errors like this:
+
+    ma.ail.ma
+    ma.ail.man
+    ...
+
+    The above rule should correctly syllabify these. Apparently T6 is bled
+    by T5 which incorrectly inserts a boundary between two identical
+    vowels:
+
+    T5: If a (V)VVV-sequence contains a VV-sequence that could be an
+    /i/-final diphthong, there is a syllable boundary between it and the
+    third vowel, e.g., [raa.ois.sa], [huo.uim.me], [la.eis.sa],
+    [sel.vi.äi.si], [tai.an], [säi.e], [oi.om.me].
+
+    It looks like T6 must precede T5.
+
 FROM BAD TO GOOD (22)
 -----------------------  --------  -  -----------------------  --------
 ko.fei.i.ni              T1 T5     >  ko.fe.ii.ni              T1 T6

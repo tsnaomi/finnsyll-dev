@@ -365,7 +365,7 @@ def get_good_tokens():
 
 def get_unverified_tokens():
     '''Return tokens with uncertain syllabifications.'''
-    return Token.query.filter_by(is_gold=None).order_by(Token.lemma)
+    return Token.query.filter_by(is_gold=None).order_by(Token.freq.desc())
 
 
 def get_unseen_lemmas():
@@ -456,9 +456,9 @@ def apply_form(http_form):
     try:
         orth = http_form.get('orth')
         syll = http_form['syll'] or http_form['test_syll']
-        alt_syll1 = http_form['alt_syll1'] or ''
-        alt_syll2 = http_form['alt_syll2'] or ''
-        alt_syll3 = http_form['alt_syll3'] or ''
+        alt_syll1 = http_form.get('alt_syll1', '')
+        alt_syll2 = http_form.get('alt_syll2', '')
+        alt_syll3 = http_form.get('alt_syll3', '')
         is_compound = bool(http_form.getlist('is_compound'))
         is_stopword = bool(http_form.getlist('is_stopword'))
         token = Token.query.get(http_form['find'])
@@ -562,6 +562,24 @@ def bad_view(page):
         )
 
 
+@app.route('/unverified', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/unverified/page/<int:page>')
+def unverified_view(page):
+    '''List all unverified Tokens and process corrections.'''
+    if request.method == 'POST':
+        apply_form(request.form)
+
+    tokens = get_unverified_tokens()
+    tokens, pagination = paginate(page, tokens, per_page=20)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='unverified',
+        pagination=pagination,
+        )
+
+
 # @app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/lemma/page/<int:page>')
 def lemma_view(page):
@@ -613,14 +631,11 @@ def logout_view():
 
 # Pagination ------------------------------------------------------------------
 
-PER_PAGE = 40
-
-
 class Pagination(object):
 
-    def __init__(self, page, total_count):
+    def __init__(self, page, per_page, total_count):
         self.page = page
-        self.per_page = PER_PAGE
+        self.per_page = per_page
         self.total_count = total_count
 
     @property
@@ -651,10 +666,10 @@ class Pagination(object):
                 last = num
 
 
-def paginate(page, tokens):
+def paginate(page, tokens, per_page=40):
     count = tokens.count()
-    start = (page - 1) * PER_PAGE or 0
-    end = min(start + PER_PAGE, count)
+    start = (page - 1) * per_page or 0
+    end = min(start + per_page, count)
 
     try:
         tokens = tokens[start:end]
@@ -663,7 +678,7 @@ def paginate(page, tokens):
         if page != 1:
             abort(404)
 
-    pagination = Pagination(page, count)
+    pagination = Pagination(page, per_page, count)
 
     return tokens, pagination
 
