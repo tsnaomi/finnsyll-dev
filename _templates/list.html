@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block body %}
+{{ list.0 }}
+<div class='bad-tokens'>
+    <span class='bad-attr-label'>orth</span>
+    <span class='mini-bad-attr-label'>rules</span>
+    <span class='bad-attr-label'>test</span>
+    <span class='bad-attr-label'>gold</span>
+    <br><br>
+    {% for t in list.1 %}
+    <span class='bad-attr' title='Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'>{{ t.orth }}</span>
+    <span class='mini-bad-attr'>{{ t.rules }}</span>
+    <span class='bad-attr'><span class='{{ t|goldclass }} {% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span></span>
+    <span class='bad-attr'>{{ t.syll }}</span>
+    <span class='bad-attr'>{{ t.alt_syll1 }}</span>
+    <span class='bad-attr'>{{ t.alt_syll2 }}</span>
+    <span class='bad-attr'>{{ t.alt_syll3 }}</span>
+    <br>
+    {% endfor %}
+</div>
+<br>
+{% endblock %}

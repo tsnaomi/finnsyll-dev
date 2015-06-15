@@ -1,0 +1,6 @@
+{% extends 'base.html' %}
+
+{% block body %}
+{% for list in lists %}
+<a href="{{ url_for('list_view', List='{{ list }}'') }}">{{ list }}</a>
+{% endblock %}

@@ -419,6 +419,18 @@ def get_numbers():
     return stats
 
 
+# Lists -----------------------------------------------------------------------
+
+def yi_tokens():
+    description = 'Yi tokens'
+    q = Token.query.filter(Token.orth.contains('yi')).order_by(Token.is_gold)
+    return description, q
+
+LISTS = {
+    'yi': yi_tokens(),
+    }
+
+
 # View helpers ----------------------------------------------------------------
 
 @app.before_request
@@ -526,6 +538,27 @@ def approve_doc_view(id):
     doc.verify_all_unverified_tokens()
 
     return redirect(url_for('doc_view', id=id))
+
+
+@app.route('/lists', methods=['GET', ])
+@login_required
+def lists_view():
+    ''''''
+    lists = LISTS.keys()
+
+    return render_template('lists.html', kw='lists', lists=lists)
+
+
+@app.route('/lists/<List>', methods=['GET', ])
+@app.route('/lists/<List>', defaults={'page': 1}, methods=['GET', ])
+@app.route('/lists/<List>/page/<int:page>')
+@login_required
+def list_view(List, page):
+    ''''''
+    description, tokens = LISTS.get(List, ('', ''))
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template('list.html', list=LISTS.get(List, ''))
 
 
 @app.route('/find', methods=['GET', 'POST'])
