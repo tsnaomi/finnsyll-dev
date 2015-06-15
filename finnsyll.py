@@ -540,27 +540,6 @@ def approve_doc_view(id):
     return redirect(url_for('doc_view', id=id))
 
 
-@app.route('/lists', methods=['GET', ])
-@login_required
-def lists_view():
-    ''''''
-    lists = LISTS.keys()
-
-    return render_template('lists.html', kw='lists', lists=lists)
-
-
-@app.route('/lists/<List>', methods=['GET', ])
-@app.route('/lists/<List>', defaults={'page': 1}, methods=['GET', ])
-@app.route('/lists/<List>/page/<int:page>')
-@login_required
-def list_view(List, page):
-    ''''''
-    description, tokens = LISTS.get(List, ('', ''))
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template('list.html', list=LISTS.get(List, ''))
-
-
 @app.route('/find', methods=['GET', 'POST'])
 @login_required
 def find_view():
@@ -578,6 +557,27 @@ def find_view():
         results = results.order_by(Token.is_gold)
 
     return render_template('find.html', kw='find', results=results)
+
+
+@app.route('/contains', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/contains/page/<int:page>')
+@login_required
+def contains_view(page):
+    '''Search for tokens by word and/or citation form.'''
+    results = None
+
+    if request.method == 'POST':
+        find = request.form.get('search')
+
+        if '.' in find:
+            results = Token.query.filter(Token.test_syll.contains(find))
+
+        else:
+            results = Token.query.filter(Token.orth.contains(find))
+
+        results = results.order_by(Token.is_gold)
+
+    return render_template('contains.html', kw='contains', results=results)
 
 
 @app.route('/bad', defaults={'page': 1}, methods=['GET', 'POST'])
