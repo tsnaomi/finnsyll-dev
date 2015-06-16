@@ -419,18 +419,6 @@ def get_numbers():
     return stats
 
 
-# Lists -----------------------------------------------------------------------
-
-def yi_tokens():
-    description = 'Yi tokens'
-    q = Token.query.filter(Token.orth.contains('yi')).order_by(Token.is_gold)
-    return description, q
-
-LISTS = {
-    'yi': yi_tokens(),
-    }
-
-
 # View helpers ----------------------------------------------------------------
 
 @app.before_request
