@@ -602,8 +602,8 @@ def unverified_view(page):
     if request.method == 'POST':
         apply_form(request.form)
 
-    tokens = get_unverified_tokens()
-    tokens, pagination = paginate(page, tokens, per_page=20)
+    tokens = get_unverified_tokens().slice(0, 400)
+    tokens, pagination = paginate(page, tokens)
 
     return render_template(
         'tokens.html',
