@@ -148,13 +148,11 @@ There is a syllable boundary within a sequence VV of two nonidentical vowels tha
             pattern = r'(?=(^|\.)[^ieAyOauo]*((?!ay)[ieAyOauo]{2})[^ieAyOauo]*($|\.))'
             return re.finditer(pattern, word)
 
-
         def vvv_sequences(word):
             # this pattern searches for any VVV sequence that is not directly preceded
             # or followed by a vowel
             pattern = r'(?=(^|\.)[^ieAyOauo]*([ieAyOauo]{3})[^ieAyOauo]*($|\.))'
             return re.finditer(pattern, word)
-
 
         def ie_sequences(word):
             # this pattern searches for any /ie/ sequence that does not occur in the
@@ -175,7 +173,6 @@ There is a syllable boundary within a sequence VV of two nonidentical vowels tha
             pattern = r'[ieAyOauo]+([eAyOauo]{1}i)[ieAyOauo]*'
             pattern += r'|[ieAyOauo]*([eAyOauo]{1}i)[ieAyOauo]+'
             return re.finditer(pattern, word)
-
 
         def u_or_y_final_diphthongs(word):
             # this pattern searchs for any VV sequence that ends in /u/ or /y/ (incl.
