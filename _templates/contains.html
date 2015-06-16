@@ -8,13 +8,15 @@
 <div class="search"> 
     <form class='search' method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-        <input type='text' name='search' class='find' placeholder='type in a sequence...'>
+        <input type='text' name='search' class='find' placeholder='type in a sequence...' {% if find %}value={{ find }}{% endif %}>
         <input type='submit' class='find' value='FIND'>
     </form>
     <br>
 </div>
 {% if results is not none %}
 <div class='bad-tokens'>
+    <div class='stats'>Words containing <i>{{ find }}</i> sequences ({{ count }} matches).</div>
+    <br>
     <span class='bad-attr-label'>orth</span>
     <span class='mini-bad-attr-label'>rules</span>
     <span class='bad-attr-label'>test</span>

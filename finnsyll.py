@@ -564,7 +564,7 @@ def find_view():
 @login_required
 def contains_view(page):
     '''Search for tokens by word and/or citation form.'''
-    results = None
+    results, find, count = None, None, None
 
     if request.method == 'POST':
         find = request.form.get('search')
@@ -575,9 +575,21 @@ def contains_view(page):
         else:
             results = Token.query.filter(Token.orth.contains(find))
 
-        results = results.order_by(Token.is_gold)
+        count = results.count()
 
-    return render_template('contains.html', kw='contains', results=results)
+        try:
+            results = results.order_by(Token.is_gold)[:500]
+
+        except IndexError:
+            results = results.order_by(Token.is_gold)
+
+    return render_template(
+        'contains.html',
+        kw='contains',
+        results=results,
+        find=find,
+        count=count,
+        )
 
 
 @app.route('/bad', defaults={'page': 1}, methods=['GET', 'POST'])
