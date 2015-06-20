@@ -27,21 +27,26 @@
         <span class='unverified-attr-label'>syll 1</span>
         <span class='unverified-attr-label'>syll 2</span>
         <span class='mini-unverified-attr-label'>compound</span>
-        <span class='mini-unverified-attr-label'>save</span>
         <br><br>
-        {% for t in tokens %}
         <form method='POST'>
-            <span class='mini-unverified-attr' style='color: #E1E1E1;'>{{ t.freq }}</span>
             <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-            <input type='hidden' name='find' value='{{ t.id }}'>
-            <span class='unverified-attr editab'><input type='text' id='test' name='test_syll' readonly='True' value='{{ t.test_syll }}' title='Rules: {{ t.rules }}&#10;&#10;Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'></span>
-            <span class='unverified-attr editable'><input type='text' id='syll' name='syll' value='{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}'></span>
-            <span class='unverified-attr editable'><input type='text' id='alt1' name='alt_syll1' value='{{ t.alt_syll1 }}'></span>
-            <span class='mini-unverified-attr'><input type='checkbox' id='compound' name='is_compound' value=1 {% if t.is_compound %} checked{% endif %}></span>
-            <input type='submit' class='OK' value='OK!'>
+            {% for t in tokens %}
+            <span class='mini-unverified-attr freq'>{{ t.freq }}</span>
+            <input type='hidden' name='find_{{ loop.index }}' value='{{ t.id }}'>
+            <span class='unverified-attr'><input type='text' id='test' name='test_syll_{{ loop.index }}' readonly='True' value='{{ t.test_syll }}' title='Rules: {{ t.rules }}&#10;&#10;Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'></span>
+            <span class='unverified-attr editable'><input type='text' id='syll' name='syll_{{ loop.index }}' value='{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}'></span>
+            <span class='unverified-attr editable'><input type='text' id='alt1' name='alt_syll1_{{ loop.index }}' value='{{ t.alt_syll1 }}'></span>
+            <span class='mini-unverified-attr'><input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}></span>
+            <br>
+            {% endfor %}
+            <button type='submit' id='submit-form' style='display: none;'/>
         </form>
-        {% endfor %}
     </div>
+    <br><br>
+    <div class='center'>
+        <label for='submit-form' class='BIG-OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');">OK!</label>
+    </div>
+    <br>
 {% endif %}
     <br>
     <div class='pagination'>

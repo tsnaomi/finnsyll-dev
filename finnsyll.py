@@ -22,6 +22,7 @@ from math import ceil
 from syllabifier.phonology import get_sonorities, get_weights
 from syllabifier.v4 import syllabify
 from tabulate import tabulate
+from werkzeug.exceptions import BadRequestKeyError
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
 app.config.from_pyfile('finnsyll_config.py')
@@ -451,17 +452,23 @@ def redirect_url(default='main_view'):
     return request.referrer or url_for(default)
 
 
-def apply_form(http_form):
+def apply_form(http_form, commit=True):
     # Apply changes to Token instance based on POST request
     try:
+        token = Token.query.get(http_form['find'])
         orth = http_form.get('orth')
         syll = http_form['syll'] or http_form['test_syll']
         alt_syll1 = http_form.get('alt_syll1', '')
         alt_syll2 = http_form.get('alt_syll2', '')
         alt_syll3 = http_form.get('alt_syll3', '')
-        is_compound = bool(http_form.getlist('is_compound'))
-        is_stopword = bool(http_form.getlist('is_stopword'))
-        token = Token.query.get(http_form['find'])
+
+        try:
+            is_compound = bool(http_form.getlist('is_compound'))
+            is_stopword = bool(http_form.getlist('is_stopword'))
+
+        except AttributeError:
+            is_compound = bool(http_form.get('is_compound'))
+            is_stopword = bool(http_form.get('is_stopword'))
 
         token.correct(
             orth=orth or token.orth,
@@ -473,7 +480,8 @@ def apply_form(http_form):
             is_stopword=is_stopword,
             )
 
-        db.session.commit()
+        if commit:
+            db.session.commit()
 
     except (AttributeError, KeyError, LookupError):
         pass
@@ -600,7 +608,21 @@ def bad_view(page):
 def unverified_view(page):
     '''List all unverified Tokens and process corrections.'''
     if request.method == 'POST':
-        apply_form(request.form)
+        forms = {k: {} for k in range(1, 41)}
+
+        for i in range(1, 41):
+            for attr in ['find', 'syll', 'alt_syll1', 'is_compound']:
+
+                try:
+                    forms[i][attr] = request.form['%s_%s' % (attr, i)]
+
+                except BadRequestKeyError:
+                    pass
+
+        for form in forms.itervalues():
+            apply_form(form, commit=False)
+
+        db.session.commit()
 
     tokens = get_unverified_tokens().slice(0, 400)
     tokens, pagination = paginate(page, tokens)
