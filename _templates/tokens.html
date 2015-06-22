@@ -1,71 +1,112 @@
 {% extends 'base.html' %}
 
 {% block body %}
-
-{% if kw == 'bad' %}
-    <div class='bad-tokens'>
-        <span class='bad-attr-label'>orth</span>
-        <span class='mini-bad-attr-label'>rules</span>
-        <span class='bad-attr-label'>test</span>
-        <span class='bad-attr-label'>gold</span>
-        <br><br>
+<br>
+<br> 
+{% if kw == 'bad' %} <!-- BAD -->
+<div class='tokens container'>
+    <div class='row hidden-xs hidden-sm'>
+        <span class='attr-label col-md-3'>orth</span>
+        <span class='attr-label col-md-2'>rules</span>
+        <span class='attr-label col-md-3'>test</span>
+        <span class='attr-label col-md-3'>gold</span>
+    </div>
+    <br class='hidden-xs hidden-sm'>
+    {% for t in tokens %}
+    <div class='row'>
+        <span class='col-xs-6 col-md-3' title='Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'>{{ t.orth }}</span>
+        <span class='col-xs-6 col-md-2'>{{ t.rules }}&nbsp;</span>
+        <span class='col-xs-6 col-md-3'><span class='sm-bad {% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span></span>
+        <span class='col-xs-6 col-md-3'>{{ t.syll }}{% if t.alt_syll1 %} + {% endif %}</span>
+    </div>
+    <br>
+    {% endfor %}
+</div>
+{% elif kw == 'unverified' %} <!-- UNVERIFIED -->
+<div class='tokens container'>
+    <div class='row hidden-xs hidden-sm'>
+        <span class='attr-label col-md-1'>freq</span>
+        <span class='attr-label col-md-2'>test</span>
+        <span class='attr-label col-md-2'>syll 1</span>
+        <span class='attr-label col-md-2'>syll 2</span>
+        <span class='attr-label col-md-2'>syll 3</span>
+        <span class='attr-label col-md-2'>syll 4</span>
+        <span class='attr-label col-md-1'>compound</span>
+    </div>
+    <br class='hidden-xs hidden-sm'>
+    <form method='POST'>
+        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
         {% for t in tokens %}
-        <span class='bad-attr' title='Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'>{{ t.orth }}</span>
-        <span class='mini-bad-attr'>{{ t.rules }}</span>
-        <span class='bad-attr'><span class='{% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span></span>
-        <span class='bad-attr'>{{ t.syll }}</span>
-        <span class='bad-attr'>{{ t.alt_syll1 }}</span>
-        <span class='bad-attr'>{{ t.alt_syll2 }}</span>
-        <span class='bad-attr'>{{ t.alt_syll3 }}</span>
+        <div class='row'>
+            <span class='col-xs-12 col-md-1 freq'>{{ t.freq }}</span>
+            <input type='hidden' name='find_{{ loop.index }}' value='{{ t.id }}'>
+            <span class='col-xs-12 col-md-2'><input type='text' class='gray readonly' id='test' name='test_syll_{{ loop.index }}' readonly='True' value='{{ t.test_syll }}' title='Rules: {{ t.rules }}&#10;&#10;Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'></span>
+            <span class='col-xs-6 col-md-2'><input type='text' class='gray' id='syll' name='syll_{{ loop.index }}' value='{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}'></span>
+            <span class='col-xs-6 col-md-2'><input type='text' class='gray' id='alt1' name='alt_syll1_{{ loop.index }}' placeholder='alternative syll 1' value='{{ t.alt_syll1 }}'></span>
+            <span class='col-xs-6 col-md-2'><input type='text' class='gray' id='alt2' name='alt_syll2_{{ loop.index }}' placeholder='alternative syll 2' value='{{ t.alt_syll2 }}'></span>
+            <span class='col-xs-6 col-md-2'><input type='text' class='gray' id='alt3' name='alt_syll3_{{ loop.index }}' placeholder='alternative syll 3' value='{{ t.alt_syll3 }}'></span>
+            <span class='col-xs-12 col-md-1'><input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}><span class='attr-label visible-xs visible-sm' style='float: left;'>compound&nbsp;&nbsp;</span></span> <!-- TODO: CSS -->
+        </div>
         <br>
         {% endfor %}
+        <br>
+        <div class='center'>
+            <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');" value='OK!'>
+        </div>
+    </form>
+</div>
+<br>
+{% else %} <!-- LEMMAS -->
+<div class='tokens container'>
+    <div class='row hidden-xs hidden-sm'>
+        <span class='attr-label col-md-2'>test</span></span>
+        <span class='attr-label col-md-2'>syll 1</span>
+        <span class='attr-label col-md-2'>syll 2</span>
+        <span class='attr-label col-md-2'>syll 3</span>
+        <span class='attr-label col-md-2'>syll 4</span>
+        <span class='attr-label col-md-2'>compound</span>
     </div>
-{% else %}
-    <div class='unverified-tokens'>
-        <span class='mini-unverified-attr-label'>freq</span>
-        <span class='unverified-attr-label'>test</span>
-        <span class='unverified-attr-label'>syll 1</span>
-        <span class='unverified-attr-label'>syll 2</span>
-        <span class='mini-unverified-attr-label'>compound</span>
-        <br><br>
-        <form method='POST'>
-            <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-            {% for t in tokens %}
-            <span class='mini-unverified-attr freq'>{{ t.freq }}</span>
+    <br class='hidden-xs hidden-sm'>
+    <form method='POST'>
+        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+        {% for t in tokens %}
+        <div class='row'>
             <input type='hidden' name='find_{{ loop.index }}' value='{{ t.id }}'>
-            <span class='unverified-attr'><input type='text' id='test' name='test_syll_{{ loop.index }}' readonly='True' value='{{ t.test_syll }}' title='Rules: {{ t.rules }}&#10;&#10;Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'></span>
-            <span class='unverified-attr editable'><input type='text' id='syll' name='syll_{{ loop.index }}' value='{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}'></span>
-            <span class='unverified-attr editable'><input type='text' id='alt1' name='alt_syll1_{{ loop.index }}' value='{{ t.alt_syll1 }}'></span>
-            <span class='mini-unverified-attr'><input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}></span>
-            <br>
-            {% endfor %}
-            <button type='submit' id='submit-form' style='display: none;'/>
-        </form>
-    </div>
-    <br><br>
-    <div class='center'>
-        <label for='submit-form' class='BIG-OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');">OK!</label>
-    </div>
-    <br>
-{% endif %}
-    <br>
-    <div class='pagination'>
-        {% if pagination.has_prev %}
-        <a href="{{ url_for_other_page(pagination.page - 1) }}">&laquo; Previous</a>
-        {% endif %}
-        {% for page in pagination.iter_pages() %}
-        {% if page %}
-        {% if page != pagination.page %}
-        <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
-        {% else %}
-        <strong>{{ page }}</strong>
-        {% endif %}
-        {% else %}
-        <span class='ellipsis'>…</span>
-        {% endif %}
+            <span class='col-xs-12 col-md-2'><input type='text' class='gray readonly' id='test' name='test_syll_{{ loop.index }}' readonly='True' value='{{ t.test_syll }}' title='Rules: {{ t.rules }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'></span>
+            <span class='col-xs-6 col-md-2'><input type='text' class='gray' id='syll' name='syll_{{ loop.index }}' value='{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}'></span>
+            <span class='col-xs-6 col-md-2'><input type='text' class='gray' id='alt1' name='alt_syll1_{{ loop.index }}' placeholder='alternative syll 1' value='{{ t.alt_syll1 }}'></span>
+            <span class='col-xs-6 col-md-2'><input type='text' class='gray' id='alt2' name='alt_syll2_{{ loop.index }}' placeholder='alternative syll 2' value='{{ t.alt_syll2 }}'></span>
+            <span class='col-xs-6 col-md-2'><input type='text' class='gray' id='alt3' name='alt_syll3_{{ loop.index }}' placeholder='alternative syll 3' value='{{ t.alt_syll3 }}'></span>
+            <span class='col-xs-12 col-md-2'><input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}><span class='attr-label visible-xs visible-sm' style='float: left;'>compound&nbsp;&nbsp;</span></span> <!-- TODO: CSS -->
+        </div>
+        <br>
         {% endfor %}
-        {% if pagination.has_next %}
-        <a href="{{ url_for_other_page(pagination.page + 1) }}">Next &raquo;</a>
-        {% endif %}
-    </div>
+        <br>
+        <div class='center'>
+            <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');" value='OK!'>
+        </div>
+    </form>
+</div>
+<br>
+{% endif %}
+<br>
+<div class='pagination'>
+    {% if pagination.has_prev %}
+    <a href="{{ url_for_other_page(pagination.page - 1) }}">&laquo; Previous</a>
+    {% endif %}
+    {% for page in pagination.iter_pages() %}
+    {% if page %}
+    {% if page != pagination.page %}
+    <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+    {% else %}
+    <strong>{{ page }}</strong>
+    {% endif %}
+    {% else %}
+    <span class='ellipsis'>…</span>
+    {% endif %}
+    {% endfor %}
+    {% if pagination.has_next %}
+    <a href="{{ url_for_other_page(pagination.page + 1) }}">Next &raquo;</a>
+    {% endif %}
+</div>
 {% endblock %}

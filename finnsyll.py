@@ -540,7 +540,7 @@ def approve_doc_view(id):
 @login_required
 def find_view():
     '''Search for tokens by word and/or citation form.'''
-    results = None
+    results, find = None, None
 
     if request.method == 'POST':
 
@@ -548,11 +548,16 @@ def find_view():
             apply_form(request.form)
 
         find = request.form.get('search') or request.form['syll']
-        find = find.strip().translate({ord('.'): None, })  # strip periods
-        results = Token.query.filter(Token.orth.ilike(find))
+        FIND = find.strip().translate({ord('.'): None, })  # strip periods
+        results = Token.query.filter(Token.orth.ilike(FIND))
         results = results.order_by(Token.is_gold)
 
-    return render_template('find.html', kw='find', results=results)
+    return render_template(
+        'search.html',
+        kw='find',
+        results=results,
+        find=find,
+        )
 
 
 @app.route('/contains', defaults={'page': 1}, methods=['GET', 'POST'])
@@ -580,7 +585,7 @@ def contains_view(page):
             results = results.order_by(Token.is_gold)
 
     return render_template(
-        'contains.html',
+        'search.html',
         kw='contains',
         results=results,
         find=find,
@@ -603,15 +608,17 @@ def bad_view(page):
         )
 
 
+# TODO: apply bulk form
 @app.route('/unverified', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/unverified/page/<int:page>')
 def unverified_view(page):
     '''List all unverified Tokens and process corrections.'''
     if request.method == 'POST':
         forms = {k: {} for k in range(1, 41)}
+        attrs = ['find', 'syll', 'alt_syll1', 'alt_syl2', 'is_compound']
 
         for i in range(1, 41):
-            for attr in ['find', 'syll', 'alt_syll1', 'is_compound']:
+            for attr in attrs:
 
                 try:
                     forms[i][attr] = request.form['%s_%s' % (attr, i)]
@@ -635,12 +642,35 @@ def unverified_view(page):
         )
 
 
-# @app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
+# TODO: apply bulk form
+@app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/lemma/page/<int:page>')
 def lemma_view(page):
     '''List all unverified unseen lemmas and process corrections.'''
     if request.method == 'POST':
-        apply_form(request.form)
+        forms = {k: {} for k in range(1, 41)}
+        attrs = [
+            'find',
+            'syll',
+            'alt_syll1',
+            'alt_syll2',
+            'alt_syll3',
+            'is_compound',
+            ]
+
+        for i in range(1, 41):
+            for attr in attrs:
+
+                try:
+                    forms[i][attr] = request.form['%s_%s' % (attr, i)]
+
+                except BadRequestKeyError:
+                    pass
+
+        for form in forms.itervalues():
+            apply_form(form, commit=False)
+
+        db.session.commit()
 
     tokens = get_unseen_lemmas()
     tokens, pagination = paginate(page, tokens)
@@ -648,7 +678,7 @@ def lemma_view(page):
     return render_template(
         'tokens.html',
         tokens=tokens,
-        kw='lemma',
+        kw='lemmas',
         pagination=pagination,
         )
 

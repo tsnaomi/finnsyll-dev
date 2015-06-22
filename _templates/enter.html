@@ -7,12 +7,14 @@
         <link rel='stylesheet' type='text/css' href='//fonts.googleapis.com/css?family=Pacifico|EB+Garamond'>
         {% if config.TESTING %}
         <link rel="icon" type="image/png" href="{{ url_for('static', filename='finnsyll-testing.png') }}">
+        <link rel="apple-touch-icon-precomposed" href="{{ url_for('static', filename='finnsyll-testing.png') }}">
         {% else %}
         <link rel="icon" type="image/png" href="{{ url_for('static', filename='finnsyll.png') }}">
+        <link rel="apple-touch-icon-precomposed" href="{{ url_for('static', filename='finnsyll.png') }}">
         {% endif %}
     </head>
     <body>
-        <form class='entrance entrance-entrance' method='POST'>
+        <form class='entrance' method='POST'>
             <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
             <br>
             <input type='text' class='entrance-auth' name='username' placeholder='username'>
