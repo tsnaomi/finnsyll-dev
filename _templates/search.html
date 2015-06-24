@@ -5,7 +5,6 @@
 {% endblock %}
 
 {% block body %}
-{% if kw == 'find' %}
 <!-- Modal -->
 <div class='modal fade' id='modal' tabindex='-1' role='dialog' aria-labelledby='myModalLabel'>
     <div class='modal-dialog' role='document'>
@@ -52,6 +51,7 @@
                             <input type='checkbox' id='compound' name='is_compound' class='col-xs-7' value=1>
                         </div>
                         <br>
+                        <input type='hidden' name='search' id='search' value='{% if find %}{{ find }}{% endif %}'>
                         <input type='hidden' name='find' id='find' value=''>
                         <input type='submit' class='OK' value='OK!'><br>
                         <br>
@@ -62,7 +62,6 @@
     </div>
 </div>
 <!-- Modal (end) -->
-{% endif %}
 <br>
 <br>
 <br>
@@ -83,21 +82,19 @@
         <div class='count'>Words containing <i>{{ find }}</i> sequences ({{ count }} matches).</div>
         <br>
         <div class='row hidden-xs hidden-sm'>
-            <span class='attr-label col-xs-12 col-md-2'>orth</span>
-            <span class='attr-label col-xs-12 col-md-1'>rules</span>
-            <span class='attr-label col-xs-12 col-md-2'>test</span>
-            <span class='attr-label col-xs-12 col-md-2'>gold</span>
+            <span class='attr-label col-xs-12 col-md-3'>orth</span>
+            <span class='attr-label col-xs-12 col-md-2'>rules</span>
+            <span class='attr-label col-xs-12 col-md-3'>test</span>
+            <span class='attr-label col-xs-12 col-md-3'>gold</span>
         </div>
         <br class='hidden-xs hidden-sm'>
         {% for t in results %}
         <div class='row'>
-            <span class='col-xs-12 col-md-2' title='Lemma: {{ t.lemma }}&#10;&#10;POS: {{ t.pos }}&#10;&#10;MSD: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'>{{ t.orth }}</span>
-            <span class='hidden-xs hidden-sm col-md-1'>{{ t.rules }}</span>
-            <span class='col-xs-6 col-md-2'><span class='{{ t|goldclass }} {% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span></span>
+            <span class='col-xs-12 col-md-3' title='Lemma: {{ t.lemma }}&#10;&#10;POS: {{ t.pos }}&#10;&#10;MSD: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'>{{ t.orth }}</span>
+            <span class='hidden-xs hidden-sm col-md-2'>{{ t.rules }}</span>
+            <span class='col-xs-6 col-md-3'><span data-toggle='modal' data-target='#modal' onclick="populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.test_syll }}', '{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}');" class='{{ t|goldclass }} {% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span></span>
             <span class='visible-xs visible-sm col-xs-6'>{{ t.rules }}</span>
-            <span class='col-xs-12 col-md-2'>{{ t.syll }}</span>
-            <span class='col-xs-12 col-md-2'>{{ t.alt_syll1 }}</span>
-            <span class='col-xs-12 col-md-2'>{{ t.alt_syll2 }}{% if t.alt_syll3 %} + {% endif %}</span>
+            <span class='col-xs-12 col-md-3'>{{ t.syll }}{{ t.alt_syll1 }}{% if t.alt_syll1 %} + {% endif %}</span>
         </div>
         <br>
         {% endfor %}

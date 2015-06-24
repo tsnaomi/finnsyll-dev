@@ -4,6 +4,62 @@
 <br>
 <br> 
 {% if kw == 'bad' %} <!-- BAD -->
+<!-- Modal -->
+<div class='modal fade' id='modal' tabindex='-1' role='dialog' aria-labelledby='myModalLabel'>
+    <div class='modal-dialog' role='document'>
+        <div class='modal-content'>
+            <div class='modal-body'>
+                <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
+                <form class='doc-tokens' method='POST'>
+                    <div class='container-fluid'>
+                        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+                        <br>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Orthography:</span>
+                            <input type='text' id='orth' name='orth' class='gray readonly col-xs-7' value='' readonly>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Test Syll:</span>
+                            <input type='text' id='test' name='test_syll' class='gray readonly col-xs-7' value='' readonly>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Correct Syll:</span>
+                            <input type='text' id='syll' name='syll' class='gray col-xs-7' value=''>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Alt Syll 1:</span>
+                            <input type='text' id='alt1' name='alt_syll1' class='gray col-xs-7' value=''>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Alt Syll 2:</span>
+                            <input type='text' id='alt2' name='alt_syll2' class='gray col-xs-7' value=''>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Alt Syll 3:</span>
+                            <input type='text' id='alt3' name='alt_syll3' class='gray col-xs-7' value=''>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Compound:</span>
+                            <input type='checkbox' id='compound' name='is_compound' class='col-xs-7' value=1>
+                        </div>
+                        <br>
+                        <input type='hidden' name='find' id='find' value=''>
+                        <input type='submit' class='OK' value='OK!'><br>
+                        <br>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal (end) -->
 <div class='tokens container'>
     <div class='row hidden-xs hidden-sm'>
         <span class='attr-label col-md-3'>orth</span>
@@ -16,7 +72,7 @@
     <div class='row'>
         <span class='col-xs-6 col-md-3' title='Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'>{{ t.orth }}</span>
         <span class='col-xs-6 col-md-2'>{{ t.rules }}&nbsp;</span>
-        <span class='col-xs-6 col-md-3'><span class='sm-bad {% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span></span>
+        <span class='col-xs-6 col-md-3'><span data-toggle='modal' data-target='#modal' class='sm-bad bad {% if t.is_compound %} compound {% endif %}' onclick="populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.test_syll }}', '{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}');" id='{{ loop.index }}' class='{{ t|goldclass }} {% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span></span>
         <span class='col-xs-6 col-md-3'>{{ t.syll }}{% if t.alt_syll1 %} + {% endif %}</span>
     </div>
     <br>
@@ -110,3 +166,23 @@
     {% endif %}
 </div>
 {% endblock %}
+
+{% if kw == 'bad' %}
+{% block footer %}
+<script>
+    function populatemodal(find, orth, gold, test, syll, alt1, alt2, alt3, compound) {
+        $('#orth').val(orth);
+        $('#test').val(test);
+        $('#test').addClass(gold);
+        $('#syll').val(syll);
+        $('#alt1').val(alt1);
+        $('#alt2').val(alt2);
+        $('#alt3').val(alt3);
+        $('#find').val(find);
+        if (compound == 'checked') {
+            $('#compound').prop('checked', true);
+        };
+    }
+</script>
+{% endblock %}
+{% endif %}

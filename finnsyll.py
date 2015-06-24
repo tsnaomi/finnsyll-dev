@@ -374,6 +374,14 @@ def get_unseen_lemmas():
     return Token.query.filter_by(freq=0).order_by(Token.lemma)
 
 
+def get_stopword_tokens():
+    '''Return all unverified stopwords.'''
+    tokens = Token.query.filter_by(is_stopword=True).filter_by(is_gold=None)
+    tokens = tokens.order_by(Token.freq.desc())
+
+    return tokens
+
+
 def get_unreviewed_documents():
     '''Return all unreviewed documents.'''
     docs = Document.query.filter_by(reviewed=False)
@@ -570,6 +578,9 @@ def contains_view(page):
     if request.method == 'POST':
         find = request.form.get('search')
 
+        if request.form.get('syll'):
+            apply_form(request.form)
+
         if '.' in find:
             results = Token.query.filter(Token.test_syll.contains(find))
 
@@ -597,6 +608,9 @@ def contains_view(page):
 @app.route('/bad/page/<int:page>')
 def bad_view(page):
     '''List all incorrectly syllabified Tokens and process corrections.'''
+    if request.method == 'POST':
+        apply_form(request.form)
+
     tokens = get_bad_tokens()
     tokens, pagination = paginate(page, tokens)
 
@@ -679,6 +693,22 @@ def lemma_view(page):
         'tokens.html',
         tokens=tokens,
         kw='lemmas',
+        pagination=pagination,
+        )
+
+
+# TODO: apply bulk form
+@app.route('/stopword', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/stopword/page/<int:page>')
+def stopword_view(page):
+    '''List all stopwords and process corrections.'''
+    tokens = get_stopword_tokens()
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='stopwords',
         pagination=pagination,
         )
 
