@@ -12,6 +12,10 @@ from phonology import (
 
 # Notes -----------------------------------------------------------------------
 
+# Foreign/Interjection: If there is a word that doesn't end in a vowel or a
+# coronal consonant, treat it as a stopword; mono-syllabific consonant-final
+# words are likely foreign (e.g., bordeaux, serious, jak)
+
 
 # Syllabifier -----------------------------------------------------------------
 
