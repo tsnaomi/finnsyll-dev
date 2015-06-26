@@ -294,8 +294,12 @@ def syllabify_tokens():
 
 def transition(pdf=False):
     '''Syllabify tokens and create a transition report.'''
-    tokens = Token.query.filter(Token.is_gold.isnot(None))
+    compound = lambda t: 'C' if t.is_compound else None
     parse = lambda t: (t, [t.test_syll, t.rules])
+    row = lambda t: ['>', t.test_syll, t.rules, compound(t)]
+
+    tokens = Token.query.filter(Token.is_gold.isnot(None))
+
     Dict = lambda tokens=tokens: {
         'good': dict([parse(t) for t in tokens.filter_by(is_gold=True)]),
         'bad': dict([parse(t) for t in tokens.filter_by(is_gold=False)]),
@@ -311,8 +315,8 @@ def transition(pdf=False):
     if PRE['good'] != POST['good']:
         good = set(PRE['bad'].keys()).intersection(POST['good'].keys())
         bad = set(PRE['good'].keys()).intersection(POST['bad'].keys())
-        table1 = [PRE['bad'][t] + ['>', t.test_syll, t.rules] for t in good]
-        table2 = [PRE['good'][t] + ['>', t.test_syll, t.rules] for t in bad]
+        table1 = [PRE['bad'][t] + row(t) for t in good]
+        table2 = [PRE['good'][t] + row(t) for t in bad]
         report = 'FROM BAD TO GOOD (%s)\n' % len(good)
         report += tabulate(table1)
         report += '\n\nFROM GOOD TO BAD (%s)\n' % len(bad)

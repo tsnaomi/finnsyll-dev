@@ -3,6 +3,7 @@
 import re
 
 from phonology import (
+    is_cluster,
     is_consonant,
     is_diphthong,
     is_long,
@@ -112,6 +113,7 @@ def apply_T1(word):
     '''There is a syllable boundary in front of every CV-sequence.'''
     # split consonants and vowels: 'balloon' -> ['b', 'a', 'll', 'oo', 'n']
     WORD = [w for w in re.split('([ieAyOauo]+)', word) if w]
+    count = 0
 
     for i, v in enumerate(WORD):
 
@@ -119,7 +121,14 @@ def apply_T1(word):
             continue
 
         elif is_consonant(v[0]) and i + 1 != len(WORD):
-            WORD[i] = v[:-1] + '.' + v[-1]
+
+            if is_cluster(v) and count % 2 == 1:  # WSP
+                WORD[i] = '.' + v
+
+            else:
+                WORD[i] = v[:-1] + '.' + v[-1]
+
+            count += 1
 
     WORD = ''.join(WORD)
     RULE = ' T1' if word != WORD else ''
@@ -330,6 +339,8 @@ if __name__ == '__main__':
             (u'uusivuosi', u'uu.si.vuo.si'),
             (u'elämäntyömerkki', u'e.lä.män.työ.merk.ki'),
             (u'imperiumiin', u'im.pe.ri.u.miin'),
+            (u'demokraattisen', u'de.mo.kraat.ti.sen'),
+            (u'mikrojäähdytin', u'mik.ro.jääh.dy.tin'),
             ]
 
         for word in words:

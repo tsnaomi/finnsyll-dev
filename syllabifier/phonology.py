@@ -21,7 +21,7 @@ CONSONANTS = [
 
 
 # Finnish consonant clusters (see Karlsson 1985, #4)
-CLUSTERS = [  # KEEP?
+CLUSTERS = [
     u'bl', u'br', u'dr', u'fl', u'fr', u'gl', u'gr', u'kl', u'kr', u'kv',
     u'pl', u'pr', u'cl', u'qv', u'schm']
 
