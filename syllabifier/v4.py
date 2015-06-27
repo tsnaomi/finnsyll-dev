@@ -11,12 +11,6 @@ from phonology import (
     replace_umlauts,
     )
 
-# Notes -----------------------------------------------------------------------
-
-# Foreign/Interjection: If there is a word that doesn't end in a vowel or a
-# coronal consonant, treat it as a stopword; mono-syllabific consonant-final
-# words are likely foreign (e.g., bordeaux, serious, jak)
-
 
 # Syllabifier -----------------------------------------------------------------
 
@@ -58,6 +52,7 @@ def _syllabify(word):
         applied_rules += T5 + T6 + T7 + T2
 
     word = replace_umlauts(word, put_back=True)
+    applied_rules = applied_rules or ' T0'  # T0 means no rules have applied
 
     return word, applied_rules
 

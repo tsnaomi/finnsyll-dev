@@ -10,17 +10,25 @@
 
 # Syllabification rules
 
+**T0**:
+Indicates that no syllabification rules have applied.
+
 **T1**:
-There is a syllable boundary in front of every CV-sequence.
+There is a syllable boundary in front of every CV-sequence. If there is a legal consonant cluster, the first consonant of the cluster forms the coda of a stressed syllable; otherwise, the cluster forms the onset of an unstressed syllable.
 
         def apply_T1(word):
             # split consonants and vowels: 'balloon' -> ['b', 'a', 'll', 'oo', 'n']
             WORD = [w for w in re.split('([ieAyOauo]+)', word) if w]
+            count = 0
             for i, v in enumerate(WORD):
                 if i == 0 and is_consonant(v[0]):
                     continue
                 elif is_consonant(v[0]) and i + 1 != len(WORD):
-                    WORD[i] = v[:-1] + '.' + v[-1]
+                    if is_cluster(v) and count % 2 == 1:
+                        WORD[i] = '.' + v
+                    else:
+                        WORD[i] = v[:-1] + '.' + v[-1]
+                    count += 1
             WORD = ''.join(WORD)
             return WORD
 
