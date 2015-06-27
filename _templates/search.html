@@ -74,8 +74,8 @@
 </div>
 <br>
 <br>
-{% if results is not none %}
-{% if count != 0 %}
+{% if results != none %}
+{% if results %}
 <div class='tokens container'>
     {% if kw == 'contains' %} <!-- CONTAINS -->
     <div class='contains'>
@@ -114,14 +114,16 @@
         <span class='attr-label'>pos</span> {{ t.pos }}<br>
         <span class='attr-label'>msd</span> {{ t.msd }}<br>
         <span class='attr-label'>lemma</span> {{ t.lemma }}<br><br>
+        {% else %}
+        <span class='message'>No matches found.</span>
         {% endfor %}
     </div>
     {% endif %}
 </div>
 <br>
 {% else %}
-{% endif %}
 <span class='message'>No matches found.</span>
+{% endif %}
 {% endif %}
 {% endblock %}
 
