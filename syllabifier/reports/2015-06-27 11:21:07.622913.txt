@@ -1,0 +1,25 @@
+FROM BAD TO GOOD (13)
+---------------------------  -----  -  ---------------------------  -----  -
+me.lod.raa.mas.sa            T1     >  me.lo.draa.mas.sa            T1     C
+laa.tup.ro.fes.so.ri         T1     >  laa.tu.pro.fes.so.ri         T1     C
+tu.lo.ve.rop.ro.sent.ti      T1     >  tu.lo.ve.ro.pro.sent.ti      T1     C
+me.lod.raa.ma                T1     >  me.lo.draa.ma                T1     C
+de.mok.raat.ti.sen           T1     >  de.mo.kraat.ti.sen           T1
+ve.rop.ro.sen.tik.si         T1     >  ve.ro.pro.sen.tik.si         T1     C
+tu.lo.ve.rop.ro.sent.tin.sa  T1     >  tu.lo.ve.ro.pro.sent.tin.sa  T1     C
+de.mok.ra.ti.aa              T1 T6  >  de.mo.kra.ti.aa              T1 T6
+en.dok.ri.no.lo.gi.an        T1 T2  >  en.do.kri.no.lo.gi.an        T1 T2  C
+ve.rop.ro.sen.tit            T1     >  ve.ro.pro.sen.tit            T1     C
+in.to.hi.mod.raa.mas.sa      T1     >  in.to.hi.mo.draa.mas.sa      T1     C
+pik.kuk.las.si.kos.ta        T1     >  pik.ku.klas.si.kos.ta        T1     C
+käyt.töp.ro.sent.ti          T1     >  käyt.tö.pro.sent.ti          T1     C
+---------------------------  -----  -  ---------------------------  -----  -
+
+FROM GOOD TO BAD (3)
+----------------  -----  -  ----------------  -----
+bat.tag.li.a      T1 T2  >  bat.ta.gli.a      T1 T2
+bat.tag.li.an     T1 T2  >  bat.ta.gli.an     T1 T2
+es.tab.lish.ment  T1     >  es.ta.blish.ment  T1
+----------------  -----  -  ----------------  -----
+
+421 BAD TOKENS
