@@ -116,12 +116,15 @@ def apply_T1(word):
             continue
 
         elif is_consonant(v[0]) and i + 1 != len(WORD):
+            if is_cluster(v):  # WSP
+                if count % 2 == 0:
+                    WORD[i] = v[0] + '.' + v[1:]  # CC > C.C, CCC > C.CC
 
-            if is_cluster(v) and count % 2 == 1:  # WSP
-                WORD[i] = '.' + v
+                else:
+                    WORD[i] = '.' + v  # CC > .CC, CCC > .CCC
 
             else:
-                WORD[i] = v[:-1] + '.' + v[-1]
+                WORD[i] = v[:-1] + '.' + v[-1]  # CC > C.C, CCC > CC.C
 
             count += 1
 
@@ -165,7 +168,6 @@ def apply_T4(word):
         # i % 2 != 0 prevents this rule from applying to first, third, etc.
         # syllables, which receive stress (WSP)
         if is_consonant(v[-1]) and i % 2 != 0:
-
             if i + 1 == len(WORD) or is_consonant(WORD[i + 1][0]):
                 vv = u_y_final_diphthongs(v)
 
@@ -336,6 +338,8 @@ if __name__ == '__main__':
             (u'imperiumiin', u'im.pe.ri.u.miin'),
             (u'demokraattisen', u'de.mo.kraat.ti.sen'),
             (u'mikrojäähdytin', u'mik.ro.jääh.dy.tin'),
+            (u'republikaani', u're.pub.li.kaa.ni'),
+            (u'Jakobson', u'Ja.kob.son'),
             ]
 
         for word in words:
