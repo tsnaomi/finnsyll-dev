@@ -6,6 +6,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 from collections import Counter, namedtuple
+from tabulate import tabulate as tabulate
 
 # word forms: 991730 (exluding unseen lemmas)
 # xml files: 61,529
@@ -189,10 +190,34 @@ def syllabify_unseen_lemmas():
         finn.db.session.commit()
 
 
+# Queries ---------------------------------------------------------------------
+
+def tabulate_to_file(tokens, filename):
+    row = lambda t: [
+        t.freq,
+        t.orth,
+        t.rules,
+        t.test_syll,
+        t.syll + ' +' if t.alt_syll1 else t.syll,
+        'T' if t.is_gold else 'F' if t.is_gold is False else '',
+        'C' if t.is_compound else '',
+        ]
+
+    headers = ['freq', 'orth', 'rules', 'test', 'correct', 'gold', 'compound']
+    table = tabulate([row(t) for t in tokens], headers=headers)
+
+    filename = 'syllabifier/queries/%s.txt' % filename
+
+    with open(filename, 'w') as f:
+        f.write(table.encode('utf-8'))
+
+
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
     # populate_db_tokens_from_aamulehti_1999()  # 13114.48 seconds
     # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
+    # tabulate_to_file(finn.get_acronyms(), 'acronyms')
+    # tabulate_to_file(finn.get_foreign_words(), 'foreign')
     finn.transition(pdf='--pdf' in sys.argv)

@@ -1,0 +1,401 @@
+  freq  orth                                rules                test                                     correct                 gold    compound
+------  ----------------------------------  -------------------  ---------------------------------------  ----------------------  ------  ----------
+    91  Ramsaun MM                          T1 T4 |              ram.sa.un mm                             ram.saun mm             F
+     1  Make Up ABC                         T1 | |               ma.ke up abc                             ma.ke up a.b.c          F       C
+     1  NK Communications                   | T1 T2              nk com.mu.ni.ca.ti.ons                   nk com.mu.ni.ca.ti.ons  T
+     1  FC SeMi                             | T1                 fc se.mi                                 fc se.mi                T
+    11  Tampere ATP                         T1 |                 tam.pe.re atp
+    11  enduron MM                          T1 |                 en.du.ron mm
+    11  Tampere TT                          T1 |                 tam.pe.re tt
+     8  kaksoistrapin MM                    T1 |                 kak.soist.ra.pin mm
+     7  Maebashin MM                        T1 T2 |              ma.e.bas.hin mm
+     6  Perthin MM                          T1 |                 pert.hin mm
+     5  Teivon EM                           T1 |                 tei.von em
+     4  Enduron MM                          T1 |                 en.du.ron mm
+     4  Suomen PT                           T1 |                 suo.men pt
+     4  Vuoreksen YVA                       T1 | T1              vuo.rek.sen y.va
+     4  Ramsau hiidon MM                    T1 | T1 |            ram.sau hii.don mm
+     4  Fiden MM                            T1 |                 fi.den mm
+     3  Sanremon MM                         T1 |                 san.re.mon mm
+     3  Anaheimin NHL                       T1 |                 a.na.hei.min nhl
+     3  ABB Industry                        | T1                 abb in.dust.ry
+     3  SSH Communications                  | T1 T2              ssh com.mu.ni.ca.ti.ons
+     3  cheerleadereiden EM                 T1 T2 |              cheer.le.a.de.rei.den em
+     3  v EM                                |                    v em
+     3  VTT Tietotekniikasta                | T1                 vtt tie.to.tek.nii.kas.ta
+     3  VTT Tietotekniikka                  | T1                 vtt tie.to.tek.niik.ka
+     3  Suomi EU                            T1 |                 suo.mi eu
+     3  trapin MM                           T1 |                 tra.pin mm
+     3  Stora ENSO                          T1 | T1              sto.ra en.so
+     3  Minneapolisin MM                    T1 T2 |              min.ne.a.po.li.sin mm
+     2  kaksoistrapin EM                    T1 |                 kak.soist.ra.pin em
+     2  Classic FM                          T1 |                 clas.sic fm
+     2  Tampere EU                          T1 |                 tam.pe.re eu
+     2  ABB Industryn                       | T1                 abb in.dust.ryn
+     2  Tanska EM                           T1 |                 tans.ka em
+     2  Poutiainen VR                       T1 T5 |              pou.ti.ai.nen vr
+     2  fittnessin SM                       T1 |                 fitt.nes.sin sm
+     2  Fontaine EU                         T1 |                 fon.tai.ne eu
+     2  FC Kal                              |                    fc kal
+     2  Holbrooken YK                       T1 |                 holb.roo.ken yk
+     2  Auriolin MM                         T1 T2 |              au.ri.o.lin mm
+     2  sumon MM                            T1 |                 su.mon mm
+     2  SBA Industry                        | T1                 sba in.dust.ry
+     2  Skycomin TV                         T1 |                 sky.co.min tv
+     2  Jussilainen MM                      T1 |                 jus.si.lai.nen mm
+     2  CPS Elektroniikan                   | T1                 cps e.lekt.ro.nii.kan
+     2  Sveitsi MM                          T1 |                 sveit.si mm
+     2  VTT Elektroniikka                   | T1                 vtt e.lekt.ro.niik.ka
+     2  Piekkasen EM                        T1 |                 piek.ka.sen em
+     2  mm EU                               |                    mm eu
+     2  PCE Engineering                     | T1                 pce en.gi.nee.ring
+     2  Classic CD                          T1 |                 clas.sic cd
+     2  VTT Elektroniikasta                 | T1                 vtt e.lekt.ro.nii.kas.ta
+     2  Silverstonen MM                     T1 |                 sil.vers.to.nen mm
+     2  Senatorsin NHL                      T1 |                 se.na.tor.sin nhl
+     2  starin EM                           T1 |                 sta.rin em
+     2  enduromoottoripyöräilyn MM          T1 |                 en.du.ro.moot.to.ri.pyö.räi.lyn mm
+     2  Turekin NHL                         T1 |                 tu.re.kin nhl
+     2  Kaukajärven MM                      T1 |                 kau.ka.jär.ven mm
+     1  Ramsaum MM                          T1 T4 |              ram.sa.um mm
+     1  DSP Communicationsin                | T1 T2              dsp com.mu.ni.ca.ti.on.sin
+     1  Anaheimista MM                      T1 |                 a.na.hei.mis.ta mm
+     1  Pörtschachissa EU                   T1 |                 pörtsc.hac.his.sa eu
+     1  Kemoralla SM                        T1 |                 ke.mo.ral.la sm
+     1  Hämeenlinna EM                      T1 |                 hä.meen.lin.na em
+     1  Boenisz MM                          T1 T2 |              bo.e.nisz mm
+     1  Desire TT                           T1 |                 de.si.re tt
+     1  Veivon EU                           T1 |                 vei.von eu
+     1  Kouvola MM                          T1 |                 kou.vo.la mm
+     1  Rallisprintin SM                    T1 |                 ral.lisp.rin.tin sm
+     1  Turkulainen AD                      T1 |                 tur.ku.lai.nen ad
+     1  Pielavedellä UKK                    T1 |                 pie.la.ve.del.lä ukk
+     1  Prinkkala MM                        T1 |                 prink.ka.la mm
+     1  bongailemassa EU                    T1 |                 bon.gai.le.mas.sa eu
+     1  EBU Bandin lead                     T1 | T1 | T2         e.bu ban.din le.ad
+     1  ITF-Taekwon-don MM                  | T1 T2 | |          itf-ta.ek.won-don mm
+     1  Grahamen NHL                        T1 |                 gra.ha.men nhl
+     1  iguaaneille UV                      T1 T6 |              i.gu.aa.neil.le uv
+     1  TTKK kompleksia                     | T1 T2              ttkk komp.lek.si.a
+     1  Hopkins CIA                         T1 | T2              hop.kins ci.a
+     1  Fiemmen MM                          T1 |                 fiem.men mm
+     1  Henri Tilburgin ROC Midden Brabant  T1 | T1 | | T1 | T1  hen.ri til.bur.gin roc mid.den bra.bant
+     1  Ikaalinen SM                        T1 |                 i.kaa.li.nen sm
+     1  Hennessy EU                         T1 |                 hen.nes.sy eu
+     1  Canadiensille NHL                   T1 T8 |              ca.na.di.en.sil.le nhl
+     1  Real IRA                            T2 | T1              re.al i.ra
+     1  Ferrari MM                          T1 |                 fer.ra.ri mm
+     1  Sanna SM                            T1 |                 san.na sm
+     1  EU kompleksien                      | T1 T8              eu komp.lek.si.en
+     1  Häkämies EU                         T1 T8 |              hä.kä.mi.es eu
+     1  Kingsin NHL                         T1 |                 king.sin nhl
+     1  KalPan SM                           T1 |                 kal.pan sm
+     1  FC FinnPa                           | T1                 fc finn.pa
+     1  Vykoukalille MM                     T1 |                 vy.kou.ka.lil.le mm
+     1  APiONin WAP                         T1 T2 |              a.pi.o.nin wap
+     1  ammattilaissurffaajien MM           T1 T8 |              am.mat.ti.lais.surf.faa.ji.en mm
+     1  Happonen VR                         T1 |                 hap.po.nen vr
+     1  Slovakia EU                         T1 T2 |              slo.va.ki.a eu
+     1  RSL Communications                  | T1 T2              rsl com.mu.ni.ca.ti.ons
+     1  Keurusselän EU                      T1 |                 keu.rus.se.län eu
+     1  Calgaryn NHL                        T1 |                 cal.ga.ryn nhl
+     1  Talencessa MM                       T1 |                 ta.len.ces.sa mm
+     1  Dartsin SM                          T1 |                 dart.sin sm
+     1  Slovakia EM                         T1 T2 |              slo.va.ki.a em
+     1  Orivesi TT                          T1 |                 o.ri.ve.si tt
+     1  Latun MM                            T1 |                 la.tun mm
+     1  Liettua EU                          T1 T2 |              liet.tu.a eu
+     1  nro D                               |                    nro d
+     1  SSH Communicationsin                | T1 T2              ssh com.mu.ni.ca.ti.on.sin
+     1  puh A                               |                    puh a
+     1  Canadiensin NHL                     T1 T8 |              ca.na.di.en.sin nhl
+     1  kartingin MM                        T1 |                 kar.tin.gin mm
+     1  Pusilan MM                          T1 |                 pu.si.lan mm
+     1  Pelicansien SM                      T1 T8 |              pe.li.can.si.en sm
+     1  mm GM                               |                    mm gm
+     1  Tanska EU                           T1 |                 tans.ka eu
+     1  Akopjan MM                          T1 |                 a.kop.jan mm
+     1  Nebojsa Vujovic CNN                 T1 | T1 |            ne.boj.sa vu.jo.vic cnn
+     1  Meluzinille SM                      T1 |                 me.lu.zi.nil.le sm
+     1  Lowe EU                             T1 |                 lo.we eu
+     1  IVO Power Engineering               T1 | T1 | T1         i.vo po.wer en.gi.nee.ring
+     1  SM Fair Play                        | |                  sm fair play
+     1  Maradona MM                         T1 |                 ma.ra.do.na mm
+     1  Saarijärvi SP                       T1 |                 saa.ri.jär.vi sp
+     1  puolustamaann MM                    T1 |                 puo.lus.ta.maann mm
+     1  Studio B                            T1 T2 |              stu.di.o b
+     1  tax freen EU                        | |                  tax freen eu
+     1  Berezovskin IVY                     T1 | T1              be.re.zovs.kin i.vy
+     1  nk AKT                              |                    nk akt
+     1  Putkurin EM                         T1 |                 put.ku.rin em
+     1  q MM                                |                    q mm
+     1  superbiken SM                       T1 |                 su.per.bi.ken sm
+     1  Short SA                            |                    short sa
+     1  Sauro SOS                           T1 |                 sau.ro sos
+     1  q GSM                               |                    q gsm
+     1  Starsin NHL                         T1 |                 star.sin nhl
+     1  SaiPan SM                           T1 |                 sai.pan sm
+     1  room SM                             |                    room sm
+     1  Caenissa CSI                        T1 T2 |              ca.e.nis.sa csi
+     1  nro F                               |                    nro f
+     1  Merikoski MTK                       T1 |                 me.ri.kos.ki mtk
+     1  Ahonen SM                           T1 |                 a.ho.nen sm
+     1  Tiukka SM                           T1 |                 tiuk.ka sm
+     1  Kauppiaitten KUSTANNUS              T1 T5 | T1           kaup.pi.ait.ten kus.tan.nus
+     1  Schilyn EU                          T1 |                 schi.lyn eu
+     1  Sheffeldin EM                       T1 |                 shef.fel.din em
+     1  trimmaantuisi EU                    T1 |                 trim.maan.tui.si eu
+     1  skeittauksen SM                     T1 T4 |              skeit.ta.uk.sen sm
+     1  Sisu SR                             T1 |                 si.su sr
+     1  Purjehdusseura PM                   T1 |                 pur.jeh.dus.seu.ra pm
+     1  Salolaisjoukkueen EU                T1 T4 T6 |           sa.lo.lais.jo.uk.ku.een eu
+     1  Foremanin MM                        T1 |                 fo.re.ma.nin mm
+     1  mää EU                              |                    mää eu
+     1  Butzmannille EM                     T1 |                 butz.man.nil.le em
+     1  Kuparinen HIFK                      T1 |                 ku.pa.ri.nen hifk
+     1  Wernblomin MM                       T1 |                 wernb.lo.min mm
+     1  q SM                                |                    q sm
+     1  rkl HP                              |                    rkl hp
+     1  Aunula SM                           T1 |                 au.nu.la sm
+     1  KooVee MM                           T1 |                 koo.vee mm
+     1  ORT RTR Rossija                     | | T1               ort rtr ros.si.ja
+     1  Remon MM                            T1 |                 re.mon mm
+     1  Pokki UKK                           T1 |                 pok.ki ukk
+     1  ksm MM                              |                    ksm mm
+     1  KPM Engineering                     | T1                 kpm en.gi.nee.ring
+     1  Sestrieren MM                       T1 T8 |              sest.ri.e.ren mm
+     1  Suzukassa GP                        T1 |                 su.zu.kas.sa gp
+     1  Laurence J DeFranco GP              T1 | | T1 |          lau.ren.ce j def.ran.co gp
+     1  Kiss FM                             |                    kiss fm
+     1  Nieminen MM                         T1 |                 nie.mi.nen mm
+     1  Karting PM                          T1 |                 kar.ting pm
+     1  Piha EU                             T1 |                 pi.ha eu
+     1  Nurmi TP                            T1 |                 nur.mi tp
+     1  Radisson SAS                        T1 |                 ra.dis.son sas
+     1  Junkersillaan OH                    T1 |                 jun.ker.sil.laan oh
+     1  mm MM                               |                    mm mm
+     1  tämänpäivän MM                      T1 |                 tä.män.päi.vän mm
+     1  TuTon SM                            T1 |                 tu.ton sm
+     1  JP Operations Management            | T1 T2 | T1         jp o.pe.ra.ti.ons ma.na.ge.ment
+     1  Williams Natasha Zvereva V          T1 T2 | T1 | T1 |    wil.li.ams na.tas.ha zve.re.va v
+     1  Kollenin MM                         T1 |                 kol.le.nin mm
+     1  Otilaa EU                           T1 |                 o.ti.laa eu
+     1  Gracelandiin CD                     T1 |                 gra.ce.lan.diin cd
+     1  Plessin ATP                         T1 |                 ples.sin atp
+     1  Sharksin NHL                        T1 |                 shark.sin nhl
+     1  Maradonan MM                        T1 |                 ma.ra.do.nan mm
+     1  Oppitunti TT                        T1 |                 op.pi.tun.ti tt
+     1  wokki HP                            T1 |                 wok.ki hp
+     1  Coyotesin NHL                       T1 T7 |              coy.o.te.sin nhl
+     1  Jääkiekkoiluon SM                   T1 T8 |              jää.ki.ek.koi.luon sm
+     1  Koivisto EM                         T1 |                 koi.vis.to em
+     1  Ruotsi EU                           T1 |                 ruot.si eu
+     1  Hextallin NHL                       T1 |                 hex.tal.lin nhl
+     1  enduron SM                          T1 |                 en.du.ron sm
+     1  Izhevskin EM                        T1 |                 iz.hevs.kin em
+     1  ylöjärveläisen SM                   T1 |                 y.lö.jär.ve.läi.sen sm
+     1  Calgaryn MM                         T1 |                 cal.ga.ryn mm
+     1  Ahvenlammi SM                       T1 |                 ah.ven.lam.mi sm
+     1  singelisarjassa dartsin MM          T1 | T1 |            sin.ge.li.sar.jas.sa dart.sin mm
+     1  Dhaen-Bertier EU                    T2 | T1 T8 |         dha.en-ber.ti.er eu
+     1  Songs A Rainy Day                   | | T1 |             songs a rai.ny day
+     1  Honkongin MM                        T1 |                 hon.kon.gin mm
+     1  Pinton EE                           T1 |                 pin.ton ee
+     1  Hämeenlinna PM                      T1 |                 hä.meen.lin.na pm
+     1  Leitner MM                          T1 |                 leit.ner mm
+     1  Prodi EU                            T1 |                 pro.di eu
+     1  Niemelä VR                          T1 |                 nie.me.lä vr
+     1  Stora ENSOSSA                       T1 | T1              sto.ra en.sos.sa
+     1  Future TV                           T1 |                 fu.tu.re tv
+     1  v MM                                |                    v mm
+     1  Panther XL                          T1 |                 pant.her xl
+     1  Scovoloa enduron MM                 T1 T2 | T1 |         sco.vo.lo.a en.du.ron mm
+     1  Liikanen EU                         T1 |                 lii.ka.nen eu
+     1  kommentoitunut NHL                  T1 |                 kom.men.toi.tu.nut nhl
+     1  Harju EU                            T1 |                 har.ju eu
+     1  saallis SM                          T1 |                 saal.lis sm
+     1  Kastrenin MM                        T1 |                 kast.re.nin mm
+     1  Raviaohjastajien MM                 T1 T8 T7 T2 |        ra.vi.a.oh.jas.ta.ji.en mm
+     1  dartsin MM                          T1 |                 dart.sin mm
+     1  Bartolinille MM                     T1 |                 bar.to.li.nil.le mm
+     1  nro H                               |                    nro h
+     1  Lintunen OP                         T1 |                 lin.tu.nen op
+     1  Mitsubishillä MM                    T1 |                 mit.su.bis.hil.lä mm
+     1  Lurex OK                            T1 |                 lu.rex ok
+     1  Kuusi EU                            T1 |                 kuu.si eu
+     1  Galfionea MM                        T1 T2 |              gal.fi.o.ne.a mm
+     1  Lyon sestä ICG                      T2 | T1 |            ly.on ses.tä icg
+     1  DDI Corporationin                   | T1 T2              ddi cor.po.ra.ti.o.nin
+     1  MyPalle SM                          T1 |                 my.pal.le sm
+     1  Hackman TTT                         T1 |                 hack.man ttt
+     1  Lolo Sainzille EM                   T1 | T1 |            lo.lo sain.zil.le em
+     1  FC FiinPa-P                         | T1 |               fc fiin.pa-p
+     1  Reuters AFP                         T1 |                 reu.ters afp
+     1  Heikkinen EM                        T1 |                 heik.ki.nen em
+     1  Sedinin MM                          T1 |                 se.di.nin mm
+     1  todennäköisyydella SM               T1 |                 to.den.nä.köi.syy.del.la sm
+     1  mm TV                               |                    mm tv
+     1  Futsalin EM                         T1 |                 fut.sa.lin em
+     1  nro G                               |                    nro g
+     1  raplaajista MM                      T1 |                 rap.laa.jis.ta mm
+     1  löylyttelyn MM                      T1 |                 löy.lyt.te.lyn mm
+     1  Törmänen VR                         T1 |                 tör.mä.nen vr
+     1  RIKEN BNL Research Center           T1 | | T1 T2 | T1    ri.ken bnl re.se.arch cen.ter
+     1  Van Grunsvenille EM                 | T1 |               van gruns.ve.nil.le em
+     1  s FT                                |                    s ft
+     1  puoleiden EU                        T1 |                 puo.lei.den eu
+     1  RoPS SM                             |                    rops sm
+     1  CBC tv                              |                    cbc tv
+     1  SaiPassa SM                         T1 |                 sai.pas.sa sm
+     1  Meiringenin MM                      T1 |                 mei.rin.ge.nin mm
+     1  Kiina MM                            T1 |                 kii.na mm
+     1  Dahlberg EM                         T1 |                 dahl.berg em
+     1  Vammalalaisopiskelija EU            T1 |                 vam.ma.la.lai.so.pis.ke.li.ja eu
+     1  Cheerleadereiden EM                 T1 T2 |              cheer.le.a.de.rei.den em
+     1  jousiammunnnan MM                   T1 T2 |              jou.si.am.munn.nan mm
+     1  A Worm s Life                       | | | T1             a worm s li.fe
+     1  nro B                               |                    nro b
+     1  VR Engineeringin                    | T1                 vr en.gi.nee.rin.gin
+     1  Keskinen SM                         T1 |                 kes.ki.nen sm
+     1  Hubertuksen EU                      T1 |                 hu.ber.tuk.sen eu
+     1  Mäkelä SM                           T1 |                 mä.ke.lä sm
+     1  Pärnu CC                            T1 |                 pär.nu cc
+     1  mm EM                               |                    mm em
+     1  alk SS                              |                    alk ss
+     1  Borg UKK                            |                    borg ukk
+     1  Hussein YK                          T1 |                 hus.sein yk
+     1  Brememin EM                         T1 |                 bre.me.min em
+     1  Edmonton MM                         T1 |                 ed.mon.ton mm
+     1  Venäjä IVY                          T1 | T1              ve.nä.jä i.vy
+     1  Liquidiscille ultimaten MM          T1 | T1 |            li.qui.dis.cil.le ul.ti.ma.ten mm
+     1  kartingin SM                        T1 |                 kar.tin.gin sm
+     1  Viitasalo SM                        T1 |                 vii.ta.sa.lo sm
+     1  Ecren EU                            T1 |                 ec.ren eu
+     1  mm YK                               |                    mm yk
+     1  Öcalanin PKK                        T1 |                 ö.ca.la.nin pkk
+     1  Suomi EM                            T1 |                 suo.mi em
+     1  Tractor Pulling SM                  T1 | T1 |            trac.tor pul.ling sm
+     1  Paras NHL                           T1 |                 pa.ras nhl
+     1  JP Management                       | T1                 jp ma.na.ge.ment
+     1  Salaisuus TT                        T1 |                 sa.lai.suus tt
+     1  L M Ericsson                        | | T1               l m e.rics.son
+     1  Reima MM                            T1 |                 rei.ma mm
+     1  acrohiihdon MM                      T1 |                 ac.ro.hiih.don mm
+     1  Suomi EY                            T1 |                 suo.mi ey
+     1  Kuqi EM                             T1 |                 ku.qi em
+     1  Jetsissä NHL                        T1 |                 jet.sis.sä nhl
+     1  Stora ENSON                         T1 | T1              sto.ra en.son
+     1  vikellyksen PM                      T1 |                 vi.kel.lyk.sen pm
+     1  futsalin MM                         T1 |                 fut.sa.lin mm
+     1  Sumon MM                            T1 |                 su.mon mm
+     1  Eka SM                              T1 |                 e.ka sm
+     1  A carte                             | T1                 a car.te
+     1  Pörtschachin EU                     T1 |                 pörtsc.hac.hin eu
+     1  Ionela Tirlean MM                   T1 T2 | T1 T2 |      i.o.ne.la tir.le.an mm
+     1  an EU                               |                    an eu
+     1  Montecatinin MM                     T1 |                 mon.te.ca.ti.nin mm
+     1  PyrBasketin SM                      T1 |                 pyr.bas.ke.tin sm
+     1  Ferraran EM                         T1 |                 fer.ra.ran em
+     1  Saarijärvi MM                       T1 |                 saa.ri.jär.vi mm
+     1  Dart CD                             |                    dart cd
+     1  futsalin SM                         T1 |                 fut.sa.lin sm
+     1  Kansainvälinen XL                   T1 |                 kan.sain.vä.li.nen xl
+     1  Paine EU                            T1 |                 pai.ne eu
+     1  kovääninen EU                       T1 |                 ko.vää.ni.nen eu
+     1  sumon EM                            T1 |                 su.mon em
+     1  Cecenaticon EM                      T1 |                 ce.ce.na.ti.con em
+     1  Maksa TV                            T1 |                 mak.sa tv
+     1  KooVee SM                           T1 |                 koo.vee sm
+     1  Lake Placidin MM                    T1 | T1 |            la.ke pla.ci.din mm
+     1  VTT Elektroniikalta                 | T1                 vtt e.lekt.ro.nii.kal.ta
+     1  Mbekin ANC                          T1 |                 mbe.kin anc
+     1  taekwondon SM                       T1 T2 |              ta.ek.won.don sm
+     1  TuTon utotyö SM                     T1 | T1 |            tu.ton u.to.työ sm
+     1  ORION yhtymän                       T1 T2 | T1           o.ri.on yh.ty.män
+     1  SCANA Corporation                   T1 | T1 T2           sca.na cor.po.ra.ti.on
+     1  McRae MM                            T2 |                 mcra.e mm
+     1  Mazda F                             T1 |                 maz.da f
+     1  henkitoreisille EU                  T1 |                 hen.ki.to.rei.sil.le eu
+     1  EMC Kristoffer Center               | T1 | T1            emc kris.tof.fer cen.ter
+     1  idyllisyydessään SM                 T1 |                 i.dyl.li.syy.des.sään sm
+     1  mukan EM                            T1 |                 mu.kan em
+     1  Oberstdorfin MM                     T1 |                 o.berst.dor.fin mm
+     1  Kirvesniemi MM                      T1 T8 |              kir.ves.ni.e.mi mm
+     1  Pukkelikon MM                       T1 |                 puk.ke.li.kon mm
+     1  Syväskylän MM                       T1 |                 sy.väs.ky.län mm
+     1  Waffen SS                           T1 |                 waf.fen ss
+     1  RSL Communicationsin                | T1 T2              rsl com.mu.ni.ca.ti.on.sin
+     1  Music TV                            T1 |                 mu.sic tv
+     1  s FHM                               |                    s fhm
+     1  Lentolan FK                         T1 |                 len.to.lan fk
+     1  venstren EU                         T1 |                 venst.ren eu
+     1  Buren NHL                           T1 |                 bu.ren nhl
+     1  ZEP Plastics Engineeringiä          | T1 | T1 T2         zep plas.tics en.gi.nee.rin.gi.ä
+     1  mm BMW                              |                    mm bmw
+     1  Dhabin MM                           T1 |                 dha.bin mm
+     1  Kafelnikov ATP                      T1 |                 ka.fel.ni.kov atp
+     1  Vaskola EM                          T1 |                 vas.ko.la em
+     1  Tuomi-Nikula EU                     T1 | T1 |            tuo.mi-ni.ku.la eu
+     1  Lindfors B                          T1 |                 lind.fors b
+     1  Jääkiekoilun SM                     T1 T8 |              jää.ki.e.koi.lun sm
+     1  jääliekon MM                        T1 T8 |              jää.li.e.kon mm
+     1  UPM-Kymmene FINE                    | T1 | T1            upm-kym.me.ne fi.ne
+     1  VII Beach Volley la                 | T2 | T1 |          vii be.ach vol.ley la
+     1  Maximillian Schell yrmy SS          T1 T2 | | T1 |       ma.xi.mil.li.an schell yr.my ss
+     1  Zugin NHL                           T1 |                 zu.gin nhl
+     1  Petankin SM                         T1 |                 pe.tan.kin sm
+     1  Woogien SM                          T1 T8 |              woo.gi.en sm
+     1  Evilän EM                           T1 |                 e.vi.län em
+     1  Ai EU                               |                    ai eu
+     1  Mänttä MM                           T1 |                 mänt.tä mm
+     1  vaskaajien SM                       T1 T8 |              vas.kaa.ji.en sm
+     1  ilmottautumishetken ATP             T1 |                 il.mot.tau.tu.mis.het.ken atp
+     1  IC Systems                          | T1                 ic sys.tems
+     1  Jyskälän MM                         T1 |                 jys.kä.län mm
+     1  kahvitellaan MM                     T1 |                 kah.vi.tel.laan mm
+     1  LP RaisU                            | T1                 lp rai.su
+     1  MBO Management                      | T1                 mbo ma.na.ge.ment
+     1  MesTon SM                           T1 |                 mes.ton sm
+     1  Trondhemin MM                       T1 |                 trond.he.min mm
+     1  Express A                           T1 |                 exp.ress a
+     1  Italia EM                           T1 T2 |              i.ta.li.a em
+     1  VTT Tietotekniikassa                | T1                 vtt tie.to.tek.nii.kas.sa
+     1  Nuojua TP                           T1 T2 |              nuo.ju.a tp
+     1  Bruijn EE                           |                    bruijn ee
+     1  Wallströmiä EU                      T1 T2 |              wallst.rö.mi.ä eu
+     1  kolmissa MM                         T1 |                 kol.mis.sa mm
+     1  Corunan EM                          T1 |                 co.ru.nan em
+     1  SNS profil                          | T1                 sns pro.fil
+     1  Doanin NHL                          T1 T2 |              do.a.nin nhl
+     1  Dan SM                              |                    dan sm
+     1  Pirkkahallissa SM                   T1 |                 pirk.ka.hal.lis.sa sm
+     1  Alanissi SK                         T1 |                 a.la.nis.si sk
+     1  ähtäriläiset SM                     T1 |                 äh.tä.ri.läi.set sm
+     1  jääkiekkopilun MM                   T1 T8 |              jää.ki.ek.ko.pi.lun mm
+     1  Aalto VHF                           T1 |                 aal.to vhf
+     1  skeitin SM                          T1 |                 skei.tin sm
+     1  ITF-taekwon-don MM                  | T1 T2 | |          itf-ta.ek.won-don mm
+     1  Perhin MM                           T1 |                 per.hin mm
+     1  Peking A                            T1 |                 pe.king a
+     1  Parkkari UKK                        T1 |                 park.ka.ri ukk
+     1  romauttaisi K                       T1 T4 |              ro.ma.ut.tai.si k
+     1  PR Sea Sound                        | T2 |               pr se.a sound
+     1  International TV                    T1 T2 |              in.ter.na.ti.o.nal tv
+     1  TaUSin SM                           T1 |                 tau.sin sm
+     1  lattaritanssien EM                  T1 T8 |              lat.ta.ri.tans.si.en em
+     1  Kapanen NHL                         T1 |                 ka.pa.nen nhl
+     1  mm TP                               |                    mm tp
+     1  Ramsaussa sprinttikisan MM          T1 T4 | T1 |         ram.sa.us.sa sprint.ti.ki.san mm
+     1  Folketingetin EU                    T1 |                 fol.ke.tin.ge.tin eu
+     1  Rouvinen VR                         T1 |                 rou.vi.nen vr
+     1  Vapriikkia EU                       T1 T2 |              vap.riik.ki.a eu
+     1  Mm UKK                              |                    mm ukk
+     1  Lehtimäki EM                        T1 |                 leh.ti.mä.ki em
+     1  Koskela MM                          T1 |                 kos.ke.la mm
+     1  Tero SM                             T1 |                 te.ro sm
+     1  Alasentielle EU                     T1 T8 |              a.la.sen.ti.el.le eu
+     1  VTT Tietotekniikan                  | T1                 vtt tie.to.tek.nii.kan
+     1  Kööpenhaminen PM                    T1 |                 köö.pen.ha.mi.nen pm
+     1  Kingsien NHL                        T1 T8 |              king.si.en nhl
+     1  Muzzattin NHL                       T1 |                 muz.zat.tin nhl
+     1  Samprasin ATP                       T1 |                 samp.ra.sin atp

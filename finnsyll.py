@@ -19,7 +19,7 @@ from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
 from math import ceil
-from syllabifier.phonology import get_sonorities, get_weights
+from syllabifier.phonology import FOREIGN_FINAL, get_sonorities, get_weights
 from syllabifier.v4 import syllabify
 from tabulate import tabulate
 from werkzeug.exceptions import BadRequestKeyError
@@ -380,8 +380,30 @@ def get_unseen_lemmas():
 
 def get_stopword_tokens():
     '''Return all unverified stopwords.'''
-    tokens = Token.query.filter_by(is_stopword=True).filter_by(is_gold=None)
-    tokens = tokens.order_by(Token.freq.desc())
+    tokens = Token.query.filter_by(is_stopword=True)
+    tokens = tokens.order_by(Token.is_gold).order_by(Token.freq.desc())
+
+    return tokens
+
+
+def get_acronyms():
+    '''Return all compound words containing acronyms.'''
+    tokens = Token.query.filter(Token.orth.contains(' '))
+    tokens = tokens.order_by(Token.is_gold).order_by(Token.freq.desc())
+    tokens = [t for t in tokens if any([w.isupper() for w in t.orth.split()])]
+
+    return tokens
+
+
+def get_foreign_words():
+    '''Return a list of potential foreign words and interjections.
+
+    This function returns all of the words that do not end in either a vowel or
+    coronal consonant.
+    '''
+    query = lambda c: Token.query.filter(Token.orth.endswith(c))
+    tokens = [t for c in FOREIGN_FINAL for t in query(c)]
+    tokens = sorted(tokens, key=lambda t: (t.is_gold, t.freq), reverse=True)
 
     return tokens
 
@@ -459,11 +481,6 @@ def serve_docs():
     return dict(docs=docs)
 
 
-def redirect_url(default='main_view'):
-    # Redirect page to previous url or to main_view
-    return request.referrer or url_for(default)
-
-
 def apply_form(http_form, commit=True):
     # Apply changes to Token instance based on POST request
     try:
@@ -499,6 +516,26 @@ def apply_form(http_form, commit=True):
         pass
 
 
+def apply_bulk_form(http_form):
+    # Apply changes to multiple Token instances based on POST request
+    forms = {k: {} for k in range(1, 41)}
+    attrs = ['find', 'syll', 'alt_syll1', 'alt_syll2', 'alt_syll3',
+             'is_compound']
+
+    for i in range(1, 41):
+        for attr in attrs:
+            try:
+                forms[i][attr] = request.form['%s_%s' % (attr, i)]
+
+            except BadRequestKeyError:
+                pass
+
+    for form in forms.itervalues():
+        apply_form(form, commit=False)
+
+    db.session.commit()
+
+
 # Views -----------------------------------------------------------------------
 
 @app.route('/', methods=['GET', 'POST'])
@@ -508,13 +545,6 @@ def main_view():
     stats = get_numbers()
 
     return render_template('main.html', stats=stats, kw='main')
-
-
-@app.route('/rules', methods=['GET', ])
-@login_required
-def rules_view():
-    '''List syllabification rules.'''
-    return render_template('rules.html', kw='rules')
 
 
 @app.route('/doc/<id>', methods=['GET', 'POST'])
@@ -548,28 +578,11 @@ def approve_doc_view(id):
     return redirect(url_for('doc_view', id=id))
 
 
-@app.route('/find', methods=['GET', 'POST'])
+@app.route('/rules', methods=['GET', ])
 @login_required
-def find_view():
-    '''Search for tokens by word and/or citation form.'''
-    results, find = None, None
-
-    if request.method == 'POST':
-
-        if request.form.get('syll'):
-            apply_form(request.form)
-
-        find = request.form.get('search') or request.form['syll']
-        FIND = find.strip().translate({ord('.'): None, })  # strip periods
-        results = Token.query.filter(Token.orth.ilike(FIND))
-        results = results.order_by(Token.is_gold)
-
-    return render_template(
-        'search.html',
-        kw='find',
-        results=results,
-        find=find,
-        )
+def rules_view():
+    '''List syllabification rules.'''
+    return render_template('rules.html', kw='rules')
 
 
 @app.route('/contains', defaults={'page': 1}, methods=['GET', 'POST'])
@@ -608,6 +621,66 @@ def contains_view(page):
         )
 
 
+@app.route('/find', methods=['GET', 'POST'])
+@login_required
+def find_view():
+    '''Search for tokens by word and/or citation form.'''
+    results, find = None, None
+
+    if request.method == 'POST':
+
+        if request.form.get('syll'):
+            apply_form(request.form)
+
+        find = request.form.get('search') or request.form['syll']
+        FIND = find.strip().translate({ord('.'): None, })  # strip periods
+        results = Token.query.filter(Token.orth.ilike(FIND))
+        results = results.order_by(Token.is_gold)
+
+    return render_template(
+        'search.html',
+        kw='find',
+        results=results,
+        find=find,
+        )
+
+
+@app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/lemma/page/<int:page>')
+def lemma_view(page):
+    '''List all unverified unseen lemmas and process corrections.'''
+    if request.method == 'POST':
+        apply_bulk_form(request.form)
+
+    tokens = get_unseen_lemmas()
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='lemmas',
+        pagination=pagination,
+        )
+
+
+@app.route('/unverified', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/unverified/page/<int:page>')
+def unverified_view(page):
+    '''List all unverified Tokens and process corrections.'''
+    if request.method == 'POST':
+        apply_bulk_form(request.form)
+
+    tokens = get_unverified_tokens().slice(0, 400)
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='unverified',
+        pagination=pagination,
+        )
+
+
 @app.route('/bad', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/bad/page/<int:page>')
 def bad_view(page):
@@ -622,97 +695,6 @@ def bad_view(page):
         'tokens.html',
         tokens=tokens,
         kw='bad',
-        pagination=pagination,
-        )
-
-
-# TODO: apply bulk form
-@app.route('/unverified', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/unverified/page/<int:page>')
-def unverified_view(page):
-    '''List all unverified Tokens and process corrections.'''
-    if request.method == 'POST':
-        forms = {k: {} for k in range(1, 41)}
-        attrs = ['find', 'syll', 'alt_syll1', 'alt_syl2', 'is_compound']
-
-        for i in range(1, 41):
-            for attr in attrs:
-
-                try:
-                    forms[i][attr] = request.form['%s_%s' % (attr, i)]
-
-                except BadRequestKeyError:
-                    pass
-
-        for form in forms.itervalues():
-            apply_form(form, commit=False)
-
-        db.session.commit()
-
-    tokens = get_unverified_tokens().slice(0, 400)
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='unverified',
-        pagination=pagination,
-        )
-
-
-# TODO: apply bulk form
-@app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/lemma/page/<int:page>')
-def lemma_view(page):
-    '''List all unverified unseen lemmas and process corrections.'''
-    if request.method == 'POST':
-        forms = {k: {} for k in range(1, 41)}
-        attrs = [
-            'find',
-            'syll',
-            'alt_syll1',
-            'alt_syll2',
-            'alt_syll3',
-            'is_compound',
-            ]
-
-        for i in range(1, 41):
-            for attr in attrs:
-
-                try:
-                    forms[i][attr] = request.form['%s_%s' % (attr, i)]
-
-                except BadRequestKeyError:
-                    pass
-
-        for form in forms.itervalues():
-            apply_form(form, commit=False)
-
-        db.session.commit()
-
-    tokens = get_unseen_lemmas()
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='lemmas',
-        pagination=pagination,
-        )
-
-
-# TODO: apply bulk form
-@app.route('/stopword', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/stopword/page/<int:page>')
-def stopword_view(page):
-    '''List all stopwords and process corrections.'''
-    tokens = get_stopword_tokens()
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='stopwords',
         pagination=pagination,
         )
 
@@ -805,6 +787,7 @@ def paginate(page, tokens, per_page=40):
 def url_for_other_page(page):
     args = request.view_args.copy()
     args['page'] = page
+
     return url_for(request.endpoint, **args)
 
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page

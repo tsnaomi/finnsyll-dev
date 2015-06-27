@@ -6,7 +6,7 @@ body {
     word-wrap: break-word;
 }
 
-/* fonts */
+/* fonts ------------------------------------------------------------------- */
 
 .entrance input {
     font-family: 'HelveticaNeue-Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -31,11 +31,15 @@ code {
     font-family: 'Droid Sans Mono' !important;
 }
 
-/* navbar */
+/* navbar ------------------------------------------------------------------ */
 
 nav {
     font-size: 19px;
     text-transform: lowercase;
+}
+
+nav li a span {
+    word-wrap: normal;
 }
 
 .dropdown-menu > li > a {
@@ -54,7 +58,7 @@ li a span:hover {
     padding-bottom: 2px;
 }
 
-/* doc */
+/* doc --------------------------------------------------------------------- */
 
 .doc-title {
     font-size: 28px;
@@ -83,7 +87,7 @@ li a span:hover {
     background: #80FFBF;
 }
 
-/* markdown */
+/* markdown ---------------------------------------------------------------- */
 
 h1 {
     font-weight: 700;
@@ -111,7 +115,7 @@ pre {
     margin: -10px 0 20px;
 }
 
-/* forms */
+/* forms ------------------------------------------------------------------- */
 
 input:focus {
     outline: none;
@@ -143,8 +147,6 @@ input.gray {
     border: none;
     background-color: #f5f5f5;
     padding-left: 8px;
-    /*margin-left: -8px;*/
-    /*margin-top: -20px;*/
 }
 
 .OK {
@@ -171,7 +173,7 @@ input.gray {
     background-color: #fff !important;
 }
 
-/* tokens */
+/* tokens ------------------------------------------------------------------ */
 
 .good {
     background: #D1EDFF;
@@ -192,7 +194,7 @@ input.gray {
     margin: -4px;
 }
 
-/* search */
+/* search ------------------------------------------------------------------ */
 
 form.search {
     text-align: center;
@@ -235,7 +237,7 @@ input.search[type='submit'] {
     margin: 0 12%;
 }
 
-/* modal */
+/* modal ------------------------------------------------------------------- */
 
 .modal-dialog {
     width: 360px;
@@ -266,7 +268,7 @@ input.search[type='submit'] {
     top: 8px;
 }
 
-/* entrance */
+/* entrance ---------------------------------------------------------------- */
 
 .entrance input {
     font-size: 15px;
@@ -305,7 +307,7 @@ input[type='submit']:hover {
     margin-top: 36px;
 }
 
-/* misc */
+/* misc -------------------------------------------------------------------- */
 
 .center {
     text-align: center;
@@ -336,7 +338,7 @@ input[type='submit']:hover {
     text-align: center;
 }
 
-/* media queries */
+/* media queries ----------------------------------------------------------- */
 
 @media (min-width: 992px) {
 

@@ -26,8 +26,9 @@ CLUSTERS = [
     u'pl', u'pr', u'cl', u'qv', u'schm']
 
 
-# vowels plus coronal consonants
-WORD_FINAL = tuple(VOWELS) + (u's', u'z', u'd', u't', u'r', u'n')
+CORONALS = [u's', u'z', u'd', u't', u'r', u'n']
+
+FOREIGN_FINAL = [c for c in CONSONANTS if c not in CORONALS]
 
 
 # Phonemic functions ----------------------------------------------------------
@@ -51,14 +52,6 @@ def is_diphthong(chars):
 
 def is_long(chars):
     return chars == chars[0] * len(chars)
-
-
-# Finnish functions -----------------------------------------------------------
-
-def is_stopword(word):
-    word = replace_umlauts(word)
-
-    return not word.endswith(WORD_FINAL)  # and word[-1].islower()
 
 
 # Normalization functions -----------------------------------------------------
