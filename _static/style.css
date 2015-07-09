@@ -207,7 +207,15 @@ input.search {
 }
 
 input.search[type='submit'] {
+    padding: 1px;
+}
+
+input.search[type='submit'][value='FIND'] {
     width: 80px;
+}
+
+input.search[type='submit'][value='CONTAINS'] {
+    width: 120px;
 }
 
 .tokens {

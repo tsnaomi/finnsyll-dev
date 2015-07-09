@@ -12,6 +12,12 @@ from phonology import (
     )
 
 
+# Notes -----------------------------------------------------------------------
+
+# Use / or // notation to delimit the set of syllabification rules for each
+# variant in an ambiguous word
+
+
 # Syllabifier -----------------------------------------------------------------
 
 def syllabify(word):

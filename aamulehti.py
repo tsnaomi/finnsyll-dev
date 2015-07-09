@@ -171,6 +171,8 @@ def accumulate_docs(filename, filepath):
 
 # Lemmas ----------------------------------------------------------------------
 
+# arrange in order of allomorph frequency?
+
 def syllabify_unseen_lemmas():
     # get all unique lemmas
     lemmas = finn.db.session.query(finn.Token.lemma, finn.Token.pos).distinct()
@@ -198,12 +200,27 @@ def tabulate_to_file(tokens, filename):
         t.orth,
         t.rules,
         t.test_syll,
-        t.syll + ' +' if t.alt_syll1 else t.syll,
-        'T' if t.is_gold else 'F' if t.is_gold is False else '',
-        'C' if t.is_compound else '',
+        t.syll,
+        t.alt_syll1,
+        t.alt_syll2,
+        t.alt_syll3,
+        'F' if not t.is_gold else '',  # F for false
+        'C' if t.is_compound else '',  # C for compound
         ]
 
-    headers = ['freq', 'orth', 'rules', 'test', 'correct', 'gold', 'compound']
+    headers = [
+        'freq',
+        'orth',
+        'rules',
+        'test',
+        'gold 1',
+        'gold 2',
+        'gold 3',
+        'gold 4',
+        'good',
+        'compound',
+        ]
+
     table = tabulate([row(t) for t in tokens], headers=headers)
 
     filename = 'syllabifier/queries/%s.txt' % filename
@@ -218,6 +235,6 @@ if __name__ == '__main__':
     # populate_db_tokens_from_aamulehti_1999()  # 13114.48 seconds
     # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
-    # tabulate_to_file(finn.get_acronyms(), 'acronyms')
     # tabulate_to_file(finn.get_foreign_words(), 'foreign')
+    # tabulate_to_file(finn.get_ambiguous_tokens(), 'ambiguous')
     finn.transition(pdf='--pdf' in sys.argv)

@@ -71,11 +71,20 @@ class Token(db.Model):
     # the word's lemma/citation form
     lemma = db.Column(db.String(80, convert_unicode=True), default='')
 
+    # a string of the rules applied in the test syllabfication
+    rules = db.Column(db.String(80, convert_unicode=True), default='')
+
     # the syllabification that is estimated programmatically
     test_syll = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # a string of the rules applied in the test syllabfication
-    rules = db.Column(db.String(80, convert_unicode=True), default='')
+    # # an alternative syllabification that is estimated programmatically
+    # test_alt_syll1 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # # an alternative syllabification that is estimated programmatically
+    # test_alt_syll2 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # # an alternative syllabification that is estimated programmatically
+    # test_alt_syll3 = db.Column(db.String(80, convert_unicode=True), default='')
 
     # the correct syllabification (hand-verified)
     syll = db.Column(db.String(80, convert_unicode=True), default='')
@@ -104,6 +113,9 @@ class Token(db.Model):
     # a boolean indicating if the word is a stopword -- only if the
     # word's syllabification is lexically marked
     is_stopword = db.Column(db.Boolean, default=False)
+
+    # a boolean indicating if the word is a foreign word
+    # is_foreign = db.Column(db.Boolean, default=False)
 
     # a boolean indicating if the algorithm has estimated correctly
     is_gold = db.Column(db.Boolean, default=None)
@@ -156,6 +168,27 @@ class Token(db.Model):
         Token.is_gold is True if the test syllabifcation matches the true
         syllabification. Otherwise, Token.is_fold is False.
         '''
+        # if self.test_syll and self.syll:  # NEW
+        #     test = set([
+        #         self.test_syll,
+        #         self.test_alt_syll1,
+        #         self.test_alt_syll2,
+        #         self.test_alt_syll3,
+        #         ])
+
+        #     gold = set([
+        #         self.syll,
+        #         self.alt_syll1,
+        #         self.alt_syll2,
+        #         self.alt_syll3,
+        #         ])
+
+        #     self.is_gold = test == gold
+
+        #     return self.is_gold
+
+        # return False
+
         if self.test_syll and self.syll:
             is_gold = self.test_syll == self.syll
 
@@ -269,7 +302,7 @@ class Document(db.Model):
 # Database functions ----------------------------------------------------------
 
 def syllabify_tokens():
-    '''Algorithmically syllabify all tokens.'''
+    '''Syllabify all tokens.'''
     print 'Syllabifying...'
 
     count = Token.query.count()
@@ -293,7 +326,7 @@ def syllabify_tokens():
 
 
 def transition(pdf=False):
-    '''Syllabify tokens and create a transition report.'''
+    '''Temporarily re-syllabify tokens and create a transition report.'''
     compound = lambda t: 'C' if t.is_compound else None
     parse = lambda t: (t, [t.test_syll, t.rules])
     row = lambda t: ['>', t.test_syll, t.rules, compound(t)]
@@ -338,7 +371,7 @@ def transition(pdf=False):
 
 
 def find_token(orth):
-    '''Retrieve token by its orthography.'''
+    '''Retrieve a token by its orthography.'''
     try:
         # ilike queries are case insensitive
         token = Token.query.filter(Token.orth.ilike(orth)).first()
@@ -355,8 +388,47 @@ def update_documents():
     for doc in docs:
         doc.update_review()
 
-    db.seees.commit()
+    db.session.commit()
 
+
+def calculate():
+    '''Generate statistics on the syllabifier's performance.'''
+    VERIFIED = Token.query.filter(Token.is_gold.isnot(None))
+    GOLD = Token.query.filter_by(is_gold=True)
+
+    class Stats(object):
+        token_count = 991730  # Token.query.count()
+        doc_count = 61529  # Document.query.count()
+
+        # caculate accuracy excluding compounds
+        verified = VERIFIED.filter_by(is_compound=False).count()
+        gold = GOLD.filter_by(is_compound=False).count()
+        accuracy = (float(gold) / verified) * 100
+
+        # calculate accuracy including compounds
+        verified = VERIFIED.count()
+        gold = GOLD.count()
+        compound_accuracy = (float(gold) / verified) * 100
+
+        remaining = token_count - verified
+        reviewed = Document.query.filter_by(reviewed=True).count()
+
+        # final statistics
+        token_count = format(token_count, ',d')
+        doc_count = format(doc_count, ',d')
+        verified = format(verified, ',d')
+        gold = format(gold, ',d')
+        accuracy = round(accuracy, 2)
+        compound_accuracy = round(compound_accuracy, 2)
+        remaining = format(remaining, ',d')
+        reviewed = format(reviewed, ',d')
+
+    stats = Stats()
+
+    return stats
+
+
+# Queries ---------------------------------------------------------------------
 
 def get_bad_tokens():
     '''Return all of the tokens that are incorrectly syllabified.'''
@@ -378,19 +450,19 @@ def get_unseen_lemmas():
     return Token.query.filter_by(freq=0).order_by(Token.lemma)
 
 
-def get_stopword_tokens():
-    '''Return all unverified stopwords.'''
-    tokens = Token.query.filter_by(is_stopword=True)
-    tokens = tokens.order_by(Token.is_gold).order_by(Token.freq.desc())
+def get_ambiguous_tokens():
+    '''Return tokens with alternative syllabifications.'''
+    # tokens = Token.query.filter(Token.test_alt_syll1 != '')
+    tokens = Token.query.filter(Token.alt_syll1 != '')
+    tokens = tokens.order_by(Token.is_gold.desc()).order_by(Token.freq.desc())
 
     return tokens
 
 
-def get_acronyms():
-    '''Return all compound words containing acronyms.'''
-    tokens = Token.query.filter(Token.orth.contains(' '))
-    tokens = tokens.order_by(Token.is_gold).order_by(Token.freq.desc())
-    tokens = [t for t in tokens if any([w.isupper() for w in t.orth.split()])]
+def get_stopwords():
+    '''Return all unverified stopwords.'''
+    tokens = Token.query.filter_by(is_stopword=True)
+    tokens = tokens.order_by(Token.is_gold.desc()).order_by(Token.freq.desc())
 
     return tokens
 
@@ -405,53 +477,10 @@ def get_foreign_words():
     tokens = [t for c in FOREIGN_FINAL for t in query(c)]
     tokens = sorted(tokens, key=lambda t: (t.is_gold, t.freq), reverse=True)
 
+    # tokens = Token.query.filter_by(is_foreign=True)
+    # tokens - tokens.order_by(Token.is_gold).order_by(Token.freq.desc())
+
     return tokens
-
-
-def get_unreviewed_documents():
-    '''Return all unreviewed documents.'''
-    docs = Document.query.filter_by(reviewed=False)
-    docs = docs.order_by(Document.unique_count).limit(10)
-
-    return docs
-
-
-def get_numbers():
-    '''Generate statistics.'''
-
-    class Stats(object):
-        # _token_count = tokens.count()
-        # _doc_count = Document.query.count()
-        _token_count = 991730  # one less ping to the database
-        _doc_count = 61529  # one less ping to the database
-
-        # caculate accuracy excluding compounds
-        _non_compound_verified = Token.query.filter(Token.is_gold.isnot(None)) \
-            .filter_by(is_compound=False).count()
-        _non_compound_gold = Token.query.filter_by(is_gold=True) \
-            .filter_by(is_compound=False).count()
-        _accuracy = (float(_non_compound_gold) / _non_compound_verified) * 100
-
-        # calculate accuracy including compounds
-        _verified = Token.query.filter(Token.is_gold.isnot(None)).count()
-        _gold = Token.query.filter_by(is_gold=True).count()
-        _compound_accuracy = (float(_gold) / _verified) * 100
-
-        _remaining = _token_count - _verified
-        _reviewed = Document.query.filter_by(reviewed=True).count()
-
-        token_count = format(_token_count, ',d')
-        doc_count = format(_doc_count, ',d')
-        verified = format(_verified, ',d')
-        gold = format(_gold, ',d')
-        accuracy = round(_accuracy, 2)
-        compound_accuracy = round(_compound_accuracy, 2)
-        remaining = format(_remaining, ',d')
-        reviewed = format(_reviewed, ',d')
-
-    stats = Stats()
-
-    return stats
 
 
 # View helpers ----------------------------------------------------------------
@@ -476,7 +505,9 @@ def login_required(x):
 
 @app.context_processor
 def serve_docs():
-    docs = get_unreviewed_documents()
+    # Serve documents to navbar
+    docs = Document.query.filter_by(reviewed=False)
+    docs = docs.order_by(Document.unique_count).limit(10)
 
     return dict(docs=docs)
 
@@ -542,7 +573,7 @@ def apply_bulk_form(http_form):
 @login_required
 def main_view():
     '''List links to unverified texts (think: Table of Contents).'''
-    stats = get_numbers()
+    stats = calculate()
 
     return render_template('main.html', stats=stats, kw='main')
 
@@ -695,6 +726,46 @@ def bad_view(page):
         'tokens.html',
         tokens=tokens,
         kw='bad',
+        pagination=pagination,
+        )
+
+
+@app.route('/ambiguous', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/ambiguous/page/<int:page>')
+def vowel_view(page):
+    '''List all ambiguous tokens and process corrections.'''
+    if request.method == 'POST':
+        # apply_form(request.form)
+        pass
+
+    tokens = get_ambiguous_tokens()
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='vv',
+        pagination=pagination,
+        )
+
+
+@app.route('/hidden', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/hidden/page/<int:page>')
+def hidden_view(page):
+    '''List special queries.'''
+    if request.method == 'POST':
+        apply_form(request.form)
+
+    # Monosyllabic test syllabifications
+    tokens = Token.query.filter(~Token.test_syll.contains('.'))
+
+    tokens = tokens.order_by(Token.freq.desc())
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='hidden',
         pagination=pagination,
         )
 

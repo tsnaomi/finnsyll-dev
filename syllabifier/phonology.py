@@ -26,7 +26,7 @@ CLUSTERS = [
     u'pl', u'pr', u'cl', u'qv', u'schm']
 
 
-CORONALS = [u's', u'z', u'd', u't', u'r', u'n']
+CORONALS = [u's', u'z', u'd', u't', u'r', u'n', u'l']
 
 FOREIGN_FINAL = [c for c in CONSONANTS if c not in CORONALS]
 

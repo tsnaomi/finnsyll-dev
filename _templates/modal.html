@@ -1,0 +1,71 @@
+<!-- Modal -->
+<div class='modal fade' id='modal' tabindex='-1' role='dialog' aria-labelledby='myModalLabel'>
+    <div class='modal-dialog' role='document'>
+        <div class='modal-content'>
+            <div class='modal-body'>
+                <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
+                <form class='doc-tokens' method='POST'>
+                    <div class='container-fluid'>
+                        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+                        <br>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Orthography:</span>
+                            <input type='text' id='orth' name='orth' class='gray readonly col-xs-7' value='' readonly>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Test Syll:</span>
+                            <input type='text' id='test' name='test_syll' class='gray readonly col-xs-7' value='' readonly>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Rules:</span>
+                            <input id='rules' class='gray readonly col-xs-7' value='' readonly></input>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Correct Syll:</span>
+                            <input type='text' id='syll' name='syll' class='gray col-xs-7' value=''>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Alt Syll 1:</span>
+                            <input type='text' id='alt1' name='alt_syll1' class='gray col-xs-7' value=''>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Alt Syll 2:</span>
+                            <input type='text' id='alt2' name='alt_syll2' class='gray col-xs-7' value=''>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Alt Syll 3:</span>
+                            <input type='text' id='alt3' name='alt_syll3' class='gray col-xs-7' value=''>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Compound:</span>
+                            <input type='checkbox' id='compound' name='is_compound' class='col-xs-7' value=1>
+                        </div>
+                        <br>
+                        <div class='row'>
+                            <span class='modal-label col-xs-5'>Stopword:</span>
+                            <input type='checkbox' id='stopword' name='is_stopword' class='col-xs-7' value=1 disabled>
+                        </div>
+                        <br>
+                        {% kw == 'doc' %}
+                        <input type='hidden' name='scroll' id='scroll' value=''>
+                        {% elif kw == 'contains' or kw == 'find' %}
+                        <input type='hidden' name='search' id='search' value='{% if find %}{{ find }}{% endif %}'>
+                        {% endif %}
+                        <input type='hidden' name='find' id='find' value=''> <!-- TODO -->
+                        <input type='submit' class='OK' value='OK!'><br>
+                        <br>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal (end) -->

@@ -1,3 +1,8 @@
+syllabifier.v4
+
+Revise T1 to mind 'kr' sequences.  If there is a legal consonant cluster, the first consonant of the cluster forms the coda of a stressed syllable; otherwise, the cluster forms the onset of the following syllable.
+
+
 FROM BAD TO GOOD (13)
 ---------------------------  -----  -  ---------------------------  -----  -
 me.lod.raa.mas.sa            T1     >  me.lo.draa.mas.sa            T1     C
