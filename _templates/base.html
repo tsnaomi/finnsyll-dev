@@ -1,5 +1,7 @@
 <!DOCTYPE html>
 
+{% from '_macros.html' import modal, paginate, populate, title, tokenify %}
+
 <html lang='en'>
     <title>FinnSyll {% if config.TESTING %}- Development{% endif %}</title>
     <head>
@@ -30,14 +32,14 @@
                 <div class='collapse navbar-collapse' id='bs-example-navbar-collapse-1'>
                     <ul class='nav navbar-nav'>
                         <li class='dropdown'> <!-- docs dropdown -->
-                            <a href="{{ url_for('main_view') }}" role='button' aria-haspopup='true' aria-expanded='false'><span class="{% if kw == 'main' %}highlight{% endif %}">Main &#8623;</span></a>
-                            <ul class='dropdown-menu'>
+                            <a href="{{ url_for('main_view') }}" role='button' aria-haspopup='true' aria-expanded='false'><span class="{% if kw == 'main' %}highlight{% endif %}">Main<!--  &#8623; --></span></a>
+                            <!-- <ul class='dropdown-menu'>
                                 {% for doc in docs %}
                                 <li><a href="{{ url_for('doc_view', id=doc.id) }}">{{ doc.filename }}</a></li>
                                 {% else %}
                                 <li class='no-docs'><a href='#'>...</a></li>
                                 {% endfor %}
-                            </ul>
+                            </ul> -->
                         </li>
                         <li><a href="{{ url_for('rules_view') }}"><span class="{% if kw == 'rules' %}highlight{% endif %}">Rules</span></a></li>
                         <li><a href="{{ url_for('contains_view') }}"><span class="{% if kw == 'contains' %}highlight{% endif %}">Contains</span></a></li>
@@ -45,7 +47,7 @@
                         <!-- <li><a href="{{ url_for('lemma_view') }}"><span class="{% if kw == 'lemma' %}highlight{% endif %}">Lemmas</span></a></li> -->
                         <li><a href="{{ url_for('unverified_view') }}"><span class="{% if kw == 'unverified' %}highlight{% endif %}">Unverified</span></a></li>
                         <li><a href="{{ url_for('bad_view') }}"><span class="{% if kw == 'bad' %}highlight{% endif %}">Bad</span></a></li>
-                        <li><a href="{{ url_for('vowel_view') }}"><span class="{% if kw == 'vv' %}highlight{% endif %}">Ambiguous</span></a></li>
+                        <li><a href="{{ url_for('vowel_view') }}"><span class="{% if kw == 'vv' %}highlight{% endif %}">Variation</span></a></li>
                         <li><a href="{{ url_for('logout_view') }}"><span>Sign Out</a></span></li>
                     </ul>
                 </div>

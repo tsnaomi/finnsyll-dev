@@ -503,7 +503,7 @@ def login_required(x):
     return decorator
 
 
-@app.context_processor
+# @app.context_processor
 def serve_docs():
     # Serve documents to navbar
     docs = Document.query.filter_by(reviewed=False)

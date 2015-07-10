@@ -5,75 +5,14 @@
 {% endblock %}
 
 {% block body %}
-<!-- Modal -->
-<div class='modal fade' id='modal' tabindex='-1' role='dialog' aria-labelledby='myModalLabel'>
-    <div class='modal-dialog' role='document'>
-        <div class='modal-content'>
-            <div class='modal-body'>
-                <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
-                <form class='doc-tokens' method='POST'>
-                    <div class='container-fluid'>
-                        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-                        <br>
-                        <br>
-                        <div class='row'>
-                            <span class='modal-label col-xs-5'>Orthography:</span>
-                            <input type='text' id='orth' name='orth' class='gray readonly col-xs-7' value='' readonly>
-                        </div>
-                        <br>
-                        <div class='row'>
-                            <span class='modal-label col-xs-5'>Test Syll:</span>
-                            <input type='text' id='test' name='test_syll' class='gray readonly col-xs-7' value='' readonly>
-                        </div>
-                        <br>
-                        <div class='row'>
-                            <span class='modal-label col-xs-5'>Correct Syll:</span>
-                            <input type='text' id='syll' name='syll' class='gray col-xs-7' value=''>
-                        </div>
-                        <br>
-                        <div class='row'>
-                            <span class='modal-label col-xs-5'>Alt Syll 1:</span>
-                            <input type='text' id='alt1' name='alt_syll1' class='gray col-xs-7' value=''>
-                        </div>
-                        <br>
-                        <div class='row'>
-                            <span class='modal-label col-xs-5'>Alt Syll 2:</span>
-                            <input type='text' id='alt2' name='alt_syll2' class='gray col-xs-7' value=''>
-                        </div>
-                        <br>
-                        <div class='row'>
-                            <span class='modal-label col-xs-5'>Alt Syll 3:</span>
-                            <input type='text' id='alt3' name='alt_syll3' class='gray col-xs-7' value=''>
-                        </div>
-                        <br>
-                        <div class='row'>
-                            <span class='modal-label col-xs-5'>Compound:</span>
-                            <input type='checkbox' id='compound' name='is_compound' class='col-xs-7' value=1>
-                        </div>
-                        <br>
-                        <div class='row'>
-                            <span class='modal-label col-xs-5'>Stopword:</span>
-                            <input type='checkbox' id='stopword' name='is_stopword' class='col-xs-7' value=1 disabled>
-                        </div>
-                        <br>
-                        <input type='hidden' name='search' id='search' value='{% if find %}{{ find }}{% endif %}'>
-                        <input type='hidden' name='find' id='find' value=''>
-                        <input type='submit' class='OK' value='OK!'><br>
-                        <br>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-<!-- Modal (end) -->
+{{ modal() }}
 <br>
 <br>
 <br>
 <div>
     <form class='search' method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-        <input type='text' name='search' class='search clear' placeholder="type in a {% if kw == 'find' %}word{% else %}sequence{% endif %}..." {% if find %}value={{ find }}{% endif %}> <!-- TODO: find -->
+        <input type='text' name='search' class='search clear' placeholder="type in a {% if kw == 'find' %}word{% else %}sequence{% endif %}..." {% if find %}value={{ find }}{% endif %}> 
         <input type='submit' class='search clear' value={% if kw == 'find' %}'FIND'{% else %}'CONTAINS'{% endif %}>
     </form>
 </div>
@@ -82,43 +21,47 @@
 {% if results != none %}
 {% if results %}
 <div class='tokens container'>
-    {% if kw == 'contains' %} <!-- CONTAINS -->
+    <!-- contains -->
+    {% if kw == 'contains' %}
     <div class='contains'>
         <div class='count'>Words containing <i>{{ find }}</i> sequences ({{ count }} matches).</div>
         <br>
-        <div class='row hidden-xs hidden-sm'>
-            <span class='attr-label col-xs-12 col-md-3'>orth</span>
-            <span class='attr-label col-xs-12 col-md-2'>rules</span>
-            <span class='attr-label col-xs-12 col-md-3'>test</span>
-            <span class='attr-label col-xs-12 col-md-3'>gold</span>
-        </div>
-        <br class='hidden-xs hidden-sm'>
-        {% for t in results %}
-        <div class='row'>
-            <span class='col-xs-12 col-md-3' title='Lemma: {{ t.lemma }}&#10;&#10;POS: {{ t.pos }}&#10;&#10;MSD: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}'>{{ t.orth }}</span>
-            <span class='hidden-xs hidden-sm col-md-2'>{{ t.rules }}</span>
-            <span class='col-xs-6 col-md-3'><span data-toggle='modal' data-target='#modal' onclick="populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.test_syll }}', '{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}', '{% if t.is_stopword %}checked{% else %} {% endif %}');" class='{{ t|goldclass }} {% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</span></span>
-            <span class='visible-xs visible-sm col-xs-6'>{{ t.rules }}</span>
-            <span class='col-xs-12 col-md-3'>{{ t.syll }}{{ t.alt_syll1 }}{% if t.alt_syll1 %} + {% endif %}</span>
-        </div>
-        <br>
-        {% endfor %}
+        {{ tokenify(results, inline=False ) }}
     </div>
-    {% else %} <!-- FIND -->
+    <!-- find -->
+    {% else %}
     <div class='find'>
         {% for t in results %}
-        <span class='attr-orth'>{{ t.orth }}</span><br>
-        <span class='attr-label'>test</span>
-        <a data-toggle='modal' data-target='#modal' onclick="populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.test_syll }}', '{% if t.syll %}{{ t.syll }}{% else %}{{ t.test_syll }}{% endif %}', '{{ t.alt_syll1 }}', '{{ t.alt_syll2 }}', '{{ t.alt_syll3 }}', '{% if t.is_compound %}checked{% else %} {% endif %}', '{% if t.is_stopword %}checked{% else %} {% endif %}');" id='{{ loop.index }}' class='{{ t|goldclass }} {% if t.is_compound %} compound {% endif %}'>{{ t.test_syll }}</a>
+        <span class='attr-orth'>{{ t.orth }}</span>
         <br>
-        {% if t.syll %}<span class='attr-label'>gold</span> {{ t.syll }}<br>{% endif %}
-        {% if t.alt_syll1 %}<span class='attr-label'>alt</span> {{ t.alt_syll1 }}<br>{% endif %}
-        {% if t.alt_syll2 %}<span class='attr-label'>alt</span> {{ t.alt_syll2 }}<br>{% endif %}
-        {% if t.alt_syll3 %}<span class='attr-label'>alt</span> {{ t.alt_syll3 }}<br>{% endif %}
-        <span class='attr-label'>rules</span> {{ t.rules }}<br>
-        <span class='attr-label'>pos</span> {{ t.pos }}<br>
-        <span class='attr-label'>msd</span> {{ t.msd }}<br>
-        <span class='attr-label'>lemma</span> {{ t.lemma }}<br><br>
+        <span class='attr-label'>test</span>
+        <a data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='{{ t|goldclass }}{% if t.is_compound %} compound{% endif %}'>{{ t.test_syll }}</a>
+        <br>
+        {% if t.syll %}
+        <span class='attr-label'>gold</span> {{ t.syll }}
+        <br>
+        {% endif %}
+        {% if t.alt_syll1 %}
+        <span class='attr-label'>alt</span> {{ t.alt_syll1 }}
+        <br>
+        {% endif %}
+        {% if t.alt_syll2 %}
+        <span class='attr-label'>alt</span> {{ t.alt_syll2 }}
+        <br>
+        {% endif %}
+        {% if t.alt_syll3 %}
+        <span class='attr-label'>alt</span> {{ t.alt_syll3 }}
+        <br>
+        {% endif %}
+        <span class='attr-label'>rules</span> {{ t.rules }}
+        <br>
+        <span class='attr-label'>pos</span> {{ t.pos }}
+        <br>
+        <span class='attr-label'>msd</span> {{ t.msd }}
+        <br>
+        <span class='attr-label'>lemma</span> {{ t.lemma }}
+        <br>
+        <br>
         {% else %}
         <span class='message'>No matches found.</span>
         {% endfor %}
@@ -134,10 +77,11 @@
 
 {% block footer %}
 <script>
-    function populatemodal(find, orth, gold, test, syll, alt1, alt2, alt3, compound, stopword) {
+    function populatemodal(find, orth, gold, test, rules, syll, alt1, alt2, alt3, compound, stopword) {
         $('#orth').val(orth);
         $('#test').val(test);
         $('#test').addClass(gold);
+        $('#rules').val(rules);
         $('#syll').val(syll);
         $('#alt1').val(alt1);
         $('#alt2').val(alt2);
