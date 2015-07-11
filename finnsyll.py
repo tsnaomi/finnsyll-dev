@@ -71,32 +71,67 @@ class Token(db.Model):
     # the word's lemma/citation form
     lemma = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # a string of the rules applied in the test syllabfication
+    # Syllabification rules ---------------------------------------------------
+
+    # DELETE
     rules = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # the syllabification that is estimated programmatically
+    # # a string of the rules applied in the test_syll1
+    # rules1 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # # a string of the rules applied in the test_syll2
+    # rules2 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # # a string of the rules applied in the test_syll3
+    # rules3 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # # a string of the rules applied in the test_syll4
+    # rules4 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # TEST Syllabifications ---------------------------------------------------
+
+    # DELETE
     test_syll = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # # an alternative syllabification that is estimated programmatically
-    # test_alt_syll1 = db.Column(db.String(80, convert_unicode=True), default='')
+    # # the word's test syllabification
+    # test_syll1 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # # an alternative syllabification that is estimated programmatically
-    # test_alt_syll2 = db.Column(db.String(80, convert_unicode=True), default='')
+    # # the word's test syllabification
+    # test_syll2 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # # an alternative syllabification that is estimated programmatically
-    # test_alt_syll3 = db.Column(db.String(80, convert_unicode=True), default='')
+    # # the word's test syllabification
+    # test_syll3 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # the correct syllabification (hand-verified)
+    # # the word's test syllabification
+    # test_syll4 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # GOLD Syllabifications ---------------------------------------------------
+
+    # DELETE
     syll = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # an alternative syllabification (hand-verified)
+    # DELETE
     alt_syll1 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # an alternative syllabification (hand-verified)
+    # DELETE
     alt_syll2 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # an alternative syllabification (hand-verified)
+    # DELETE
     alt_syll3 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # # the word's correct syllabification (hand-verified)
+    # syll1 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # # the word's correct syllabification (hand-verified)
+    # syll2 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # # the word's correct syllabification (hand-verified)
+    # syll3 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # # the word's correct syllabification (hand-verified)
+    # syll4 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # -------------------------------------------------------------------------
 
     # the word's part-of-speech
     pos = db.Column(db.String(80, convert_unicode=True), default='')
@@ -114,7 +149,7 @@ class Token(db.Model):
     # word's syllabification is lexically marked
     is_stopword = db.Column(db.Boolean, default=False)
 
-    # a boolean indicating if the word is a foreign word
+    # # a boolean indicating if the word is a foreign word
     # is_foreign = db.Column(db.Boolean, default=False)
 
     # a boolean indicating if the algorithm has estimated correctly
@@ -141,20 +176,32 @@ class Token(db.Model):
         if self.syll:
             return self.syll.count('.') + 1  # TODO
 
+        # This only takes into consideration the number of syllables in the
+        # first syllabification. It also fails when counting the number of
+        # syllables in delimited compounds.
+
     @property
     def syllables(self):
         '''Return a list of the word's syllables.'''
         return self.test_syll.split('.')  # TODO
 
+        # This fails when listing the syllables of delimited compounds.
+
     @property
     def weights(self):
         '''Return the weight structure of the test syllabification.'''
-        return get_weights(self.test_syll)
+        return get_weights(self.test_syll)  # TODO
+
+        # This only takes into consiterdation the syllable weights of the
+        # first syllabification.
 
     @property
     def sonorities(self):
         '''Return the sonority structure of the test syllabification.'''
         return get_sonorities(self.test_syll)
+
+        # This only takes into consiterdation the sonority structure of the
+        # first syllabification.
 
     def is_lemma(self):
         '''Return True if the word is in its citation form, else False.'''

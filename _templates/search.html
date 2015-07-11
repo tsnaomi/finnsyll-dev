@@ -30,42 +30,7 @@
     </div>
     <!-- find -->
     {% else %}
-    <div class='find'>
-        {% for t in results %}
-        <span class='attr-orth'>{{ t.orth }}</span>
-        <br>
-        <span class='attr-label'>test</span>
-        <a data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='{{ t|goldclass }}{% if t.is_compound %} compound{% endif %}'>{{ t.test_syll }}</a>
-        <br>
-        {% if t.syll %}
-        <span class='attr-label'>gold</span> {{ t.syll }}
-        <br>
-        {% endif %}
-        {% if t.alt_syll1 %}
-        <span class='attr-label'>alt</span> {{ t.alt_syll1 }}
-        <br>
-        {% endif %}
-        {% if t.alt_syll2 %}
-        <span class='attr-label'>alt</span> {{ t.alt_syll2 }}
-        <br>
-        {% endif %}
-        {% if t.alt_syll3 %}
-        <span class='attr-label'>alt</span> {{ t.alt_syll3 }}
-        <br>
-        {% endif %}
-        <span class='attr-label'>rules</span> {{ t.rules }}
-        <br>
-        <span class='attr-label'>pos</span> {{ t.pos }}
-        <br>
-        <span class='attr-label'>msd</span> {{ t.msd }}
-        <br>
-        <span class='attr-label'>lemma</span> {{ t.lemma }}
-        <br>
-        <br>
-        {% else %}
-        <span class='message'>No matches found.</span>
-        {% endfor %}
-    </div>
+    {{ tokenify(results, inline=False, explicit=True) }}
     {% endif %}
 </div>
 <br>

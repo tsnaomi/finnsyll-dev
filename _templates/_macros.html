@@ -100,8 +100,45 @@
     Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}&#10;&#10;Sonority: {{ t.sonorities }}&#10;&#10;Weight: {{ t.weights }}
 {%- endmacro %}
 
-{% macro tokenify(tokens, inline=True) -%}
-    {% if inline %}
+{% macro tokenify(tokens, inline=True, explicit=False) -%}
+    {% if explicit %}
+    <div class='find'>  <!-- TODO -->
+        {% for t in tokens %}
+        <span class='attr-orth'>{{ t.orth }}</span>
+        <br>
+        <span class='attr-label'>test</span>
+        <a data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='{{ t|goldclass }}{% if t.is_compound %} compound{% endif %}'>{{ t.test_syll }}</a>
+        <br>
+        {% if t.syll %}
+        <span class='attr-label'>gold</span> {{ t.syll }}
+        <br>
+        {% endif %}
+        {% if t.alt_syll1 %}
+        <span class='attr-label'>alt</span> {{ t.alt_syll1 }}
+        <br>
+        {% endif %}
+        {% if t.alt_syll2 %}
+        <span class='attr-label'>alt</span> {{ t.alt_syll2 }}
+        <br>
+        {% endif %}
+        {% if t.alt_syll3 %}
+        <span class='attr-label'>alt</span> {{ t.alt_syll3 }}
+        <br>
+        {% endif %}
+        <span class='attr-label'>rules</span> {{ t.rules }}
+        <br>
+        <span class='attr-label'>pos</span> {{ t.pos }}
+        <br>
+        <span class='attr-label'>msd</span> {{ t.msd }}
+        <br>
+        <span class='attr-label'>lemma</span> {{ t.lemma }}
+        <br>
+        <br>
+        {% else %}
+        <span class='message'>No matches found.</span>
+        {% endfor %}
+    </div>
+    {% elif inline %}
     <div class='row hidden-xs hidden-sm'>
         <span class='attr-label col-md-1'>freq</span>
         <span class='attr-label col-md-2'>test</span>
