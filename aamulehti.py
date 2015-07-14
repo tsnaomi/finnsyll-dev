@@ -6,6 +6,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 from collections import Counter, namedtuple
+from datetime import datetime
 from tabulate import tabulate as tabulate
 
 # word forms: 991730 (exluding unseen lemmas)
@@ -229,6 +230,52 @@ def tabulate_to_file(tokens, filename):
         f.write(table.encode('utf-8'))
 
 
+# Transitioning the syllabifier -----------------------------------------------
+
+def transition(pdf=False):  # TODO
+    '''Temporarily re-syllabify tokens and create a transition report.'''
+    compound = lambda t: 'C' if t.is_compound else None
+    parse = lambda t: (t, [t.test_syll, t.rules])
+    row = lambda t: ['>', t.test_syll, t.rules, compound(t)]
+
+    tokens = finn.Token.query.filter(Token.is_gold.isnot(None))
+
+    Dict = lambda tokens=tokens: {
+        'good': dict([parse(t) for t in tokens.filter_by(is_gold=True)]),
+        'bad': dict([parse(t) for t in tokens.filter_by(is_gold=False)]),
+        }
+
+    PRE = Dict()
+
+    for t in tokens:
+        t.syllabify()
+
+    POST = Dict()
+
+    if PRE['good'] != POST['good']:
+        good = set(PRE['bad'].keys()).intersection(POST['good'].keys())
+        bad = set(PRE['good'].keys()).intersection(POST['bad'].keys())
+        table1 = [PRE['bad'][t] + row(t) for t in good]
+        table2 = [PRE['good'][t] + row(t) for t in bad]
+        report = 'FROM BAD TO GOOD (%s)\n' % len(good)
+        report += tabulate(table1)
+        report += '\n\nFROM GOOD TO BAD (%s)\n' % len(bad)
+        report += tabulate(table2)
+        report += '\n\n%s BAD TOKENS' % len(POST['bad'])
+
+        if pdf:
+            filename = 'syllabifier/reports/%s.txt' % str(datetime.utcnow())
+
+            with open(filename, 'w') as f:
+                f.write(report.encode('utf-8'))
+
+        print report
+
+    else:
+        'BAD TOKENS' % len(POST['bad'])
+
+    finn.db.session.rollback()
+
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
@@ -237,4 +284,4 @@ if __name__ == '__main__':
     # syllabify_unseen_lemmas()
     # tabulate_to_file(finn.get_foreign_words(), 'foreign')
     # tabulate_to_file(finn.get_ambiguous_tokens(), 'ambiguous')
-    finn.transition(pdf='--pdf' in sys.argv)
+    transition(pdf='--pdf' in sys.argv)

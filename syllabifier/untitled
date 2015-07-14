@@ -11,50 +11,67 @@ from phonology import (
     replace_umlauts,
     )
 
+# SYLLABIFIER.V5 introduce variation
+
 
 # Syllabifier -----------------------------------------------------------------
 
 def syllabify(word):
+    '''Syllabify the given word, whether simplex or complex.'''
     compound = True if re.search(r'-| ', word) else False
+    syllabify = _syllabify_compound if compound else _syllabify
+    syll, rules = syllabify(word)
+
+    yield syll, rules
+
+    n = 3
+
+    # derive variation
+    if 'T4' in rules:
+        yield syllabify(word, variation=True)
+        n -= 1
+
+    # yield empty syllabifications and rules
+    for n in range(3):
+        yield '', ''
+
+
+def _syllabify_compound(word, variation):
+    WORD, RULES = [], []
 
     # if the word contains a delimiter (a hyphens or space), split the word
     # along the delimiter(s) and syllabify the individual parts separately
-    if compound:
-        WORD, RULES = [], []
-
-        for w in re.split(r'(-| |\.)', word):
-            syll, rules = (w, ' |') if w in '- .' else _syllabify(w)
-            WORD.append(syll)
-            RULES.append(rules)
+    for w in re.split(r'(-| |\.)', word):
+        syll, rules = (w, ' |') if w in '- .' else _syllabify(w, variation)
+        WORD.append(syll)
+        RULES.append(rules)
 
         return ''.join(WORD), ''.join(RULES)
 
-    return _syllabify(word)
 
-
-def _syllabify(word):
+def _syllabify(word, variation=False):
     '''Syllabify the given word.'''
-    word = replace_umlauts(word)
-    word, applied_rules = apply_T1(word)
+    WORD = replace_umlauts(word)
+    word, rules = apply_T1(WORD)
 
     if re.search(r'[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*', word):
         word, T2 = apply_T2(word)
         word, T8 = apply_T8(word)
         word, T9 = apply_T9(word)
-        word, T4 = apply_T4(word)
-        applied_rules += T2 + T8 + T9 + T4
+        word, T4 = apply_T4(word) if not variation else word, ''
+        rules += T2 + T8 + T9 + T4
 
     if re.search(r'[ieAyOauo]{3}', word):
         word, T6 = apply_T6(word)
         word, T5 = apply_T5(word)
         word, T7 = apply_T7(word)
-        word, T2 = apply_T2(word)  # ordering T2 last
-        applied_rules += T5 + T6 + T7 + T2
+        word, T2 = apply_T2(word)
+        rules += T5 + T6 + T7 + T2
 
     word = replace_umlauts(word, put_back=True)
-    applied_rules = applied_rules or ' T0'  # T0 means no rules have applied
+    rules = rules or ' T0'  # T0 means no rules have applied
 
-    return word, applied_rules
+    return word, rules
 
 
 # Sequences -------------------------------------------------------------------
@@ -156,6 +173,9 @@ def apply_T2(word):
 
 
 # T4 --------------------------------------------------------------------------
+
+# VARIATION : It is ambiguous whether these dipthongs split when they appear
+# word-finally or precede a coda.
 
 def apply_T4(word):
     '''An agglutination diphthong that ends in /u, y/ usually contains a

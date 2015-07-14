@@ -117,7 +117,8 @@ pre {
 
 /* forms ------------------------------------------------------------------- */
 
-input:focus {
+input:focus,
+textarea:focus {
     outline: none;
 }
 
@@ -141,12 +142,13 @@ input.clear[type='submit']:hover {
     border: 1px solid #c7c7c7;
 }
 
-input.gray {
-    height: 40px;
+input.gray,
+textarea.gray {
     width: 100%;
     border: none;
     background-color: #f5f5f5;
-    padding-left: 8px;
+    padding: 4px;
+    margin: 10px 0px;
 }
 
 .OK {
@@ -171,6 +173,8 @@ input.gray {
 .readonly {
     border: none !important;
     background-color: #fff !important;
+    padding-left: 0px !important; 
+    resize: none !important;
 }
 
 /* tokens ------------------------------------------------------------------ */
@@ -223,7 +227,7 @@ input.search[type='submit'][value='CONTAINS'] {
 }
 
 .attr-label {
-    color: #c7c7c7;
+    /*color: #c7c7c7;*/
     font-style: italic;
     word-wrap: normal;
 }
@@ -232,6 +236,7 @@ input.search[type='submit'][value='CONTAINS'] {
     font-size: 24px;
     font-style: italic;
     font-weight: bold;
+    padding: 6px 10px !important;
 }
 
 
@@ -248,7 +253,8 @@ input.search[type='submit'][value='CONTAINS'] {
 /* modal ------------------------------------------------------------------- */
 
 .modal-dialog {
-    width: 360px;
+    /*width: 360px;*/
+    width: 800px;
     top: 100px;
     margin: auto;
 }
@@ -263,10 +269,9 @@ input.search[type='submit'][value='CONTAINS'] {
 }
 
 .modal-body .gray {
-    width: 194px;
     height: 30px;
     padding-left: 4px;
-    margin: -5px 0 0 -8px;
+    margin: 2px 0 2px -4px;
 }
 
 .close span {
@@ -317,6 +322,11 @@ input[type='submit']:hover {
 
 /* misc -------------------------------------------------------------------- */
 
+div.gray {
+    padding: 4px 4px 4px 0;
+    margin: 9px 0px;
+}
+
 .center {
     text-align: center;
     display: block;
@@ -330,8 +340,10 @@ input[type='submit']:hover {
     margin-left: 10%;
 }
 
+.attr-label,
 .freq {
-    color: #e1e1e1;
+    /*color: #e1e1e1;*/
+    color: #cfcfcf;
 }
 
 .message {
@@ -346,6 +358,13 @@ input[type='submit']:hover {
     text-align: center;
 }
 
+.variation {
+    color: #fff;
+    background-color: #80FFBF;
+    padding: 4px 8px;
+    margin-left: 10px;
+}
+
 /* media queries ----------------------------------------------------------- */
 
 @media (min-width: 992px) {
@@ -354,13 +373,15 @@ input[type='submit']:hover {
         width: 100%;
         text-align: center;
     }
+
     .navbar-nav > li {
         float: none;
-        width: 110px;
+        min-width: 110px;
         display: inline-block;
     }
-    ul.nav li.dropdown:hover > ul.dropdown-menu {
-        display: block; 
+
+    .dropdown-menu {
+        left: -20%;
     }
 
     .tokens input.gray {
@@ -383,12 +404,17 @@ input[type='submit']:hover {
         color: #F5F5F5;  
     }
 
+    textarea.gray {
+        margin: -4px inherit 20px;
+    }
+
 }
 
 @media (max-width: 992px) {
 
     .tokens input.gray {
         border: 1px solid #fff;
+        margin: 2px 0px;
     }
 
     .tokens .readonly {
@@ -397,6 +423,22 @@ input[type='submit']:hover {
 
     .sm-bad {
         background: #FFE4E1;
+    }
+
+    .navbar-default .navbar-nav > .open > a,
+    .navbar-default .navbar-nav > .open > a:hover {
+        background-color: #80FFBF;
+    }
+
+    .dropdown-menu > li {
+        background-color: #FBFBFB;
+    }
+
+    .tokens .unverified,
+    .tokens .good,
+    .tokens .bad {
+        padding: 2px;
+        margin: -2px;
     }
 
 }

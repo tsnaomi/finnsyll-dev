@@ -1,0 +1,317 @@
+{% macro modal() -%}
+    <div class='modal fade' id='modal' tabindex='-1' role='dialog' aria-labelledby='myModalLabel'>
+        <div class='modal-dialog' role='document'>
+            <div class='modal-content'>
+                <div class='modal-body'>
+                    <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
+                    <form class='doc-tokens' method='POST'>
+                        <div class='container-fluid'>
+                            <br>
+                            <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+                            <input type='hidden' name='id' id='id' value=''>
+                            {% if kw == 'doc' %}
+                            <input type='hidden' name='scroll' id='scroll' value=''>
+                            {% elif kw == 'contains' or kw == 'find' %}
+                            <input type='hidden' name='search' id='search' value='{% if find %}{{ find }}{% endif %}'>
+                            {% endif %}
+                            <div class='row'>
+                                <div class='col-xs-12'>
+                                    <span id='orth' class='attr-orth'></span>
+                                </div>
+                            </div>
+                            <br>
+                            <div class='row'>
+                                <span class='attr-label col-xs-3'>rules</span>
+                                <span class='attr-label col-xs-9'>test</span>
+                            </div>
+                            <div class='row'>
+                                <span class='col-xs-3'>
+                                    <div style='margin-bottom: 4px;' id='rules1'></div>
+                                    <div style='margin-bottom: 4px;' id='rules2'></div>
+                                    <div style='margin-bottom: 4px;' id='rules3'></div>
+                                    <div style='margin-bottom: 4px;' id='rules4'></div>
+                                </span>
+                                <span class='col-xs-9'>
+                                    <div style='margin-bottom: 4px;' id='test1'></div>
+                                    <div style='margin-bottom: 4px;' id='test2'></div>
+                                    <div style='margin-bottom: 4px;' id='test3'></div>
+                                    <div style='margin-bottom: 4px;' id='test4'></div>
+                                </span>
+                            </div>
+                            <br>
+                            <div class='row'>
+                                <span class='attr-label col-xs-3'>note</span>
+                                <span class='attr-label col-xs-9'>gold</span>
+                            </div>
+                            <div class='row'>
+                                <span class='col-xs-3'>
+                                    <textarea id='note' name='note' class='gray' style='height: 133px; resize: none;'></textarea>
+                                </span>
+                                <span class='col-xs-9'>
+                                    <div>
+                                        <input id='syll1' name='syll1' class='gray' value=''></input>
+                                    </div>
+                                    <div>
+                                        <input id='syll2' name='syll2' class='gray' value=''></input>
+                                    </div>
+                                    <div>
+                                        <input id='syll3' name='syll3' class='gray' value=''></input>
+                                    </div>
+                                    <div>
+                                        <input id='syll4' name='syll4' class='gray' value=''></input>
+                                    </div>
+                                </span>
+                            </div>
+                            <br>
+                            <div class='row'>
+                                <span class='attr-label col-xs-1'>p / r</span>
+                                <span class='col-xs-2'><span id='precision'></span> / <span id='recall'></span></span>
+                                <span class='attr-label col-xs-1'>freq</span>
+                                <span id='freq' class='col-xs-2'></span>
+                                <span class='attr-label col-xs-1'>pos</span>
+                                <span id='pos' class='col-xs-2'></span>
+                                <span class='attr-label col-xs-1'>msd</span>
+                                <span id='msd' class='col-xs-2'></span>
+                            </div>
+                            <br>
+                            <div class='row'>
+                                <span class='attr-label col-xs-2'>compound</span>
+                                <input type='checkbox' id='compound' name='is_compound' class='col-xs-10' value=1>
+                            </div>
+                            <br>
+                            <div class='row'>
+                                <span class='attr-label col-xs-2'>stopword</span>
+                                <input type='checkbox' id='stopword' name='is_stopword' class='col-xs-10' value=1 disabled>
+                            </div>
+                            <br>
+                            <input type='submit' class='OK' value='OK!'><br>
+                            <br>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{%- endmacro %}
+
+{% macro paginate(pagination) -%}
+    <div class='pagination'>
+        {% if pagination.has_prev %}
+        <a href="{{ url_for_other_page(pagination.page - 1) }}">&laquo; Previous</a>
+        {% endif %}
+        {% for page in pagination.iter_pages() %}
+        {% if page %}
+        {% if page != pagination.page %}
+        <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+        {% else %}
+        <strong>{{ page }}</strong>
+        {% endif %}
+        {% else %}
+        <span class='ellipsis'>…</span>
+        {% endif %}
+        {% endfor %}
+        {% if pagination.has_next %}
+        <a href="{{ url_for_other_page(pagination.page + 1) }}">Next &raquo;</a>
+        {% endif %}
+    </div>
+{%- endmacro %}
+
+{% macro populate(t) -%}
+    populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.freq }}', '{{ t.pos }}', '{{ t.msd }}', '{{ t.rules1 }}', '{{ t.rules2 }}', '{{ t.rules3 }}', '{{ t.rules4 }}', '{{ t.test_syll1 }}', '{{ t.test_syll2 }}', '{{ t.test_syll3 }}', '{{ t.test_syll4 }}', '{{ t.syll1 }}', '{{ t.syll2 }}', '{{ t.syll3 }}', '{{ t.syll4 }}', '{{ t.precision }}', '{{ t.recall }}', '{{ t.is_compound }}', '{{ t.is_stopword }}', '{{ t.is_foreign }}', '{{ t.note }}');
+{%- endmacro %}
+
+{% macro title(t) -%}
+    Freq: {{ t.freq }}&#10;&#10;Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}
+{%- endmacro %}
+
+{% macro tokenify(tokens, snapshot=False, simple=False, unverified=False) -%}
+
+    {% if snapshot %}
+    {% for t in tokens %}
+    <div class='row'>
+        <span class='col-xs-12'>
+            <a data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='attr-orth {{ t|goldclass }}'>{{ t.orth }}</a>
+        </span>
+    </div>
+    <div style='margin-bottom: 8px;'></div>
+    <div class='row'>
+        <span class='col-xs-2 col-md-1 attr-label'>rules</span>
+        <span class='col-xs-5 col-md-2'>{{ t.rules1 }}</span>
+        {% if t.rules2 %}<span class='col-xs-5 col-md-2'>{{ t.rules2 }}</span>
+        {% if t.rules3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.rules3 }}</span>
+        {% if t.rules4 %}<span class='col-xs-5 col-md-2'>{{ t.rules4 }}</span>{% endif %}{% endif %}{% endif %}
+    </div>
+    <div class='row'>
+        <span class='col-xs-2 col-md-1 attr-label'>test</span>
+        <span class='col-xs-5 col-md-2'>{{ t.test_syll1 }}</span>
+        {% if t.test_syll2 %}<span class='col-xs-5 col-md-2'>{{ t.test_syll2 }}</span>
+        {% if t.test_syll3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.test_syll3 }}</span>
+        {% if t.test_syll4 %}<span class='col-xs-5 col-md-2'>{{ t.test_syll4 }}</span>{% endif %}{% endif %}{% endif %}
+    </div>
+    <div class='row'>
+        <span class='col-xs-2 col-md-1 attr-label'>gold</span>
+        <span class='col-xs-5 col-md-2'>{{ t.syll1 }}</span>
+        {% if t.syll2 %}<span class='col-xs-5 col-md-2'>{{ t.syll2 }}</span>
+        {% if t.syll3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.syll3 }}</span>
+        {% if t.syll4 %}<span class='col-xs-5 col-md-2'>{{ t.syll4 }}</span>{% endif %}{% endif %}{% endif %}
+    </div>
+    <div class='row'>
+        <span class='col-xs-2 col-md-1 attr-label'>p / r</span>
+        <span class='col-xs-10 col-md-2'>{{ t.precision }} / {{ t.recall }}</span>
+    </div>
+    <div class='row'>
+        <span class='col-xs-2 col-md-1 attr-label'>freq</span>
+        <span class='col-xs-10 col-md-2'>{{ t.freq }}</span>
+    </div>
+    <div class='row'>
+        <span class='col-xs-2 col-md-1 attr-label'>pos</span>
+        <span class='col-xs-10 col-md-2'>{{ t.pos }}</span>
+    </div>
+    <div class='row'>
+        <span class='col-xs-2 col-md-1 attr-label'>msd</span>
+        <span class='col-xs-10 col-md-2'>{{ t.msd }}</span>
+    </div>
+    <div class='row'>
+        <span class='col-xs-2 col-md-1 attr-label'>lemma</span>
+        <span class='col-xs-10 col-md-2'>{{ t.lemma }}</span>
+    </div>
+    {% if t.note %}
+    <div class='row'>
+        <span class='col-xs-2 col-md-1 attr-label'>note</span>
+        <span class='col-xs-10 col-md-7'>{{ t.note }}</span>
+    </div>
+    {% endif %}
+    <br>
+    <br>
+    {% endfor %}
+
+    {% elif simple %}
+    <div class='row hidden-xs hidden-sm'>
+        <span class='attr-label col-md-3'>orth</span>
+        <span class='attr-label col-md-2'>rules</span>
+        <span class='attr-label col-md-3'>test</span>
+        <span class='attr-label col-md-3'>gold</span>
+    </div>
+    <br class='hidden-xs hidden-sm'>
+    {% for t in tokens %}
+    <div class='row'>
+        <span class='col-xs-12 col-md-3' title='{{ title(t) }}'>{{ t.orth }}</span>
+        <span class='hidden-xs hidden-sm col-md-2'>{{ t.rules1 }}</span>
+        <span class='col-xs-6 col-md-3'>
+            <span data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='{{ t|goldclass }}'>{{ t.test_syll1 }}</span>
+            {% if t.is_ambiguous() %}<span class='variation'>V</span>{% endif %}
+        </span>
+        <span class='visible-xs visible-sm col-xs-6'>{{ t.rules1 }}</span>
+        <span class='col-xs-12 col-md-3'>{{ t.syll1 }}</span>
+    </div>
+    <br>
+    {% endfor %}
+
+    {% elif unverified %}
+    <div class='row hidden-xs hidden-sm'>
+        <span class='attr-label col-md-1'>freq</span>
+        <span class='attr-label col-md-2'>orth</span>
+        <span class='attr-label col-md-2'>rules</span>
+        <span class='attr-label col-md-3'>test</span>
+        <span class='attr-label col-md-3'>syll</span>
+        <span class='attr-label col-md-1'>compound</span>
+    </div>
+    <br class='hidden-xs hidden-sm'>
+    {% for t in tokens %}
+    <div class='row'>
+        <input type='hidden' name='id_{{ loop.index }}' value='{{ t.id }}'> 
+        <span class='col-xs-12 col-md-1'>
+            <span class='freq'>{{ t.freq }}</span>
+        </span>
+        <span class='col-xs-12 col-md-2'>
+            <span class='{{ t|goldclass }}' title='{{ title(t) }}'>{{ t.orth }}</span>
+        </span>
+        <span class='col-xs-4 col-md-2'>
+            <span class='gray'>{{ t.rules1 }}</span>
+            {% if t.rules2 %}<div class='gray'>{{ t.rules2 }}</div>
+            {% if t.rules3 %}<div class='gray'>{{ t.rules3 }}</div>
+            {% if t.rules4 %}<div class='gray'>{{ t.rules4 }}</div>{% endif %}{% endif %}{% endif %}
+        </span>
+        <span class='col-xs-6 col-md-3'>
+            <span class='gray'>{{ t.test_syll1 }}</span>
+            {% if t.test_syll2 %}<div class='gray'>{{ t.test_syll2 }}</div>
+            {% if t.test_syll3 %}<div class='gray'>{{ t.test_syll3 }}</div>
+            {% if t.test_syll4 %}<div class='gray'>{{ t.test_syll4 }}</div>{% endif %}{% endif %}{% endif %}
+        </span>
+        <span class='col-xs-12 col-md-3'>
+            <input type='text' class='gray' name='syll1_{{ loop.index }}' placeholder='alternative syll' value='{{ t.test_syll1 }}'><br>
+            <input type='text' class='gray' name='syll2_{{ loop.index }}' placeholder='alternative syll' value='{{ t.test_syll2 }}'><br>
+            <input type='text' class='gray' name='syll3_{{ loop.index }}' placeholder='alternative syll' value='{{ t.test_syll3 }}'><br>
+            <input type='text' class='gray' name='syll4_{{ loop.index }}' placeholder='alternative syll' value='{{ t.test_syll4 }}'>
+        </span>
+        <span class='col-xs-12 col-md-1'>
+            <input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}>
+            <span class='attr-label visible-xs visible-sm' style='float: left;'>compound&nbsp;&nbsp;</span>
+        </span>
+    </div>
+    <div class='row'>
+        <span class='hidden-xs hidden-sm col-md-3'></span>
+        <span class='col-xs-12 col-md-9'>
+            <textarea class='gray note' name='note_{{ loop.index }}' placeholder='Note...' >{{ t.note }}</textarea>
+        </span>
+    </div>
+    <br>
+    <br>
+    {% endfor %}
+
+    {% else %}
+    <div class='row hidden-xs hidden-sm'>
+        <span class='attr-label col-md-2'>orth</span>
+        <span class='attr-label col-md-2'>rules</span>
+        <span class='attr-label col-md-3'>test</span>
+        <span class='attr-label col-md-3'>syll</span>
+        <span class='attr-label col-md-1'>P/R</span>
+        <span class='attr-label col-md-1'>compound</span>
+    </div>
+    <br class='hidden-xs hidden-sm'>
+    {% for t in tokens %}
+    <div class='row'>
+        <input type='hidden' name='id_{{ loop.index }}' value='{{ t.id }}'> 
+        <span class='col-xs-12 col-md-2'>
+            <span class='{{ t|goldclass }}' title='{{ title(t) }}'>{{ t.orth }}</span>
+        </span>
+        <span class='col-xs-4 col-md-2'>
+            <span class='gray'>{{ t.rules1 }}</span>
+            {% if t.rules2 %}<div class='gray'>{{ t.rules2 }}</div>
+            {% if t.rules3 %}<div class='gray'>{{ t.rules3 }}</div>
+            {% if t.rules4 %}<div class='gray'>{{ t.rules4 }}</div>{% endif %}{% endif %}{% endif %}
+        </span>
+        <span class='col-xs-6 col-md-3'>
+            <span class='gray'>{{ t.test_syll1 }}</span>
+            {% if t.test_syll2 %}<div class='gray'>{{ t.test_syll2 }}</div>
+            {% if t.test_syll3 %}<div class='gray'>{{ t.test_syll3 }}</div>
+            {% if t.test_syll4 %}<div class='gray'>{{ t.test_syll4 }}</div>{% endif %}{% endif %}{% endif %}
+        </span>
+        <span class='col-xs-12 col-md-3'>
+            <input type='text' class='gray' name='syll1_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll1 }}'><br>
+            <input type='text' class='gray' name='syll2_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll2 }}'><br>
+            <input type='text' class='gray' name='syll3_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll3 }}'><br>
+            <input type='text' class='gray' name='syll4_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll4 }}'>
+        </span>
+        <span class='col-xs-12 col-md-1'>
+            {{ t.precision }}/{{ t.recall }}
+            <span class='attr-label visible-xs visible-sm' style='float: left;'>P/R&nbsp;&nbsp;</span>
+        </span>
+        <span class='col-xs-12 col-md-1'>
+            <input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}>
+            <span class='attr-label visible-xs visible-sm' style='float: left;'>compound&nbsp;&nbsp;</span>
+        </span>
+    </div>
+    <div class='row'>
+        <span class='hidden-xs hidden-sm col-md-2'></span>
+        <span class='col-xs-12 col-md-10'>
+            <textarea class='gray note' name='note_{{ loop.index }}' placeholder='Note...'>{{ t.note }}</textarea>
+        </span>
+    </div>
+    <br>
+    <br>
+    {% endfor %}
+
+    {% endif %}
+
+{%- endmacro %}
