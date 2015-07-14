@@ -4,13 +4,24 @@
 {{ modal() }}
 <br>
 <br> 
-<!-- unverified, variation -->
-{% if kw == 'unverified' or kw == 'vv' %}
+<!-- unverified -->
+{% if kw == 'unverified' %}
 <div class='tokens container'>
     <form method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-        {{ tokenify(tokens, inline=True )}}
-        <br>
+        {{ tokenify(tokens, unverified=True )}}
+        <div class='center'>
+            <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');" value='OK!'>
+        </div>
+    </form>
+</div>
+<br>
+<!-- variation, notes -->
+{% elif kw == 'notes' or kw == 'variation' and secondary != 'list' %}
+<div class='tokens container'>
+    <form method='POST'>
+        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+        {{ tokenify(tokens) }}
         <div class='center'>
             <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');" value='OK!'>
         </div>
@@ -20,30 +31,45 @@
 <!-- bad, hidden -->
 {% else %}
 <div class='tokens container'>
-    {{ tokenify(tokens, inline=False )}}
+    {{ tokenify(tokens, simple=True ) }}
 </div>
 {% endif %} 
 <br>
-{{ paginate(pagination) }}
+{% if pagination %}{{ paginate(pagination) }}{% endif %}
 {% endblock %}
 
 {% block footer %}
 <script>
-    function populatemodal(find, orth, gold, test, rules, syll, alt1, alt2, alt3, compound, stopword) {
-        $('#orth').val(orth);
-        $('#test').val(test);
-        $('#test').addClass(gold);
-        $('#rules').val(rules);
-        $('#syll').val(syll);
-        $('#alt1').val(alt1);
-        $('#alt2').val(alt2);
-        $('#alt3').val(alt3);
-        $('#find').val(find);
-        if (compound == 'checked') {
+    function populatemodal(id, orth, gold, freq, pos, msd, rules1, rules2, rules3, rules4, test1, test2, test3, test4, syll1, syll2, syll3, syll4, precision, recall, compound, stopword, foreign, note) {
+        $('#orth').text(orth);
+        $('#orth').addClass(gold);
+        $('#freq').text(freq);
+        $('#pos').text(pos);
+        $('#msd').text(msd);
+        $('#precision').text(precision);
+        $('#recall').text(recall);
+        $('#rules1').text(rules1);
+        $('#rules2').text(rules2);
+        $('#rules3').text(rules3);
+        $('#rules4').text(rules4);
+        $('#test1').text(test1);
+        $('#test2').text(test2);
+        $('#test3').text(test3);
+        $('#test4').text(test4);
+        $('#syll1').val(syll1);
+        $('#syll2').val(syll2);
+        $('#syll3').val(syll3);
+        $('#syll4').val(syll4);
+        $('#note').text(note);
+        $('#id').val(id);
+        if (compound == 'True') {
             $('#compound').prop('checked', true);
         };
-        if (stopword == 'checked') {
+        if (stopword == 'True') {
             $('#stopword').prop('checked', true);
+        };
+        if (foreign == 'True') {
+            $('#foreign').prop('checked', true);
         };
     }
 </script>

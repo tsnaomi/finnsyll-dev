@@ -19,9 +19,9 @@ from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
 from math import ceil
+from sqlalchemy import or_
 from syllabifier.phonology import FOREIGN_FINAL, get_sonorities, get_weights
-from syllabifier.v4 import syllabify
-from tabulate import tabulate
+from syllabifier.v5 import syllabify
 from werkzeug.exceptions import BadRequestKeyError
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
@@ -71,67 +71,41 @@ class Token(db.Model):
     # the word's lemma/citation form
     lemma = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # Syllabification rules ---------------------------------------------------
+    # a string of the rules applied in test_syll1
+    rules1 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # DELETE
-    rules = db.Column(db.String(80, convert_unicode=True), default='')
+    # a string of the rules applied in test_syll2
+    rules2 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # # a string of the rules applied in the test_syll1
-    # rules1 = db.Column(db.String(80, convert_unicode=True), default='')
+    # a string of the rules applied in test_syll3
+    rules3 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # # a string of the rules applied in the test_syll2
-    # rules2 = db.Column(db.String(80, convert_unicode=True), default='')
+    # a string of the rules applied in test_syll4
+    rules4 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # # a string of the rules applied in the test_syll3
-    # rules3 = db.Column(db.String(80, convert_unicode=True), default='')
+    # test syllabification
+    test_syll1 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # # a string of the rules applied in the test_syll4
-    # rules4 = db.Column(db.String(80, convert_unicode=True), default='')
+    # test syllabification
+    test_syll2 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # TEST Syllabifications ---------------------------------------------------
+    # test syllabification
+    test_syll3 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # DELETE
-    test_syll = db.Column(db.String(80, convert_unicode=True), default='')
+    # test syllabification
+    test_syll4 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # # the word's test syllabification
-    # test_syll1 = db.Column(db.String(80, convert_unicode=True), default='')
+    # correct syllabification (hand-verified)
+    syll1 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # # the word's test syllabification
-    # test_syll2 = db.Column(db.String(80, convert_unicode=True), default='')
+    # correct syllabification (hand-verified)
+    syll2 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # # the word's test syllabification
-    # test_syll3 = db.Column(db.String(80, convert_unicode=True), default='')
+    # correct syllabification (hand-verified)
+    syll3 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # # the word's test syllabification
-    # test_syll4 = db.Column(db.String(80, convert_unicode=True), default='')
-
-    # GOLD Syllabifications ---------------------------------------------------
-
-    # DELETE
-    syll = db.Column(db.String(80, convert_unicode=True), default='')
-
-    # DELETE
-    alt_syll1 = db.Column(db.String(80, convert_unicode=True), default='')
-
-    # DELETE
-    alt_syll2 = db.Column(db.String(80, convert_unicode=True), default='')
-
-    # DELETE
-    alt_syll3 = db.Column(db.String(80, convert_unicode=True), default='')
-
-    # # the word's correct syllabification (hand-verified)
-    # syll1 = db.Column(db.String(80, convert_unicode=True), default='')
-
-    # # the word's correct syllabification (hand-verified)
-    # syll2 = db.Column(db.String(80, convert_unicode=True), default='')
-
-    # # the word's correct syllabification (hand-verified)
-    # syll3 = db.Column(db.String(80, convert_unicode=True), default='')
-
-    # # the word's correct syllabification (hand-verified)
-    # syll4 = db.Column(db.String(80, convert_unicode=True), default='')
-
-    # -------------------------------------------------------------------------
+    # correct syllabification (hand-verified)
+    syll4 = db.Column(db.String(80, convert_unicode=True), default='')
 
     # the word's part-of-speech
     pos = db.Column(db.String(80, convert_unicode=True), default='')
@@ -149,11 +123,22 @@ class Token(db.Model):
     # word's syllabification is lexically marked
     is_stopword = db.Column(db.Boolean, default=False)
 
-    # # a boolean indicating if the word is a foreign word
-    # is_foreign = db.Column(db.Boolean, default=False)
+    # a boolean indicating if the word is a foreign word
+    is_foreign = db.Column(db.Boolean, default=False)
 
     # a boolean indicating if the algorithm has estimated correctly
     is_gold = db.Column(db.Boolean, default=None)
+
+    # a note field to jot down notes about the word
+    note = db.Column(db.Text, default='')
+
+    # a temporary boolean to indicate whether Arto had verified the token prior
+    # to updating the database to accommodate variation in test syllabifcations
+    verified = db.Column(db.Boolean, default=None)
+
+    __mapper_args__ = {
+        'order_by': [is_gold, is_compound, freq.desc()],
+        }
 
     def __init__(self, orth, lemma, msd, pos, freq):
         self.orth = orth
@@ -171,32 +156,31 @@ class Token(db.Model):
     # Token attribute methods -------------------------------------------------
 
     @property
-    def syllable_count(self):
+    def syllable_count(self):  # TODO
         '''Return the number of syllables the word contains.'''
-        if self.syll:
-            return self.syll.count('.') + 1  # TODO
+        return self.test_syll.count('.') + 1
 
         # This only takes into consideration the number of syllables in the
         # first syllabification. It also fails when counting the number of
         # syllables in delimited compounds.
 
     @property
-    def syllables(self):
+    def syllables(self):  # TODO
         '''Return a list of the word's syllables.'''
-        return self.test_syll.split('.')  # TODO
+        return self.test_syll.split('.')
 
         # This fails when listing the syllables of delimited compounds.
 
     @property
-    def weights(self):
+    def weights(self):  # TODO
         '''Return the weight structure of the test syllabification.'''
-        return get_weights(self.test_syll)  # TODO
+        return get_weights(self.test_syll)
 
         # This only takes into consiterdation the syllable weights of the
         # first syllabification.
 
     @property
-    def sonorities(self):
+    def sonorities(self):  # TODO
         '''Return the sonority structure of the test syllabification.'''
         return get_sonorities(self.test_syll)
 
@@ -207,69 +191,80 @@ class Token(db.Model):
         '''Return True if the word is in its citation form, else False.'''
         return self.orth.lower() == self.lemma.replace('_', ' ').lower()
 
+    def is_ambiguous(self):  # TODO
+        ''' '''
+        return bool(self.test_syll2 or self.syll2)
+
     # Syllabification methods -------------------------------------------------
 
-    def update_gold(self):
-        '''Compare test syllabifcation against true syllabification.
+    def test_sylls(self):
+        ''' '''
+        return set(filter(None, [
+            self.test_syll1,
+            self.test_syll2,
+            self.test_syll3,
+            self.test_syll4,
+            ]))
 
-        Token.is_gold is True if the test syllabifcation matches the true
-        syllabification. Otherwise, Token.is_fold is False.
-        '''
-        # if self.test_syll and self.syll:  # NEW
-        #     test = set([
-        #         self.test_syll,
-        #         self.test_alt_syll1,
-        #         self.test_alt_syll2,
-        #         self.test_alt_syll3,
-        #         ])
-
-        #     gold = set([
-        #         self.syll,
-        #         self.alt_syll1,
-        #         self.alt_syll2,
-        #         self.alt_syll3,
-        #         ])
-
-        #     self.is_gold = test == gold
-
-        #     return self.is_gold
-
-        # return False
-
-        if self.test_syll and self.syll:
-            is_gold = self.test_syll == self.syll
-
-            if not is_gold:
-                is_gold = self.test_syll == self.alt_syll1
-
-            if not is_gold:
-                is_gold = self.test_syll == self.alt_syll2
-
-            if not is_gold:
-                is_gold = self.test_syll == self.alt_syll3
-
-            self.is_gold = is_gold
-
-            return is_gold
-
-        return False
+    def sylls(self):
+        ''' '''
+        return set(filter(None, [
+            self.syll1,
+            self.syll2,
+            self.syll3,
+            self.syll4,
+            ]))
 
     def syllabify(self):
-        '''Algorithmically syllabify Token based on its orthography.'''
+        '''Programmatically syllabify Token based on its orthography.'''
         # syllabifcations do not preserve capitalization
         token = self.orth.lower()
-        self.test_syll, self.rules = syllabify(token)
+        syllabifications = list(syllabify(token))
 
-        if self.syll:
+        for i, (test_syll, rules) in enumerate(syllabifications, start=1):
+            setattr(self, 'test_syll' + str(i), test_syll)
+            setattr(self, 'rules' + str(i), rules)
+
+        if self.syll1:
             self.update_gold()
 
     def correct(self, **kwargs):
-        '''Save new attribute values to Token and update gold.'''
+        '''Save new attribute values to Token and update gold status.'''
         for attr, value in kwargs.iteritems():
             if hasattr(self, attr):
                 setattr(self, attr, value)
 
         self.update_gold()
+
+    def update_gold(self):
+        '''Compare test syllabifcations against true syllabifications.
+
+        Token.is_gold is True iff all of the gold syllabifications are
+        represented in the test syllabifications.
+        '''
+        self.is_gold = self.sylls().issubset(self.test_sylls())
+
+    # Evaluation methods ------------------------------------------------------
+
+    @property
+    def precision(self):
+        ''' '''
+        try:
+            tests, sylls = self.test_sylls(), self.sylls()
+            return round(len(tests.intersection(sylls)) * 1.0 / len(tests), 2)
+
+        except ZeroDivisionError:
+            return 0.0
+
+    @property
+    def recall(self):
+        ''' '''
+        try:
+            tests, sylls = self.test_sylls(), self.sylls()
+            return round(len(tests.intersection(sylls)) * 1.0 / len(sylls), 2)
+
+        except ZeroDivisionError:
+            return 0.0
 
 
 class Document(db.Model):
@@ -350,7 +345,7 @@ class Document(db.Model):
 
 def syllabify_tokens():
     '''Syllabify all tokens.'''
-    print 'Syllabifying...'
+    print 'Syllabifying...' + datetime.utcnow().strftime('%I:%M')
 
     count = Token.query.count()
     start = 0
@@ -369,52 +364,7 @@ def syllabify_tokens():
 
     db.session.commit()
 
-    print 'Syllabifications complete.'
-
-
-def transition(pdf=False):
-    '''Temporarily re-syllabify tokens and create a transition report.'''
-    compound = lambda t: 'C' if t.is_compound else None
-    parse = lambda t: (t, [t.test_syll, t.rules])
-    row = lambda t: ['>', t.test_syll, t.rules, compound(t)]
-
-    tokens = Token.query.filter(Token.is_gold.isnot(None))
-
-    Dict = lambda tokens=tokens: {
-        'good': dict([parse(t) for t in tokens.filter_by(is_gold=True)]),
-        'bad': dict([parse(t) for t in tokens.filter_by(is_gold=False)]),
-        }
-
-    PRE = Dict()
-
-    for t in tokens:
-        t.syllabify()
-
-    POST = Dict()
-
-    if PRE['good'] != POST['good']:
-        good = set(PRE['bad'].keys()).intersection(POST['good'].keys())
-        bad = set(PRE['good'].keys()).intersection(POST['bad'].keys())
-        table1 = [PRE['bad'][t] + row(t) for t in good]
-        table2 = [PRE['good'][t] + row(t) for t in bad]
-        report = 'FROM BAD TO GOOD (%s)\n' % len(good)
-        report += tabulate(table1)
-        report += '\n\nFROM GOOD TO BAD (%s)\n' % len(bad)
-        report += tabulate(table2)
-        report += '\n\n%s BAD TOKENS' % len(POST['bad'])
-
-        if pdf:
-            filename = 'syllabifier/reports/%s.txt' % str(datetime.utcnow())
-
-            with open(filename, 'w') as f:
-                f.write(report.encode('utf-8'))
-
-        print report
-
-    else:
-        'BAD TOKENS' % len(POST['bad'])
-
-    db.session.rollback()
+    print 'Syllabifications complete. ' + datetime.utcnow().strftime('%I:%M')
 
 
 def find_token(orth):
@@ -428,58 +378,11 @@ def find_token(orth):
         return None
 
 
-def update_documents():
-    '''Mark documents as reviewed if all of their tokens have been verified.'''
-    docs = Document.query.filter_by(reviewed=False)
-
-    for doc in docs:
-        doc.update_review()
-
-    db.session.commit()
-
-
-def calculate():
-    '''Generate statistics on the syllabifier's performance.'''
-    VERIFIED = Token.query.filter(Token.is_gold.isnot(None))
-    GOLD = Token.query.filter_by(is_gold=True)
-
-    class Stats(object):
-        token_count = 991730  # Token.query.count()
-        doc_count = 61529  # Document.query.count()
-
-        # caculate accuracy excluding compounds
-        verified = VERIFIED.filter_by(is_compound=False).count()
-        gold = GOLD.filter_by(is_compound=False).count()
-        accuracy = (float(gold) / verified) * 100
-
-        # calculate accuracy including compounds
-        verified = VERIFIED.count()
-        gold = GOLD.count()
-        compound_accuracy = (float(gold) / verified) * 100
-
-        remaining = token_count - verified
-        reviewed = Document.query.filter_by(reviewed=True).count()
-
-        # final statistics
-        token_count = format(token_count, ',d')
-        doc_count = format(doc_count, ',d')
-        verified = format(verified, ',d')
-        gold = format(gold, ',d')
-        accuracy = round(accuracy, 2)
-        compound_accuracy = round(compound_accuracy, 2)
-        remaining = format(remaining, ',d')
-        reviewed = format(reviewed, ',d')
-
-    stats = Stats()
-
-    return stats
-
-
-# Queries ---------------------------------------------------------------------
+# Baisc queries ---------------------------------------------------------------
 
 def get_bad_tokens():
     '''Return all of the tokens that are incorrectly syllabified.'''
-    return Token.query.filter_by(is_gold=False).order_by(Token.is_compound)
+    return Token.query.filter_by(is_gold=False)
 
 
 def get_good_tokens():
@@ -489,7 +392,7 @@ def get_good_tokens():
 
 def get_unverified_tokens():
     '''Return tokens with uncertain syllabifications.'''
-    return Token.query.filter_by(is_gold=None).order_by(Token.freq.desc())
+    return Token.query.filter_by(is_gold=None)
 
 
 def get_unseen_lemmas():
@@ -497,19 +400,9 @@ def get_unseen_lemmas():
     return Token.query.filter_by(freq=0).order_by(Token.lemma)
 
 
-def get_ambiguous_tokens():
-    '''Return tokens with alternative syllabifications.'''
-    # tokens = Token.query.filter(Token.test_alt_syll1 != '')
-    tokens = Token.query.filter(Token.alt_syll1 != '')
-    tokens = tokens.order_by(Token.is_gold.desc()).order_by(Token.freq.desc())
-
-    return tokens
-
-
 def get_stopwords():
     '''Return all unverified stopwords.'''
     tokens = Token.query.filter_by(is_stopword=True)
-    tokens = tokens.order_by(Token.is_gold.desc()).order_by(Token.freq.desc())
 
     return tokens
 
@@ -525,7 +418,42 @@ def get_foreign_words():
     tokens = sorted(tokens, key=lambda t: (t.is_gold, t.freq), reverse=True)
 
     # tokens = Token.query.filter_by(is_foreign=True)
-    # tokens - tokens.order_by(Token.is_gold).order_by(Token.freq.desc())
+
+    return tokens
+
+
+def get_notes():
+    ''' '''
+    return Token.query.filter(Token.note != '')
+
+
+# Variation queries -----------------------------------------------------------
+
+def get_variation():
+    '''Return tokens with alternative test or gold syllabifications.'''
+    return Token.query.filter(or_(Token.syll2 != '', Token.test_syll2 != ''))
+
+
+def get_unverified_variation():
+    '''Return unverified tokens with alternative test syllabifications.'''
+    tokens = Token.query.filter(Token.test_syll2 != '')
+    tokens = tokens.filter(Token.is_gold.is_(None))
+
+    return tokens
+
+
+def get_test_variation():
+    '''Return verified tokens with only alternative test syllabifications.'''
+    tokens = Token.query.filter(Token.is_gold.isnot(None))
+    tokens = tokens.filter(Token.test_syll2 != '').filter(Token.syll2 == '')
+
+    return tokens
+
+
+def get_verified_variation():
+    '''Return tokens with alternative syllabifications prior to migration.'''
+    tokens = Token.query.filter(Token.syll2 != '')
+    tokens = tokens.filter(Token.verified == True)  # noqa
 
     return tokens
 
@@ -562,29 +490,29 @@ def serve_docs():
 def apply_form(http_form, commit=True):
     # Apply changes to Token instance based on POST request
     try:
-        token = Token.query.get(http_form['find'])
-        orth = http_form.get('orth')
-        syll = http_form['syll'] or http_form['test_syll']
-        alt_syll1 = http_form.get('alt_syll1', '')
-        alt_syll2 = http_form.get('alt_syll2', '')
-        alt_syll3 = http_form.get('alt_syll3', '')
+        token = Token.query.get(http_form['id'])
+        syll1 = http_form['syll1']
+        syll2 = http_form.get('syll2', '')
+        syll3 = http_form.get('syll3', '')
+        syll4 = http_form.get('syll4', '')
+        note = http_form.get('note', '')
 
         try:
             is_compound = bool(http_form.getlist('is_compound'))
-            is_stopword = bool(http_form.getlist('is_stopword'))
+            # is_stopword = bool(http_form.getlist('is_stopword'))
 
         except AttributeError:
             is_compound = bool(http_form.get('is_compound'))
-            is_stopword = bool(http_form.get('is_stopword'))
+            # is_stopword = bool(http_form.get('is_stopword'))
 
         token.correct(
-            orth=orth or token.orth,
-            syll=syll,
-            alt_syll1=alt_syll1,
-            alt_syll2=alt_syll2,
-            alt_syll3=alt_syll3,
+            syll1=syll1,
+            syll2=syll2,
+            syll3=syll3,
+            syll4=syll4,
             is_compound=is_compound,
-            is_stopword=is_stopword,
+            # is_stopword=is_stopword,
+            note=note,
             )
 
         if commit:
@@ -597,8 +525,7 @@ def apply_form(http_form, commit=True):
 def apply_bulk_form(http_form):
     # Apply changes to multiple Token instances based on POST request
     forms = {k: {} for k in range(1, 41)}
-    attrs = ['find', 'syll', 'alt_syll1', 'alt_syll2', 'alt_syll3',
-             'is_compound']
+    attrs = ['id', 'syll1', 'syll2', 'syll3', 'syll4', 'is_compound', 'note']
 
     for i in range(1, 41):
         for attr in attrs:
@@ -619,10 +546,40 @@ def apply_bulk_form(http_form):
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def main_view():
-    '''List links to unverified texts (think: Table of Contents).'''
-    stats = calculate()
+    '''List statistics on the syllabifier's performance.'''
+    VERIFIED = Token.query.filter(Token.is_gold.isnot(None))
+    GOLD = Token.query.filter_by(is_gold=True)
 
-    return render_template('main.html', stats=stats, kw='main')
+    class Stats(object):
+        token_count = 991730  # Token.query.count()
+        doc_count = 61529  # Document.query.count()
+
+        # caculate accuracy excluding compounds
+        verified = VERIFIED.filter_by(is_compound=False).count()
+        gold = GOLD.filter_by(is_compound=False).count()
+        accuracy = (float(gold) / verified) * 100
+
+        # calculate accuracy including compounds
+        verified = VERIFIED.count()
+        gold = GOLD.count()
+        compound_accuracy = (float(gold) / verified) * 100
+
+        remaining = token_count - verified
+        reviewed = Document.query.filter_by(reviewed=True).count()
+
+        # final statistics
+        token_count = format(token_count, ',d')
+        doc_count = format(doc_count, ',d')
+        verified = format(verified, ',d')
+        gold = format(gold, ',d')
+        accuracy = round(accuracy, 2)
+        compound_accuracy = round(compound_accuracy, 2)
+        remaining = format(remaining, ',d')
+        reviewed = format(reviewed, ',d')
+
+    stats = Stats()
+
+    return render_template('main.html', kw='main', stats=stats)
 
 
 @app.route('/doc/<id>', methods=['GET', 'POST'])
@@ -663,6 +620,22 @@ def rules_view():
     return render_template('rules.html', kw='rules')
 
 
+@app.route('/notes/', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/notes/page/<int:page>')
+def notes_view(page):
+    '''List all tokens that contain notes.'''
+    if request.method == 'POST':
+        apply_bulk_form(request.form)
+
+    tokens = get_notes()
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='notes',
+        )
+
+
 @app.route('/contains', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/contains/page/<int:page>')
 @login_required
@@ -673,11 +646,16 @@ def contains_view(page):
     if request.method == 'POST':
         find = request.form.get('search')
 
-        if request.form.get('syll'):
+        if request.form.get('syll1'):
             apply_form(request.form)
 
         if '.' in find:
-            results = Token.query.filter(Token.test_syll.contains(find))
+            results = Token.query.filter(or_(
+                Token.test_syll1.contains(find),
+                Token.test_syll2.contains(find),
+                # Token.test_syll3.contains(find),
+                # Token.test_syll4.contains(find),
+                ))
 
         else:
             results = Token.query.filter(Token.orth.contains(find))
@@ -685,10 +663,10 @@ def contains_view(page):
         count = results.count()
 
         try:
-            results = results.order_by(Token.is_gold)[:500]
+            results = results[:500]
 
         except IndexError:
-            results = results.order_by(Token.is_gold)
+            pass
 
     return render_template(
         'search.html',
@@ -707,13 +685,13 @@ def find_view():
 
     if request.method == 'POST':
 
-        if request.form.get('syll'):
+        if request.form.get('syll1'):
             apply_form(request.form)
 
-        find = request.form.get('search') or request.form['syll']
+        find = request.form.get('search') or request.form['syll1']
         FIND = find.strip().translate({ord('.'): None, })  # strip periods
         results = Token.query.filter(Token.orth.ilike(FIND))
-        results = results.order_by(Token.is_gold)
+        results = results if results.count() > 0 else None
 
     return render_template(
         'search.html',
@@ -748,7 +726,7 @@ def unverified_view(page):
     if request.method == 'POST':
         apply_bulk_form(request.form)
 
-    tokens = get_unverified_tokens().slice(0, 400)
+    tokens = get_unverified_tokens().slice(0, 200)
     tokens, pagination = paginate(page, tokens)
 
     return render_template(
@@ -777,22 +755,41 @@ def bad_view(page):
         )
 
 
-@app.route('/ambiguous', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/ambiguous/page/<int:page>')
-def vowel_view(page):
+@app.route('/<tag>-variation/', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/<tag>-variation/page/<int:page>')
+def variation_view(tag, page):
     '''List all ambiguous tokens and process corrections.'''
     if request.method == 'POST':
-        # apply_form(request.form)
-        pass
 
-    tokens = get_ambiguous_tokens()
-    tokens, pagination = paginate(page, tokens)
+        if request.form.get('syll1'):
+            apply_form(request.form)
+
+        else:
+            apply_bulk_form(request.form)
+
+    if tag == 'list':
+        tokens = get_variation()
+        per_page = 40
+
+    elif tag == 'test':
+        tokens = get_test_variation()
+        per_page = 20
+
+    elif tag == 'verified':
+        tokens = get_verified_variation()
+        per_page = 20
+
+    else:
+        abort(404)
+
+    tokens, pagination = paginate(page, tokens, per_page)
 
     return render_template(
         'tokens.html',
         tokens=tokens,
-        kw='vv',
+        kw='variation',
         pagination=pagination,
+        secondary=tag,
         )
 
 
@@ -804,9 +801,7 @@ def hidden_view(page):
         apply_form(request.form)
 
     # Monosyllabic test syllabifications
-    tokens = Token.query.filter(~Token.test_syll.contains('.'))
-
-    tokens = tokens.order_by(Token.freq.desc())
+    tokens = Token.query.filter(~Token.test_syll1.contains('.'))
     tokens, pagination = paginate(page, tokens)
 
     return render_template(
@@ -848,6 +843,19 @@ def logout_view():
     return redirect(url_for('main_view'))
 
 
+# Jinja2 ----------------------------------------------------------------------
+
+def goldclass(t):
+    gold = t.is_gold
+    gold = u'good' if gold else u'unverified' if gold is None else u'bad'
+    compound = ' compound' if t.is_compound else ''
+
+    return gold + compound
+
+app.jinja_env.filters['goldclass'] = goldclass
+app.jinja_env.tests['token'] = lambda t: hasattr(t, 'syll1')
+
+
 # Pagination ------------------------------------------------------------------
 
 class Pagination(object):
@@ -875,13 +883,17 @@ class Pagination(object):
 
         last = 0
         for num in xrange(1, self.pages + 1):
+
             if num <= left_edge or (
                 num > self.page - left_current - 1 and
                 num < self.page + right_current
                     ) or num > self.pages - right_edge:
+
                 if last + 1 != num:
                     yield None
+
                 yield num
+
                 last = num
 
 
@@ -909,16 +921,6 @@ def url_for_other_page(page):
     return url_for(request.endpoint, **args)
 
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
-
-
-# Jinja2 ----------------------------------------------------------------------
-
-def goldclass(t):
-    gold = t.is_gold
-    return u'good' if gold else u'unverified' if gold is None else u'bad'
-
-app.jinja_env.filters['goldclass'] = goldclass
-app.jinja_env.tests['token'] = lambda t: hasattr(t, 'syll')
 
 
 # -----------------------------------------------------------------------------
