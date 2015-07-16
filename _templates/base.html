@@ -42,9 +42,9 @@
                         <li class='dropdown'>
                             <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw == 'variation' %}highlight{% endif %}">Variation &#8623;</span></a>
                             <ul class='dropdown-menu'>
-                                <li><a href="{{ url_for('variation_view', tag='list') }}"><span class="{% if secondary == 'list' %}highlight{% endif %}">All</span></a></li>
-                                <li><a href="{{ url_for('variation_view', tag='test') }}"><span class="{% if secondary == 'test' %}highlight{% endif %}">Test<span></a></li>
-                                <li><a href="{{ url_for('variation_view', tag='verified') }}"><span class="{% if secondary == 'verified' %}highlight{% endif %}">Verified</span></a></li>
+                                <li><a href="{{ url_for('variation_view', tag='list') }}"><span class="{% if secondary == 'list' %}highlight{% endif %}">All Variation</span></a></li>
+                                <li><a href="{{ url_for('variation_view', tag='test') }}"><span class="{% if secondary == 'test' %}highlight{% endif %}">Test Variation<span></a></li>
+                                <li><a href="{{ url_for('variation_view', tag='gold') }}"><span class="{% if secondary == 'gold' %}highlight{% endif %}">Gold Variation</span></a></li>
                             </ul>
                         </li>
                         <li><a href="{{ url_for('logout_view') }}" ><span>Sign Out</a></span></li>

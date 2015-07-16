@@ -442,18 +442,18 @@ def get_unverified_variation():
     return tokens
 
 
-def get_test_variation():
+def get_test_verified_variation():
     '''Return verified tokens with only alternative test syllabifications.'''
-    tokens = Token.query.filter(Token.is_gold.isnot(None))
+    tokens = Token.query.filter(Token.verified == True)  # noqa
     tokens = tokens.filter(Token.test_syll2 != '').filter(Token.syll2 == '')
 
     return tokens
 
 
-def get_verified_variation():
+def get_gold_verified_variation():
     '''Return tokens with alternative syllabifications prior to migration.'''
-    tokens = Token.query.filter(Token.syll2 != '')
-    tokens = tokens.filter(Token.verified == True)  # noqa
+    tokens = Token.query.filter(Token.verified == True)  # noqa
+    tokens = tokens.filter(Token.syll2 != '').filter(Token.test_syll2 == '')
 
     return tokens
 
@@ -727,7 +727,7 @@ def unverified_view(page):
         apply_bulk_form(request.form)
 
     tokens = get_unverified_tokens().slice(0, 200)
-    tokens, pagination = paginate(page, tokens)
+    tokens, pagination = paginate(page, tokens, per_page=10)
 
     return render_template(
         'tokens.html',
@@ -772,16 +772,17 @@ def variation_view(tag, page):
         per_page = 40
 
     elif tag == 'test':
-        tokens = get_test_variation()
-        per_page = 20
+        tokens = get_test_verified_variation()
+        per_page = 10
 
-    elif tag == 'verified':
-        tokens = get_verified_variation()
-        per_page = 20
+    elif tag == 'gold':
+        tokens = get_gold_verified_variation()
+        per_page = 10
 
     else:
         abort(404)
 
+    count = format(tokens.count(), ',d')
     tokens, pagination = paginate(page, tokens, per_page)
 
     return render_template(
@@ -790,6 +791,7 @@ def variation_view(tag, page):
         kw='variation',
         pagination=pagination,
         secondary=tag,
+        count=count,
         )
 
 

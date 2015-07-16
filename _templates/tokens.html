@@ -4,6 +4,21 @@
 {{ modal() }}
 <br>
 <br> 
+{% if secondary %}
+<div class='container stats'>
+    {% if secondary == 'list' %}
+    This page lists all of the words that display variation, whether in their <i>test</i> syllabifications, <i>gold</i> syllabifications, or both.
+    {% elif secondary == 'test' %}
+    This page lists all previously verified words that display variation in their <i>test</i> syllabifications, but not in their gold syllabifications.
+    {% elif secondary == 'gold' %}
+    This page lists all previously verified words that display variation in their <i>gold</i> syllabifications, but not in their test syllabifications.
+    {% endif %}
+    <br>
+    <i>{{ count }} matches</i>
+    <br>
+    <br>
+</div>
+{% endif %}
 <!-- unverified -->
 {% if kw == 'unverified' %}
 <div class='tokens container'>
