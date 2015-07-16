@@ -128,61 +128,63 @@
 
     {% if snapshot %}
     {% for t in tokens %}
-    <div class='row'>
-        <span class='col-xs-12'>
-            <a data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='attr-orth {{ t|goldclass }}'>{{ t.orth }}</a>
-        </span>
+    <div class='tokens'>
+        <div class='row'>
+            <span class='col-xs-12'>
+                <a data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='attr-orth {{ t|goldclass }}'>{{ t.orth }}</a>
+            </span>
+        </div>
+        <div style='margin-bottom: 8px;'></div>
+        <div class='row'>
+            <span class='col-xs-2 col-md-1 attr-label'>rules</span>
+            <span class='col-xs-5 col-md-2'>{{ t.rules1 }}</span>
+            {% if t.rules2 %}<span class='col-xs-5 col-md-2'>{{ t.rules2 }}</span>
+            {% if t.rules3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.rules3 }}</span>
+            {% if t.rules4 %}<span class='col-xs-5 col-md-2'>{{ t.rules4 }}</span>{% endif %}{% endif %}{% endif %}
+        </div>
+        <div class='row'>
+            <span class='col-xs-2 col-md-1 attr-label'>test</span>
+            <span class='col-xs-5 col-md-2'>{{ t.test_syll1 }}</span>
+            {% if t.test_syll2 %}<span class='col-xs-5 col-md-2'>{{ t.test_syll2 }}</span>
+            {% if t.test_syll3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.test_syll3 }}</span>
+            {% if t.test_syll4 %}<span class='col-xs-5 col-md-2'>{{ t.test_syll4 }}</span>{% endif %}{% endif %}{% endif %}
+        </div>
+        <div class='row'>
+            <span class='col-xs-2 col-md-1 attr-label'>gold</span>
+            <span class='col-xs-5 col-md-2'>{{ t.syll1 }}</span>
+            {% if t.syll2 %}<span class='col-xs-5 col-md-2'>{{ t.syll2 }}</span>
+            {% if t.syll3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.syll3 }}</span>
+            {% if t.syll4 %}<span class='col-xs-5 col-md-2'>{{ t.syll4 }}</span>{% endif %}{% endif %}{% endif %}
+        </div>
+        <div class='row'>
+            <span class='col-xs-2 col-md-1 attr-label'>p / r</span>
+            <span class='col-xs-10 col-md-2'>{{ t.precision }} / {{ t.recall }}</span>
+        </div>
+        <div class='row'>
+            <span class='col-xs-2 col-md-1 attr-label'>freq</span>
+            <span class='col-xs-10 col-md-2'>{{ t.freq }}</span>
+        </div>
+        <div class='row'>
+            <span class='col-xs-2 col-md-1 attr-label'>pos</span>
+            <span class='col-xs-10 col-md-2'>{{ t.pos }}</span>
+        </div>
+        <div class='row'>
+            <span class='col-xs-2 col-md-1 attr-label'>msd</span>
+            <span class='col-xs-10 col-md-2'>{{ t.msd }}</span>
+        </div>
+        <div class='row'>
+            <span class='col-xs-2 col-md-1 attr-label'>lemma</span>
+            <span class='col-xs-10 col-md-2'>{{ t.lemma }}</span>
+        </div>
+        {% if t.note %}
+        <div class='row'>
+            <span class='col-xs-2 col-md-1 attr-label'>note</span>
+            <span class='col-xs-10 col-md-7'>{{ t.note }}</span>
+        </div>
+        {% endif %}
+        <br>
+        <br>
     </div>
-    <div style='margin-bottom: 8px;'></div>
-    <div class='row'>
-        <span class='col-xs-2 col-md-1 attr-label'>rules</span>
-        <span class='col-xs-5 col-md-2'>{{ t.rules1 }}</span>
-        {% if t.rules2 %}<span class='col-xs-5 col-md-2'>{{ t.rules2 }}</span>
-        {% if t.rules3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.rules3 }}</span>
-        {% if t.rules4 %}<span class='col-xs-5 col-md-2'>{{ t.rules4 }}</span>{% endif %}{% endif %}{% endif %}
-    </div>
-    <div class='row'>
-        <span class='col-xs-2 col-md-1 attr-label'>test</span>
-        <span class='col-xs-5 col-md-2'>{{ t.test_syll1 }}</span>
-        {% if t.test_syll2 %}<span class='col-xs-5 col-md-2'>{{ t.test_syll2 }}</span>
-        {% if t.test_syll3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.test_syll3 }}</span>
-        {% if t.test_syll4 %}<span class='col-xs-5 col-md-2'>{{ t.test_syll4 }}</span>{% endif %}{% endif %}{% endif %}
-    </div>
-    <div class='row'>
-        <span class='col-xs-2 col-md-1 attr-label'>gold</span>
-        <span class='col-xs-5 col-md-2'>{{ t.syll1 }}</span>
-        {% if t.syll2 %}<span class='col-xs-5 col-md-2'>{{ t.syll2 }}</span>
-        {% if t.syll3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.syll3 }}</span>
-        {% if t.syll4 %}<span class='col-xs-5 col-md-2'>{{ t.syll4 }}</span>{% endif %}{% endif %}{% endif %}
-    </div>
-    <div class='row'>
-        <span class='col-xs-2 col-md-1 attr-label'>p / r</span>
-        <span class='col-xs-10 col-md-2'>{{ t.precision }} / {{ t.recall }}</span>
-    </div>
-    <div class='row'>
-        <span class='col-xs-2 col-md-1 attr-label'>freq</span>
-        <span class='col-xs-10 col-md-2'>{{ t.freq }}</span>
-    </div>
-    <div class='row'>
-        <span class='col-xs-2 col-md-1 attr-label'>pos</span>
-        <span class='col-xs-10 col-md-2'>{{ t.pos }}</span>
-    </div>
-    <div class='row'>
-        <span class='col-xs-2 col-md-1 attr-label'>msd</span>
-        <span class='col-xs-10 col-md-2'>{{ t.msd }}</span>
-    </div>
-    <div class='row'>
-        <span class='col-xs-2 col-md-1 attr-label'>lemma</span>
-        <span class='col-xs-10 col-md-2'>{{ t.lemma }}</span>
-    </div>
-    {% if t.note %}
-    <div class='row'>
-        <span class='col-xs-2 col-md-1 attr-label'>note</span>
-        <span class='col-xs-10 col-md-7'>{{ t.note }}</span>
-    </div>
-    {% endif %}
-    <br>
-    <br>
     {% endfor %}
 
     {% elif simple %}

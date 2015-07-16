@@ -129,7 +129,7 @@ input.clear {
 }
 
 input.clear[type='text'] {
-    font-size: 14px;
+    font-size: 16px;
     padding: 0 0 0 5px;
 }
 
@@ -223,7 +223,7 @@ input.search[type='submit'][value='CONTAINS'] {
 }
 
 .tokens {
-    font-size: 15px;
+    font-size: 17px;
 }
 
 .attr-label {
@@ -255,12 +255,12 @@ input.search[type='submit'][value='CONTAINS'] {
 .modal-dialog {
     /*width: 360px;*/
     width: 800px;
-    top: 100px;
+    top: 60px;
     margin: auto;
 }
 
 .modal-body {
-    font-size: 14px;
+    font-size: 17px;
     margin: 0 -10px;
 }
 
