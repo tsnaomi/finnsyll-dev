@@ -335,7 +335,7 @@ div.gray {
     font-size: 19px;
     text-align: left;
     line-height: 40px;
-    margin-left: 10%;
+    margin-bottom: 30px;
 }
 
 .attr-label,
@@ -354,6 +354,7 @@ div.gray {
 .pagination {
     word-spacing: 10px;
     text-align: center;
+    margin: 40px auto;
 }
 
 .variation {

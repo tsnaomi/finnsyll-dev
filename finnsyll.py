@@ -446,7 +446,7 @@ def get_foreign_words():
 
 def get_notes():
     ''' '''
-    return Token.query.filter(Token.note != '')
+    return Token.query.filter(Token.note != '').order_by(Token.orth)
 
 
 # Variation queries -----------------------------------------------------------
@@ -643,7 +643,7 @@ def rules_view():
 
 
 @app.route('/notes/', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/notes/page/<int:page>')
+@app.route('/notes/page/<int:page>', methods=['GET', 'POST'])
 def notes_view(page):
     '''List all tokens that contain notes.'''
     if request.method == 'POST':
@@ -658,10 +658,9 @@ def notes_view(page):
         )
 
 
-@app.route('/contains', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/contains/page/<int:page>')
+@app.route('/contains', methods=['GET', 'POST'])
 @login_required
-def contains_view(page):
+def contains_view():
     '''Search for tokens by word and/or citation form.'''
     results, find, count = None, None, None
 
@@ -682,7 +681,7 @@ def contains_view(page):
         else:
             results = Token.query.filter(Token.orth.contains(find))
 
-        count = results.count()
+        count = format(results.count(), ',d')
 
         try:
             results = results[:500]
@@ -724,7 +723,7 @@ def find_view():
 
 
 @app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/lemma/page/<int:page>')
+@app.route('/lemma/page/<int:page>', methods=['GET', 'POST'])
 def lemma_view(page):
     '''List all unverified unseen lemmas and process corrections.'''
     if request.method == 'POST':
@@ -742,7 +741,7 @@ def lemma_view(page):
 
 
 @app.route('/unverified', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/unverified/page/<int:page>')
+@app.route('/unverified/page/<int:page>', methods=['GET', 'POST'])
 def unverified_view(page):
     '''List all unverified Tokens and process corrections.'''
     if request.method == 'POST':
@@ -760,7 +759,7 @@ def unverified_view(page):
 
 
 @app.route('/bad', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/bad/page/<int:page>')
+@app.route('/bad/page/<int:page>', methods=['GET', 'POST'])
 def bad_view(page):
     '''List all incorrectly syllabified Tokens and process corrections.'''
     if request.method == 'POST':
@@ -778,7 +777,7 @@ def bad_view(page):
 
 
 @app.route('/<tag>-variation/', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/<tag>-variation/page/<int:page>')
+@app.route('/<tag>-variation/page/<int:page>', methods=['GET', 'POST'])
 def variation_view(tag, page):
     '''List all ambiguous tokens and process corrections.'''
     if request.method == 'POST':
@@ -818,7 +817,7 @@ def variation_view(tag, page):
 
 
 @app.route('/hidden', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/hidden/page/<int:page>')
+@app.route('/hidden/page/<int:page>', methods=['GET', 'POST'])
 def hidden_view(page):
     '''List special queries.'''
     if request.method == 'POST':

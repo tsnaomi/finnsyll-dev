@@ -4,59 +4,147 @@
 {{ modal() }}
 <br>
 <br> 
-{% if secondary %}
-<div class='container stats'>
-    {% if secondary == 'list' %}
-    This page lists all of the words that display variation, whether in their <i>test</i> syllabifications, <i>gold</i> syllabifications, or both.
-    {% elif secondary == 'test' %}
-    This page lists all previously verified words that display variation in their <i>test</i> syllabifications, but not in their gold syllabifications.
-    {% elif secondary == 'gold' %}
-    This page lists all previously verified words that display variation in their <i>gold</i> syllabifications, but not in their test syllabifications.
+
+<div class='container'>
+    {% if secondary %}
+    <div class='stats'> <!-- TODO: rename class -->
+        {% if secondary == 'list' %}
+        This page lists all of the words that display variation, whether in their <i>test</i> syllabifications, <i>gold</i> syllabifications, or both.
+        {% elif secondary == 'test' %}
+        This page lists all previously verified words that display variation in their <i>test</i> syllabifications, but not in their gold syllabifications.
+        {% elif secondary == 'gold' %}
+        This page lists all previously verified words that display variation in their <i>gold</i> syllabifications, but not in their test syllabifications.
+        {% endif %}
+        <br>
+        <i>{{ count }} matches</i>
+    </div>
     {% endif %}
-    <br>
-    <i>{{ count }} matches</i>
-    <br>
-    <br>
-</div>
-{% endif %}
-<!-- unverified -->
-{% if kw == 'unverified' %}
-<div class='tokens container'>
-    <form method='POST'>
-        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-        {{ tokenify(tokens, unverified=True )}}
-        <div class='center'>
-            <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');" value='OK!'>
+    <div class='tokens'>
+        {% if kw == 'unverified' or kw == 'variation' and secondary != 'list' %}
+        <form method='POST'>
+            <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+            <div class='row hidden-xs hidden-sm'>
+                {% if kw == 'unverified '%}<span class='attr-label col-md-1'>freq</span>{% endif %}
+                <span class='attr-label col-md-2'>orth</span>
+                <span class='attr-label col-md-2'>rules</span>
+                <span class='attr-label col-md-3'>test</span>
+                <span class='attr-label col-md-3'>syll</span>
+                {% if kw == 'variation '%}<span class='attr-label col-md-1'>p / r</span>{% endif %}
+                <span class='attr-label col-md-1'>compound</span>
+            </div>
+            <br class='hidden-xs hidden-sm'>
+            {% if kw == 'unverified '%} <!--  unverified -->
+            {% for t in tokens %}
+            <div class='row'>
+                <input type='hidden' name='id_{{ loop.index }}' value='{{ t.id }}'> 
+                <span class='col-xs-12 col-md-1'>
+                    <span class='freq'>{{ t.freq }}</span>
+                </span>
+                <span class='col-xs-12 col-md-2'>
+                    <span class='{{ t|goldclass }}' title='{{ title(t) }}'>{{ t.orth }}</span>
+                </span>
+                <span class='col-xs-4 col-md-2'>
+                    <span class='gray'>{{ t.rules1 }}</span>
+                    {% if t.rules2 %}<div class='gray'>{{ t.rules2 }}</div>
+                    {% if t.rules3 %}<div class='gray'>{{ t.rules3 }}</div>
+                    {% if t.rules4 %}<div class='gray'>{{ t.rules4 }}</div>{% endif %}{% endif %}{% endif %}
+                </span>
+                <span class='col-xs-6 col-md-3'>
+                    <span class='gray'>{{ t.test_syll1 }}</span>
+                    {% if t.test_syll2 %}<div class='gray'>{{ t.test_syll2 }}</div>
+                    {% if t.test_syll3 %}<div class='gray'>{{ t.test_syll3 }}</div>
+                    {% if t.test_syll4 %}<div class='gray'>{{ t.test_syll4 }}</div>{% endif %}{% endif %}{% endif %}
+                </span>
+                <span class='col-xs-12 col-md-3'>
+                    <input type='text' class='gray' name='syll1_{{ loop.index }}' placeholder='alternative syll' value='{{ t.test_syll1 }}'><br>
+                    <input type='text' class='gray' name='syll2_{{ loop.index }}' placeholder='alternative syll' value='{{ t.test_syll2 }}'><br>
+                    <input type='text' class='gray' name='syll3_{{ loop.index }}' placeholder='alternative syll' value='{{ t.test_syll3 }}'><br>
+                    <input type='text' class='gray' name='syll4_{{ loop.index }}' placeholder='alternative syll' value='{{ t.test_syll4 }}'>
+                </span>
+                <span class='col-xs-12 col-md-1'>
+                    <input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}>
+                    <span class='attr-label visible-xs visible-sm' style='float: left;'>compound&nbsp;&nbsp;</span>
+                </span>
+            </div>
+            <div class='row'>
+                <span class='hidden-xs hidden-sm col-md-3'></span>
+                <span class='col-xs-12 col-md-9'>
+                    <textarea class='gray note' name='note_{{ loop.index }}' placeholder='Note...' >{{ t.note }}</textarea>
+                </span>
+            </div>
+            <br>
+            <br>
+            {% endfor %}
+            {% else %}  <!--  test variation, gold variation -->
+            {% for t in tokens %}
+            <div class='row'>
+                <input type='hidden' name='id_{{ loop.index }}' value='{{ t.id }}'> 
+                <span class='col-xs-12 col-md-2'>
+                    <span class='{{ t|goldclass }}' title='{{ title(t) }}'>{{ t.orth }}</span>
+                </span>
+                <span class='col-xs-4 col-md-2'>
+                    <span class='gray'>{{ t.rules1 }}</span>
+                    {% if t.rules2 %}<div class='gray'>{{ t.rules2 }}</div>
+                    {% if t.rules3 %}<div class='gray'>{{ t.rules3 }}</div>
+                    {% if t.rules4 %}<div class='gray'>{{ t.rules4 }}</div>{% endif %}{% endif %}{% endif %}
+                </span>
+                <span class='col-xs-6 col-md-3'>
+                    <span class='gray'>{{ t.test_syll1 }}</span>
+                    {% if t.test_syll2 %}<div class='gray'>{{ t.test_syll2 }}</div>
+                    {% if t.test_syll3 %}<div class='gray'>{{ t.test_syll3 }}</div>
+                    {% if t.test_syll4 %}<div class='gray'>{{ t.test_syll4 }}</div>{% endif %}{% endif %}{% endif %}
+                </span>
+                <span class='col-xs-12 col-md-3'>
+                    <input type='text' class='gray' name='syll1_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll1 }}'><br>
+                    <input type='text' class='gray' name='syll2_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll2 }}'><br>
+                    <input type='text' class='gray' name='syll3_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll3 }}'><br>
+                    <input type='text' class='gray' name='syll4_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll4 }}'>
+                </span>
+                <span class='col-xs-12 col-md-1'>
+                    {{ t.precision }} / {{ t.recall }}
+                    <span class='attr-label visible-xs visible-sm' style='float: left;'>prR&nbsp;&nbsp;</span>
+                </span>
+                <span class='col-xs-12 col-md-1'>
+                    <input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}>
+                    <span class='attr-label visible-xs visible-sm' style='float: left;'>compound&nbsp;&nbsp;</span>
+                </span>
+            </div>
+            <div class='row'>
+                <span class='hidden-xs hidden-sm col-md-2'></span>
+                <span class='col-xs-12 col-md-10'>
+                    <textarea class='gray note' name='note_{{ loop.index }}' placeholder='Note...'>{{ t.note }}</textarea>
+                </span>
+            </div>
+            <br>
+            <br>
+            {% endfor %}
+            {% endif %}
+            <div class='center'>
+                <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');" value='OK!'>
+            </div>
+        </form>
+        {% else %}
+        {% if kw == 'notes' %} <!-- notes -->
+        <div class='row hidden-xs hidden-sm'>
+            <span class='attr-label col-md-3'>orth</span>
+            <span class='attr-label col-md-3'>note</span>
         </div>
-    </form>
-</div>
-<br>
-<!-- variation -->
-{% elif kw == 'variation' and secondary != 'list' %}
-<div class='tokens container'>
-    <form method='POST'>
-        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+        <br class='hidden-xs hidden-sm'>
+        {% for t in tokens %}
+        <div class='row'>
+            <span class='col-xs-12 col-md-3'>
+                <span class='{{ t|goldclass }}' title='{{ title(t) }}' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}">{{ t.orth }}</span>
+            </span>
+            <span class='col-xs-12 col-md-9' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}">{{ t.note }}</span>
+        </div>
+        <br>
+        {% endfor %}
+        {% else %} <!-- bad, all variation, hidden -->
         {{ tokenify(tokens) }}
-        <div class='center'>
-            <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');" value='OK!'>
-        </div>
-    </form>
+        {% endif %}
+        {% endif %}
+    </div>
 </div>
-<br>
-<!-- variation -->
-{% elif kw == 'notes' %}
-<div class='tokens container'>
-    {{ tokenify(tokens, notes=True) }}
-</div>
-<br>
-<!-- bad, hidden, variation -->
-{% else %}
-<div class='tokens container'>
-    {{ tokenify(tokens, simple=True ) }}
-</div>
-{% endif %} 
-<br>
-{% if pagination %}{{ paginate(pagination) }}{% endif %}
 {% endblock %}
 
 {% block footer %}
