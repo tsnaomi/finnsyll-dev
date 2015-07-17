@@ -367,6 +367,28 @@ def syllabify_tokens():
     print 'Syllabifications complete. ' + datetime.utcnow().strftime('%I:%M')
 
 
+def longest():
+    tokens = Token.query.filter(Token.is_gold.isnot(None)).order_by(Token.id)
+    # count = tokens.count()
+    # start = 0
+    # end = x = 1000
+    longest = 0
+    t = None
+    for token in tokens:
+        new = len(token.rules1)
+        if new > longest:
+            t = token
+            longest = new
+            # start = end
+            # end += x
+    # for token in Token.query.order_by(Token.id).slice(start, count):
+    #     new = len(token.test_syll1)
+    #     if new > longest:
+    #         t = token
+    #         longest = new
+    return t
+
+
 def find_token(orth):
     '''Retrieve a token by its orthography.'''
     try:
@@ -495,7 +517,7 @@ def apply_form(http_form, commit=True):
         syll2 = http_form.get('syll2', '')
         syll3 = http_form.get('syll3', '')
         syll4 = http_form.get('syll4', '')
-        note = http_form.get('note', '')
+        note = http_form.get('note', '').replace('\r\n', ' ')
 
         try:
             is_compound = bool(http_form.getlist('is_compound'))
@@ -625,7 +647,7 @@ def rules_view():
 def notes_view(page):
     '''List all tokens that contain notes.'''
     if request.method == 'POST':
-        apply_bulk_form(request.form)
+        apply_form(request.form)
 
     tokens = get_notes()
 

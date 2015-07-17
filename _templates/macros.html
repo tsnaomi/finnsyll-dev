@@ -25,18 +25,20 @@
                                 <span class='attr-label col-xs-9'>test</span>
                             </div>
                             <div class='row'>
-                                <span class='col-xs-3'>
-                                    <div style='margin-bottom: 4px;' id='rules1'></div>
-                                    <div style='margin-bottom: 4px;' id='rules2'></div>
-                                    <div style='margin-bottom: 4px;' id='rules3'></div>
-                                    <div style='margin-bottom: 4px;' id='rules4'></div>
-                                </span>
-                                <span class='col-xs-9'>
-                                    <div style='margin-bottom: 4px;' id='test1'></div>
-                                    <div style='margin-bottom: 4px;' id='test2'></div>
-                                    <div style='margin-bottom: 4px;' id='test3'></div>
-                                    <div style='margin-bottom: 4px;' id='test4'></div>
-                                </span>
+                                <span class='col-xs-3' id='rules1'></span>
+                                <span class='col-xs-9' id='test1'></span>
+                            </div>
+                            <div class='row'>
+                                <span class='col-xs-3' id='rules2'></span>
+                                <span class='col-xs-9' id='test2'></span>
+                            </div>
+                            <div class='row'>
+                                <span class='col-xs-3' id='rules3'></span>
+                                <span class='col-xs-9' id='test3'></span>
+                            </div>
+                            <div class='row'>
+                                <span class='col-xs-3' id='rules4'></span>
+                                <span class='col-xs-9' id='test4'></span>
                             </div>
                             <br>
                             <div class='row'>
@@ -64,27 +66,30 @@
                             </div>
                             <br>
                             <div class='row'>
-                                <span class='attr-label col-xs-1'>p / r</span>
-                                <span class='col-xs-2'><span id='precision'></span> / <span id='recall'></span></span>
-                                <span class='attr-label col-xs-1'>freq</span>
-                                <span id='freq' class='col-xs-2'></span>
-                                <span class='attr-label col-xs-1'>pos</span>
-                                <span id='pos' class='col-xs-2'></span>
-                                <span class='attr-label col-xs-1'>msd</span>
-                                <span id='msd' class='col-xs-2'></span>
+                                <span class='attr-label col-xs-3'>p / r</span>
+                                <span class='attr-label col-xs-3'>freq</span>
+                                <span class='attr-label col-xs-3'>pos</span>
+                                <span class='attr-label col-xs-3'>msd</span>
+                            </div>
+                            <div class='row'>
+                                <span class='col-xs-3'><span id='precision'></span> / <span id='recall'></span></span>
+                                <span id='freq' class='col-xs-3'></span>
+                                <span id='pos' class='col-xs-3'></span>
+                                <span id='msd' class='col-xs-3'></span>
                             </div>
                             <br>
                             <div class='row'>
-                                <span class='attr-label col-xs-2'>compound</span>
-                                <input type='checkbox' id='compound' name='is_compound' class='col-xs-10' value=1>
+                                <span class='attr-label col-xs-3'>compound</span>
+                                <span class='attr-label col-xs-3'>stopword</span>
                             </div>
-                            <br>
                             <div class='row'>
-                                <span class='attr-label col-xs-2'>stopword</span>
-                                <input type='checkbox' id='stopword' name='is_stopword' class='col-xs-10' value=1 disabled>
+                                <input type='checkbox' id='compound' name='is_compound' class='col-xs-3' style="left: 12px; bottom: -1px;" value=1>
+                                <input type='checkbox' id='stopword' name='is_stopword' class='col-xs-3' style="left: 12px; bottom: -1px;" value=1 disabled>
                             </div>
                             <br>
-                            <input type='submit' class='OK' value='OK!'><br>
+                            <div style='text-align: center; display: block;'>
+                                <input type='submit' class='OK' value='OK!'>
+                            </div>
                             <br>
                         </div>
                     </form>
@@ -124,7 +129,7 @@
     Freq: {{ t.freq }}&#10;&#10;Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}
 {%- endmacro %}
 
-{% macro tokenify(tokens, snapshot=False, simple=False, unverified=False) -%}
+{% macro tokenify(tokens, snapshot=False, notes=False, simple=False, unverified=False) -%}
 
     {% if snapshot %}
     {% for t in tokens %}
@@ -137,24 +142,47 @@
         <div style='margin-bottom: 8px;'></div>
         <div class='row'>
             <span class='col-xs-2 col-md-1 attr-label'>rules</span>
-            <span class='col-xs-5 col-md-2'>{{ t.rules1 }}</span>
-            {% if t.rules2 %}<span class='col-xs-5 col-md-2'>{{ t.rules2 }}</span>
-            {% if t.rules3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.rules3 }}</span>
-            {% if t.rules4 %}<span class='col-xs-5 col-md-2'>{{ t.rules4 }}</span>{% endif %}{% endif %}{% endif %}
+            <span class='col-xs-10 col-md-2'>{{ t.rules1 }}</span>
+            <span class='hidden-xs hidden-sm col-md-1 attr-label'>test</span>
+            <span class='hidden-xs hidden-sm col-md-8'>{{ t.test_syll1 }}</span>
         </div>
+        {% if t.test_syll2 %}
         <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'>test</span>
-            <span class='col-xs-5 col-md-2'>{{ t.test_syll1 }}</span>
-            {% if t.test_syll2 %}<span class='col-xs-5 col-md-2'>{{ t.test_syll2 }}</span>
-            {% if t.test_syll3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.test_syll3 }}</span>
-            {% if t.test_syll4 %}<span class='col-xs-5 col-md-2'>{{ t.test_syll4 }}</span>{% endif %}{% endif %}{% endif %}
+            <span class='col-xs-2 col-md-1 attr-label'></span>
+            <span class='col-xs-10 col-md-2'>{{ t.rules2 }}</span>
+            <span class='hidden-xs hidden-sm col-md-1 attr-label'></span>
+            <span class='hidden-xs hidden-sm col-md-8'>{{ t.test_syll2 }}</span>
+        </div>
+        {% if t.test_syll3 %}
+        <div class='row'>
+            <span class='col-xs-2 col-md-1 attr-label'></span>
+            <span class='col-xs-10 col-md-2'>{{ t.rules3 }}</span>
+            <span class='hidden-xs hidden-sm col-md-1 attr-label'></span>
+            <span class='hidden-xs hidden-sm col-md-8'>{{ t.test_syll3 }}</span>
+        </div>
+        {% if t.test_syll4 %}
+        <div class='row'>
+            <span class='col-xs-2 col-md-1 attr-label'></span>
+            <span class='col-xs-10 col-md-3'>{{ t.rules4 }}</span>
+            <span class='hidden-xs hidden-sm col-md-1 attr-label'></span>
+            <span class='hidden-xs hidden-sm col-md-7'>{{ t.test_syll4 }}</span>
+        </div>
+        {% endif %}
+        {% endif %}
+        {% endif %}
+        <div class='row visible-xs visible-sm'>
+            <span class='col-xs-2 attr-label'>test</span>
+            <span class='col-xs-10'>{{ t.test_syll1 }}</span>
+            {% if t.syll2 %}<span class='col-xs-2'></span><span class='col-xs-10'>{{ t.test_syll2 }}</span>
+            {% if t.syll3 %}<span class='col-xs-2'></span><span class='col-xs-10'>{{ t.test_syll3 }}</span>
+            {% if t.syll4 %}<span class='col-xs-2'></span><span class='col-xs-10'>{{ t.test_syll4 }}</span>{% endif %}{% endif %}{% endif %}
         </div>
         <div class='row'>
             <span class='col-xs-2 col-md-1 attr-label'>gold</span>
-            <span class='col-xs-5 col-md-2'>{{ t.syll1 }}</span>
-            {% if t.syll2 %}<span class='col-xs-5 col-md-2'>{{ t.syll2 }}</span>
-            {% if t.syll3 %}<span class='col-xs-2 visible-xs visible-sm'></span><span class='col-xs-5 col-md-2'>{{ t.syll3 }}</span>
-            {% if t.syll4 %}<span class='col-xs-5 col-md-2'>{{ t.syll4 }}</span>{% endif %}{% endif %}{% endif %}
+            <span class='col-xs-10 col-md-11'>{{ t.syll1 }}</span>
+            {% if t.syll2 %}<span class='col-xs-2 col-md-1'></span><span class='col-xs-10 col-md-10'>{{ t.syll2 }}</span>
+            {% if t.syll3 %}<span class='col-xs-2 col-md-1'></span><span class='col-xs-10 col-md-10'>{{ t.syll3 }}</span>
+            {% if t.syll4 %}<span class='col-xs-2 col-md-1'></span><span class='col-xs-10 col-md-10'>{{ t.syll4 }}</span>{% endif %}{% endif %}{% endif %}
         </div>
         <div class='row'>
             <span class='col-xs-2 col-md-1 attr-label'>p / r</span>
@@ -187,6 +215,23 @@
     </div>
     {% endfor %}
 
+    {% elif notes %}
+    <div class='row hidden-xs hidden-sm'>
+        <span class='attr-label col-md-3'>orth</span>
+        <span class='attr-label col-md-3'>note</span>
+    </div>
+    <br class='hidden-xs hidden-sm'>
+    {% for t in tokens %}
+    <div class='row'>
+        <span class='col-xs-12 col-md-3'>
+            <span class='{{ t|goldclass }}' title='{{ title(t) }}' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}">{{ t.orth }}</span>
+        </span>
+        <span class='col-xs-12 col-md-9' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}">{{ t.note }}</span>
+    </div>
+    <br>
+    {% endfor %}
+
+
     {% elif simple %}
     <div class='row hidden-xs hidden-sm'>
         <span class='attr-label col-md-3'>orth</span>
@@ -197,14 +242,33 @@
     <br class='hidden-xs hidden-sm'>
     {% for t in tokens %}
     <div class='row'>
-        <span class='col-xs-12 col-md-3' title='{{ title(t) }}'>{{ t.orth }}</span>
-        <span class='hidden-xs hidden-sm col-md-2'>{{ t.rules1 }}</span>
-        <span class='col-xs-6 col-md-3'>
-            <span data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='{{ t|goldclass }}'>{{ t.test_syll1 }}</span>
-            {% if t.is_ambiguous() %}<span class='variation'>V</span>{% endif %}
+        <span class='col-xs-12 col-md-3'>
+            <a class='{{ t|goldclass }}' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" title='{{ title(t) }}'>{{ t.orth }}</a>
         </span>
-        <span class='visible-xs visible-sm col-xs-6'>{{ t.rules1 }}</span>
-        <span class='col-xs-12 col-md-3'>{{ t.syll1 }}</span>
+        <span class='visible-xs visible-sm col-xs-12 attr-label'>rules</span>
+        <span class='col-xs-12 col-md-2'>
+            {{ t.rules1 }}
+            {% if t.rules2 %}<div>{{ t.rules2 }}</div>
+            {% if t.rules3 %}<div>{{ t.rules3 }}</div>
+            {% if t.rules4 %}<div>{{ t.rules4 }}</div>
+            {% endif %}{% endif %}{% endif %}
+        </span>
+        <span class='visible-xs visible-sm col-xs-12 attr-label'>test</span>
+        <span class='col-xs-12 col-md-3'>
+            {{ t.test_syll1 }}
+            {% if t.test_syll2 %}<div>{{ t.test_syll2 }}</div>
+            {% if t.test_syll3 %}<div>{{ t.test_syll3 }}</div>
+            {% if t.test_syll4 %}<div>{{ t.test_syll4 }}</div>
+            {% endif %}{% endif %}{% endif %}
+        </span>
+        <span class='visible-xs visible-sm col-xs-12 attr-label'>gold</span>
+        <span class='col-xs-12 col-md-3'>
+            {{ t.syll1 }}
+            {% if t.syll2 %}<div>{{ t.syll2 }}</div>
+            {% if t.syll3 %}<div>{{ t.syll3 }}</div>
+            {% if t.syll4 %}<div>{{ t.syll4 }}</div>
+            {% endif %}{% endif %}{% endif %}
+        </span>
     </div>
     <br>
     {% endfor %}
@@ -267,7 +331,7 @@
         <span class='attr-label col-md-2'>rules</span>
         <span class='attr-label col-md-3'>test</span>
         <span class='attr-label col-md-3'>syll</span>
-        <span class='attr-label col-md-1'>P/R</span>
+        <span class='attr-label col-md-1'>p / r</span>
         <span class='attr-label col-md-1'>compound</span>
     </div>
     <br class='hidden-xs hidden-sm'>
@@ -296,8 +360,8 @@
             <input type='text' class='gray' name='syll4_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll4 }}'>
         </span>
         <span class='col-xs-12 col-md-1'>
-            {{ t.precision }}/{{ t.recall }}
-            <span class='attr-label visible-xs visible-sm' style='float: left;'>P/R&nbsp;&nbsp;</span>
+            {{ t.precision }} / {{ t.recall }}
+            <span class='attr-label visible-xs visible-sm' style='float: left;'>prR&nbsp;&nbsp;</span>
         </span>
         <span class='col-xs-12 col-md-1'>
             <input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}>

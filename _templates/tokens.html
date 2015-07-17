@@ -31,8 +31,8 @@
     </form>
 </div>
 <br>
-<!-- variation, notes -->
-{% elif kw == 'notes' or kw == 'variation' and secondary != 'list' %}
+<!-- variation -->
+{% elif kw == 'variation' and secondary != 'list' %}
 <div class='tokens container'>
     <form method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
@@ -43,7 +43,13 @@
     </form>
 </div>
 <br>
-<!-- bad, hidden -->
+<!-- variation -->
+{% elif kw == 'notes' %}
+<div class='tokens container'>
+    {{ tokenify(tokens, notes=True) }}
+</div>
+<br>
+<!-- bad, hidden, variation -->
 {% else %}
 <div class='tokens container'>
     {{ tokenify(tokens, simple=True ) }}
