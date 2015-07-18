@@ -3,10 +3,10 @@
 import re
 
 
-def splitter(word):
+def split(word):
     # any syllable with a /uo/ and /yO/ nuclei denotes a word boundary, always
     # appearing word-initially
-    pattern = r'(?=[ieAyOauo]+[^ -]*([^ieAyOauo]{1}(uo|yO)))'
+    pattern = r'[ieAyOauo]+[^ -]*([^ieAyOauo]{1}(uo|yO))'
 
     offset = 0
 

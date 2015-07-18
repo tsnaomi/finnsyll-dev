@@ -2,6 +2,7 @@
 
 import re
 
+from compound import split
 from phonology import (
     is_cluster,
     is_consonant,
@@ -18,6 +19,7 @@ from phonology import (
 
 def syllabify(word):
     '''Syllabify the given word, whether simplex or complex.'''
+    word = split(word)  # detect any non-delimited compounds
     compound = True if re.search(r'-| |\.', word) else False
     syllabify = _syllabify_compound if compound else _syllabify
     syll, rules = syllabify(word, variation=False)
@@ -308,63 +310,4 @@ def apply_T9(word):
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    import sys
-
-    args = sys.argv[1:]
-
-    if args:
-        for arg in args:
-            if isinstance(arg, str):
-                print syllabify(arg) + '\n'
-
-    else:
-        words = [
-            (u'tae', u'ta.e'),
-            (u'koettaa', u'ko.et.taa'),
-            (u'hain', u'hain'),  # ha.in (alternative)
-            (u'laukaus', u'lau.ka.us'),
-            (u'vakauttaa', u'va.ka.ut.taa'),
-            (u'raaoissa', u'raa.ois.sa'),
-            (u'huouimme', u'huo.uim.me'),
-            (u'laeissa', u'la.eis.sa'),
-            (u'selviäisi', u'sel.vi.äi.si'),
-            (u'taian', u'tai.an'),
-            (u'säie', u'säi.e'),
-            (u'oiomme', u'oi.om.me'),
-            (u'korkeaa', u'kor.ke.aa'),
-            (u'yhtiöön', u'yh.ti.öön'),
-            (u'ruuan', u'ruu.an'),
-            (u'määytte', u'mää.yt.te'),
-            (u'kauan', u'kau.an'),
-            (u'leuan', u'leu.an'),
-            (u'kiuas', u'kiu.as'),
-            (u'haluaisin', u'ha.lu.ai.sin'),
-            (u'hyöyissä', u'hyö.yis.sä'),
-            (u'pamaushan', u'pa.ma.us.han'),
-            (u'saippuaa', u'saip.pu.aa'),
-            (u'joissa', u'jois.sa'),  # jo.is.sa (alternative)
-            (u'tae', u'ta.e'),
-            (u'kärkkyä', u'kärk.ky.ä'),
-            (u'touon', u'tou.on'),
-            (u'värväytyä', u'vär.väy.ty.ä'),
-            (u'värväyttää', u'vär.vä.yt.tää'),
-            (u'daniel', u'da.ni.el'),
-            (u'sosiaalinen', u'so.si.aa.li.nen'),
-            (u'välierien', u'vä.li.e.ri.en'),
-            (u'lounais-suomen puhelin', u'lou.nais-suo.men pu.he.lin'),
-            (u'powers', u'po.wers'),
-            (u'uusivuosi', u'uu.si.vuo.si'),
-            (u'elämäntyömerkki', u'e.lä.män.työ.merk.ki'),
-            (u'imperiumiin', u'im.pe.ri.u.miin'),
-            (u'demokraattisen', u'de.mo.kraat.ti.sen'),
-            (u'mikrojäähdytin', u'mik.ro.jääh.dy.tin'),
-            (u'republikaani', u're.pub.li.kaa.ni'),
-            (u'Jakobson', u'Ja.kob.son'),
-            ]
-
-        for word in words:
-            syll = syllabify(word[0])
-
-            if syll[0] != word[1]:
-                print u'TRY: %s  %s\nYEA: %s\n' % (syll[0], syll[1], word[1])
-                # print u'TEST: %s\nGOLD: %s\n' % (syll[0], word[1])
+    pass
