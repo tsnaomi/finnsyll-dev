@@ -119,12 +119,15 @@ class Token(db.Model):
     # a boolean indicating if the word is a compound
     is_compound = db.Column(db.Boolean, default=False)
 
+    # a boolean indicating if the word is a non-delimited compound
+    is_nondelimited_compound = db.Column(db.Boolean, default=False)
+
+    # a boolean indicating if the syllabifier predicts the word is a compound
+    is_test_compound = db.Column(db.Boolean, default=False)
+
     # a boolean indicating if the word is a stopword -- only if the
     # word's syllabification is lexically marked
     is_stopword = db.Column(db.Boolean, default=False)
-
-    # a boolean indicating if the word is a foreign word
-    is_foreign = db.Column(db.Boolean, default=False)
 
     # a boolean indicating if the algorithm has estimated correctly
     is_gold = db.Column(db.Boolean, default=None)
@@ -134,7 +137,10 @@ class Token(db.Model):
 
     # a temporary boolean to indicate whether Arto had verified the token prior
     # to updating the database to accommodate variation in test syllabifcations
-    verified = db.Column(db.Boolean, default=None)
+    verified = db.Column(db.Boolean, default=False)
+
+    # a temporary boolean to indicate whether Arto has re-verified the token
+    verified_again = db.Column(db.Boolean, default=False)
 
     __mapper_args__ = {
         'order_by': [is_gold, is_compound, freq.desc()],
@@ -367,28 +373,6 @@ def syllabify_tokens():
     print 'Syllabifications complete. ' + datetime.utcnow().strftime('%I:%M')
 
 
-def longest():
-    tokens = Token.query.filter(Token.is_gold.isnot(None)).order_by(Token.id)
-    # count = tokens.count()
-    # start = 0
-    # end = x = 1000
-    longest = 0
-    t = None
-    for token in tokens:
-        new = len(token.rules1)
-        if new > longest:
-            t = token
-            longest = new
-            # start = end
-            # end += x
-    # for token in Token.query.order_by(Token.id).slice(start, count):
-    #     new = len(token.test_syll1)
-    #     if new > longest:
-    #         t = token
-    #         longest = new
-    return t
-
-
 def find_token(orth):
     '''Retrieve a token by its orthography.'''
     try:
@@ -439,8 +423,6 @@ def get_foreign_words():
     tokens = [t for c in FOREIGN_FINAL for t in query(c)]
     tokens = sorted(tokens, key=lambda t: (t.is_gold, t.freq), reverse=True)
 
-    # tokens = Token.query.filter_by(is_foreign=True)
-
     return tokens
 
 
@@ -467,6 +449,7 @@ def get_unverified_variation():
 def get_test_verified_variation():
     '''Return verified tokens with only alternative test syllabifications.'''
     tokens = Token.query.filter(Token.verified == True)  # noqa
+    tokens = tokens.filter(Token.verified_again.is_(None))
     tokens = tokens.filter(Token.test_syll2 != '').filter(Token.syll2 == '')
 
     return tokens
@@ -475,6 +458,7 @@ def get_test_verified_variation():
 def get_gold_verified_variation():
     '''Return tokens with alternative syllabifications prior to migration.'''
     tokens = Token.query.filter(Token.verified == True)  # noqa
+    tokens = tokens.filter(Token.verified_again.is_(None))
     tokens = tokens.filter(Token.syll2 != '').filter(Token.test_syll2 == '')
 
     return tokens
@@ -535,6 +519,7 @@ def apply_form(http_form, commit=True):
             is_compound=is_compound,
             # is_stopword=is_stopword,
             note=note,
+            verified_again=True,
             )
 
         if commit:
