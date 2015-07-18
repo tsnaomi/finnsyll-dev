@@ -125,8 +125,8 @@ class Token(db.Model):
     # a boolean indicating if the syllabifier predicts the word is a compound
     is_test_compound = db.Column(db.Boolean, default=False)
 
-    # a boolean indicating if the word is a stopword -- only if the
-    # word's syllabification is lexically marked
+    # a boolean indicating if the word is a stopword -- only if the word's
+    # syllabification is lexically marked
     is_stopword = db.Column(db.Boolean, default=False)
 
     # a boolean indicating if the algorithm has estimated correctly

@@ -232,47 +232,46 @@ def tabulate_to_file(tokens, filename):
 
 # Transitioning the syllabifier -----------------------------------------------
 
-def transition(pdf=False):  # TODO
+def transition(pdf=False):
     '''Temporarily re-syllabify tokens and create a transition report.'''
-    compound = lambda t: 'C' if t.is_compound else None
-    parse = lambda t: (t, [t.test_syll, t.rules])
-    row = lambda t: ['>', t.test_syll, t.rules, compound(t)]
+    changed = lambda t: t._is_gold != t.is_gold
+    parse = lambda t: [
+        t._test_syll1, t._rules1,
+        t._test_syll2, t._rules2,
+        t._test_syll3, t._rules3,
+        '>',
+        t.test_syll1, t.rules1,
+        t.test_syll2, t.rules2,
+        t.test_syll3, t.rules3,
+        ]
 
-    tokens = finn.Token.query.filter(Token.is_gold.isnot(None))
-
-    Dict = lambda tokens=tokens: {
-        'good': dict([parse(t) for t in tokens.filter_by(is_gold=True)]),
-        'bad': dict([parse(t) for t in tokens.filter_by(is_gold=False)]),
-        }
-
-    PRE = Dict()
+    tokens = finn.Token.query.filter(finn.Token.is_gold.isnot(None))
 
     for t in tokens:
+        t._test_syll1 = t.test_syll1
+        t._test_syll2 = t.test_syll2
+        t._test_syll3 = t.test_syll3
+        t._rules1 = t.rules1
+        t._rules2 = t.rules2
+        t._rules3 = t.rules3
+        t._is_gold = t.is_gold
         t.syllabify()
 
-    POST = Dict()
+    good_to_bad = [parse(t) for t in tokens if changed(t) and not t.is_gold]
+    bad_to_good = [parse(t) for t in tokens if changed(t) and t.is_gold]
+    report = 'FROM BAD TO GOOD (%s)\n' % len(bad_to_good)
+    report += tabulate(bad_to_good)
+    report += '\n\nFROM GOOD TO BAD (%s)\n' % len(good_to_bad)
+    report += tabulate(good_to_bad)
+    report += '\n\n%s BAD TOKENS' % tokens.filter_by(is_gold=False).count()
 
-    if PRE['good'] != POST['good']:
-        good = set(PRE['bad'].keys()).intersection(POST['good'].keys())
-        bad = set(PRE['good'].keys()).intersection(POST['bad'].keys())
-        table1 = [PRE['bad'][t] + row(t) for t in good]
-        table2 = [PRE['good'][t] + row(t) for t in bad]
-        report = 'FROM BAD TO GOOD (%s)\n' % len(good)
-        report += tabulate(table1)
-        report += '\n\nFROM GOOD TO BAD (%s)\n' % len(bad)
-        report += tabulate(table2)
-        report += '\n\n%s BAD TOKENS' % len(POST['bad'])
+    if pdf:
+        filename = 'syllabifier/reports/%s.txt' % str(datetime.utcnow())
 
-        if pdf:
-            filename = 'syllabifier/reports/%s.txt' % str(datetime.utcnow())
+        with open(filename, 'w') as f:
+            f.write(report.encode('utf-8'))
 
-            with open(filename, 'w') as f:
-                f.write(report.encode('utf-8'))
-
-        print report
-
-    else:
-        'BAD TOKENS' % len(POST['bad'])
+    print report
 
     finn.db.session.rollback()
 
@@ -282,6 +281,5 @@ if __name__ == '__main__':
     # populate_db_tokens_from_aamulehti_1999()  # 13114.48 seconds
     # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
-    # tabulate_to_file(finn.get_foreign_words(), 'foreign')
     # tabulate_to_file(finn.get_ambiguous_tokens(), 'ambiguous')
     transition(pdf='--pdf' in sys.argv)

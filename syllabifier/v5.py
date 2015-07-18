@@ -18,7 +18,7 @@ from phonology import (
 
 def syllabify(word):
     '''Syllabify the given word, whether simplex or complex.'''
-    compound = True if re.search(r'-| ', word) else False
+    compound = True if re.search(r'-| |\.', word) else False
     syllabify = _syllabify_compound if compound else _syllabify
     syll, rules = syllabify(word, variation=False)
 
