@@ -126,7 +126,7 @@
 {%- endmacro %}
 
 {% macro title(t) -%}
-    Freq: {{ t.freq }}&#10;&#10;Lemma: {{ t.lemma }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}
+    Freq: {{ t.freq }}&#10;&#10;Lemma: {{ t.readable_lemma() }}&#10;&#10;Part of speech: {{ t.pos }}&#10;&#10;Morpho-syntactic description: {{ t.msd }}
 {%- endmacro %}
 
 {% macro tokenify(tokens) -%}

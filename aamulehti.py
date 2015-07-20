@@ -196,33 +196,45 @@ def syllabify_unseen_lemmas():
 # Queries ---------------------------------------------------------------------
 
 def tabulate_to_file(tokens, filename):
-    row = lambda t: [
+    parse = lambda t: [
         t.freq,
-        t.orth,
-        t.rules,
-        t.test_syll,
-        t.syll,
-        t.alt_syll1,
-        t.alt_syll2,
-        t.alt_syll3,
-        'F' if not t.is_gold else '',  # F for false
+        'good' if t.is_gold else 'bad' if t.is_gold is False else '',
         'C' if t.is_compound else '',  # C for compound
+        t.orth,
+        t.rules1,
+        t.test_syll1,
+        t.rules2,
+        t.test_syll2,
+        # t.rules3,
+        # t.test_syll3,
+        # t.rules4,
+        # t.test_syll4,
+        t.syll1,
+        t.syll2,
+        t.syll3,
+        # t.syll4,
         ]
 
     headers = [
         'freq',
+        'status',
+        'compound',
         'orth',
-        'rules',
-        'test',
+        'rules 1',
+        'test 1',
+        'rules 2',
+        'test 2',
+        # 'rules 3',
+        # 'test 3',
+        # 'rules 4',
+        # 'test 4',
         'gold 1',
         'gold 2',
         'gold 3',
-        'gold 4',
-        'good',
-        'compound',
+        # 'gold 4',
         ]
 
-    table = tabulate([row(t) for t in tokens], headers=headers)
+    table = tabulate([parse(t) for t in tokens], headers=headers)
 
     filename = 'syllabifier/queries/%s.txt' % filename
 
@@ -281,5 +293,5 @@ if __name__ == '__main__':
     # populate_db_tokens_from_aamulehti_1999()  # 13114.48 seconds
     # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
-    # tabulate_to_file(finn.get_ambiguous_tokens(), 'ambiguous')
-    transition(pdf='--pdf' in sys.argv)
+    tabulate_to_file(finn.get_test_compounds(), 'test_compounds')
+    # transition(pdf='--pdf' in sys.argv)

@@ -20,6 +20,7 @@ from flask.ext.bcrypt import Bcrypt
 from functools import wraps
 from math import ceil
 from sqlalchemy import or_
+from syllabifier.compound import detect
 from syllabifier.phonology import FOREIGN_FINAL, get_sonorities, get_weights
 from syllabifier.v5 import syllabify
 from werkzeug.exceptions import BadRequestKeyError
@@ -193,13 +194,13 @@ class Token(db.Model):
         # This only takes into consiterdation the sonority structure of the
         # first syllabification.
 
+    def readable_lemma(self):
+        '''Return a rreadable form of the lemma.'''
+        return self.lemma.replace('_', ' ')
+
     def is_lemma(self):
         '''Return True if the word is in its citation form, else False.'''
-        return self.orth.lower() == self.lemma.replace('_', ' ').lower()
-
-    def is_ambiguous(self):  # TODO
-        ''' '''
-        return bool(self.test_syll2 or self.syll2)
+        return self.orth.lower() == self.readable_lemma.lower()
 
     # Syllabification methods -------------------------------------------------
 
@@ -249,6 +250,12 @@ class Token(db.Model):
         represented in the test syllabifications.
         '''
         self.is_gold = self.sylls().issubset(self.test_sylls())
+
+    # Compound functions ------------------------------------------------------
+
+    def detect_if_compound(self):
+        '''Programmatically detect if the Token is a compound.'''
+        self.is_test_compound = detect(self.orth.lower())
 
     # Evaluation methods ------------------------------------------------------
 
@@ -351,7 +358,7 @@ class Document(db.Model):
 
 def syllabify_tokens():
     '''Syllabify all tokens.'''
-    print 'Syllabifying...' + datetime.utcnow().strftime('%I:%M')
+    print 'Syllabifying... ' + datetime.utcnow().strftime('%I:%M')
 
     count = Token.query.count()
     start = 0
@@ -371,6 +378,30 @@ def syllabify_tokens():
     db.session.commit()
 
     print 'Syllabifications complete. ' + datetime.utcnow().strftime('%I:%M')
+
+
+def detect_compounds():
+    '''Detect non-delimited compounds.'''
+    print 'Detecting compounds... ' + datetime.utcnow().strftime('%I:%M')
+
+    count = Token.query.count()
+    start = 0
+    end = x = 1000
+
+    while start + x < count:
+        for token in Token.query.order_by(Token.id).slice(start, end):
+            token.detect_if_compound()
+
+        db.session.commit()
+        start = end
+        end += x
+
+    for token in Token.query.order_by(Token.id).slice(start, count):
+        token.detect_if_compound()
+
+    db.session.commit()
+
+    print 'Detection complete. ' + datetime.utcnow().strftime('%I:%M')
 
 
 def find_token(orth):
@@ -448,7 +479,7 @@ def get_unverified_variation():
 
 def get_test_verified_variation():
     '''Return verified tokens with only alternative test syllabifications.'''
-    tokens = Token.query.filter(Token.verified == True)  # noqa
+    tokens = Token.query.filter_by(verified=True)
     tokens = tokens.filter(Token.verified_again.is_(None))
     tokens = tokens.filter(Token.test_syll2 != '').filter(Token.syll2 == '')
 
@@ -457,11 +488,18 @@ def get_test_verified_variation():
 
 def get_gold_verified_variation():
     '''Return tokens with alternative syllabifications prior to migration.'''
-    tokens = Token.query.filter(Token.verified == True)  # noqa
+    tokens = Token.query.filter_by(verified=True)
     tokens = tokens.filter(Token.verified_again.is_(None))
     tokens = tokens.filter(Token.syll2 != '').filter(Token.test_syll2 == '')
 
     return tokens
+
+
+# Compound queries ------------------------------------------------------------
+
+def get_test_compounds():
+    '''Return tokens predicted to be compounds.'''
+    return Token.query.filter_by(is_test_compound=True)
 
 
 # View helpers ----------------------------------------------------------------
@@ -707,24 +745,6 @@ def find_view():
         )
 
 
-@app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/lemma/page/<int:page>', methods=['GET', 'POST'])
-def lemma_view(page):
-    '''List all unverified unseen lemmas and process corrections.'''
-    if request.method == 'POST':
-        apply_bulk_form(request.form)
-
-    tokens = get_unseen_lemmas()
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='lemmas',
-        pagination=pagination,
-        )
-
-
 @app.route('/unverified', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/unverified/page/<int:page>', methods=['GET', 'POST'])
 def unverified_view(page):
@@ -757,6 +777,24 @@ def bad_view(page):
         'tokens.html',
         tokens=tokens,
         kw='bad',
+        pagination=pagination,
+        )
+
+
+@app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/lemma/page/<int:page>', methods=['GET', 'POST'])
+def lemma_view(page):
+    '''List all unverified unseen lemmas and process corrections.'''
+    if request.method == 'POST':
+        apply_bulk_form(request.form)
+
+    tokens = get_unseen_lemmas()
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='lemmas',
         pagination=pagination,
         )
 
@@ -809,7 +847,11 @@ def hidden_view(page):
         apply_form(request.form)
 
     # Monosyllabic test syllabifications
-    tokens = Token.query.filter(~Token.test_syll1.contains('.'))
+    # tokens = Token.query.filter(~Token.test_syll1.contains('.'))
+
+    # Test compounds
+    tokens = get_test_compounds()
+
     tokens, pagination = paginate(page, tokens)
 
     return render_template(

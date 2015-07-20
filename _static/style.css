@@ -102,6 +102,7 @@ div.markdown {
 div.markdown > h1,
 div.markdown > p {
     margin-bottom: 28px;
+    word-wrap: normal;
 }
 
 pre {
