@@ -123,6 +123,7 @@ pre code {
 
 /* forms ------------------------------------------------------------------- */
 
+input[type='password'],
 input[type='submit'],
 input[type='text'],
 textarea {
@@ -343,8 +344,7 @@ div.gray {
     display: block;
 }
 
-.stats,
-.count {
+.description {
     font-size: 19px;
     text-align: left;
     line-height: 40px;
