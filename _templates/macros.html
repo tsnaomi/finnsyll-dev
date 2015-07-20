@@ -132,8 +132,12 @@
 {% macro tokenify(tokens) -%}
     <div class='row hidden-xs hidden-sm'>
         <span class='attr-label col-md-3'>orth</span>
-        <span class='attr-label col-md-2'>rules</span>
-        <span class='attr-label col-md-3'>test</span>
+        <span class='col-md-5'>
+            <div class='row'>
+                <span class='attr-label col-md-5'>rules</span>
+                <span class='attr-label col-md-7'>test</span>
+            </div>
+        </span>
         <span class='attr-label col-md-3'>gold</span>
     </div>
     <br class='hidden-xs hidden-sm'>
@@ -142,23 +146,21 @@
         <span class='col-xs-12 col-md-3'>
             <a class='{{ t|goldclass }}' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" title='{{ title(t) }}'>{{ t.orth }}</a>
         </span>
-        <span class='visible-xs visible-sm col-xs-12 attr-label'>rules</span>
-        <span class='col-xs-12 col-md-2'>
-            {{ t.rules1 }}
-            {% if t.rules2 %}<div>{{ t.rules2 }}</div>
-            {% if t.rules3 %}<div>{{ t.rules3 }}</div>
-            {% if t.rules4 %}<div>{{ t.rules4 }}</div>
-            {% endif %}{% endif %}{% endif %}
+        <span class='visible-xs visible-sm col-xs-12 attr-label'>
+            <div class='row'>
+                <span class='col-xs-4'>rules</span><span class='col-xs-8'>test</span>
+            </div>
         </span>
-        <span class='visible-xs visible-sm col-xs-12 attr-label'>test</span>
-        <span class='col-xs-12 col-md-3'>
-            {{ t.test_syll1 }}
-            {% if t.test_syll2 %}<div>{{ t.test_syll2 }}</div>
-            {% if t.test_syll3 %}<div>{{ t.test_syll3 }}</div>
-            {% if t.test_syll4 %}<div>{{ t.test_syll4 }}</div>
-            {% endif %}{% endif %}{% endif %}
+        <span class='col-xs-12 col-md-5'>
+            <div class='row'>
+                <span class='col-xs-4 col-md-5'>{{ t.rules1 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll1 }}</span>
+                {% if t.rules2 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules2 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll2 }}</span></div>
+                {% if t.rules3 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules3 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll3 }}</span></div>
+                {% if t.rules4 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules4 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll4 }}</span></div>
+                {% endif %}{% endif %}{% endif %}
+            </div>
         </span>
-        <span class='visible-xs visible-sm col-xs-12 attr-label'>gold</span>
+        {% if t.is_gold is not none %}<span class='visible-xs visible-sm col-xs-12 attr-label'>gold</span>{% endif %}
         <span class='col-xs-12 col-md-3'>
             {{ t.syll1 }}
             {% if t.syll2 %}<div>{{ t.syll2 }}</div>
@@ -168,5 +170,6 @@
         </span>
     </div>
     <br>
+    <br class='visible-xs visible-sm'>
     {% endfor %}
 {%- endmacro %}

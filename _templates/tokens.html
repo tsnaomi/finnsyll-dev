@@ -24,16 +24,20 @@
         <form method='POST'>
             <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
             <div class='row hidden-xs hidden-sm'>
-                {% if kw == 'unverified '%}<span class='attr-label col-md-1'>freq</span>{% endif %}
+                {% if kw == 'unverified' %}<span class='attr-label col-md-1'>freq</span>{% endif %}
                 <span class='attr-label col-md-2'>orth</span>
-                <span class='attr-label col-md-2'>rules</span>
-                <span class='attr-label col-md-3'>test</span>
+                <span class='col-md-5'>
+                    <div class='row'>
+                        <span class='attr-label col-md-5'>rules</span>
+                        <span class='attr-label col-md-7'>test</span>
+                    </div>
+                </span>
                 <span class='attr-label col-md-3'>syll</span>
-                {% if kw == 'variation '%}<span class='attr-label col-md-1'>p / r</span>{% endif %}
+                {% if kw == 'variation' %}<span class='attr-label col-md-1'>p / r</span>{% endif %}
                 <span class='attr-label col-md-1'>compound</span>
             </div>
             <br class='hidden-xs hidden-sm'>
-            {% if kw == 'unverified '%} <!--  unverified -->
+            {% if kw == 'unverified' %} <!--  unverified -->
             {% for t in tokens %}
             <div class='row'>
                 <input type='hidden' name='id_{{ loop.index }}' value='{{ t.id }}'> 
@@ -43,17 +47,14 @@
                 <span class='col-xs-12 col-md-2'>
                     <span class='{{ t|goldclass }}' title='{{ title(t) }}'>{{ t.orth }}</span>
                 </span>
-                <span class='col-xs-4 col-md-2'>
-                    <span class='gray'>{{ t.rules1 }}</span>
-                    {% if t.rules2 %}<div class='gray'>{{ t.rules2 }}</div>
-                    {% if t.rules3 %}<div class='gray'>{{ t.rules3 }}</div>
-                    {% if t.rules4 %}<div class='gray'>{{ t.rules4 }}</div>{% endif %}{% endif %}{% endif %}
-                </span>
-                <span class='col-xs-6 col-md-3'>
-                    <span class='gray'>{{ t.test_syll1 }}</span>
-                    {% if t.test_syll2 %}<div class='gray'>{{ t.test_syll2 }}</div>
-                    {% if t.test_syll3 %}<div class='gray'>{{ t.test_syll3 }}</div>
-                    {% if t.test_syll4 %}<div class='gray'>{{ t.test_syll4 }}</div>{% endif %}{% endif %}{% endif %}
+                <span class='col-xs-12 col-md-5'>
+                    <div class='row'>
+                        <span class='col-xs-4 col-md-5'>{{ t.rules1 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll1 }}</span>
+                        {% if t.rules2 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules2 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll2 }}</span></div>
+                        {% if t.rules3 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules3 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll3 }}</span></div>
+                        {% if t.rules4 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules4 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll4 }}</span></div>
+                        {% endif %}{% endif %}{% endif %}
+                    </div>
                 </span>
                 <span class='col-xs-12 col-md-3'>
                     <input type='text' class='gray' name='syll1_{{ loop.index }}' placeholder='alternative syll' value='{{ t.test_syll1 }}'><br>
@@ -82,17 +83,14 @@
                 <span class='col-xs-12 col-md-2'>
                     <span class='{{ t|goldclass }}' title='{{ title(t) }}'>{{ t.orth }}</span>
                 </span>
-                <span class='col-xs-4 col-md-2'>
-                    <span class='gray'>{{ t.rules1 }}</span>
-                    {% if t.rules2 %}<div class='gray'>{{ t.rules2 }}</div>
-                    {% if t.rules3 %}<div class='gray'>{{ t.rules3 }}</div>
-                    {% if t.rules4 %}<div class='gray'>{{ t.rules4 }}</div>{% endif %}{% endif %}{% endif %}
-                </span>
-                <span class='col-xs-6 col-md-3'>
-                    <span class='gray'>{{ t.test_syll1 }}</span>
-                    {% if t.test_syll2 %}<div class='gray'>{{ t.test_syll2 }}</div>
-                    {% if t.test_syll3 %}<div class='gray'>{{ t.test_syll3 }}</div>
-                    {% if t.test_syll4 %}<div class='gray'>{{ t.test_syll4 }}</div>{% endif %}{% endif %}{% endif %}
+                <span class='col-xs-12 col-md-5'>
+                    <div class='row'>
+                        <span class='col-xs-4 col-md-5'>{{ t.rules1 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll1 }}</span>
+                        {% if t.rules2 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules2 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll2 }}</span></div>
+                        {% if t.rules3 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules3 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll3 }}</span></div>
+                        {% if t.rules4 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules4 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll4 }}</span></div>
+                        {% endif %}{% endif %}{% endif %}
+                    </div>
                 </span>
                 <span class='col-xs-12 col-md-3'>
                     <input type='text' class='gray' name='syll1_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll1 }}'><br>
