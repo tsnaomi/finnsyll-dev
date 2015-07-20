@@ -123,6 +123,13 @@ pre code {
 
 /* forms ------------------------------------------------------------------- */
 
+input[type='submit'],
+input[type='text'],
+textarea {
+  -webkit-appearance: none;
+  -webkit-border-radius: 0;
+}
+
 input:focus,
 textarea:focus {
     outline: none;
@@ -212,7 +219,7 @@ form.search {
     display: block;
 }
 
-input.search {
+input.search[type='text'] {
     width: 300px;
 }
 
