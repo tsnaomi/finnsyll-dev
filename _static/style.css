@@ -96,7 +96,7 @@ h1 {
 div.markdown {
     font-size: 19px;
     text-align: left;
-    margin: 4% 20%;
+    margin: 4% 10%;
 }
 
 div.markdown > h1,
@@ -109,11 +109,16 @@ pre {
     color: #333;
     font-size: 13px;
     line-height: 1.5;
-    min-width: 650px;
+    overflow-x: auto;
     border: 1px solid #fff;
     background-color: #f4f4f4;
     padding: 20px 0;
     margin: -10px 0 20px;
+}
+
+pre code {
+    overflow-wrap: normal;
+    white-space: pre;
 }
 
 /* forms ------------------------------------------------------------------- */
