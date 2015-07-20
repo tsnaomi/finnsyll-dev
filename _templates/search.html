@@ -13,7 +13,7 @@
     <form class='search' method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
         <input type='text' name='search' class='search clear' placeholder="type in a {% if kw == 'find' %}word{% else %}sequence{% endif %}..." {% if find %}value={{ find }}{% endif %}> 
-        <br class='visible-xs visible-sm' style='height: 5px;'>
+        <div class='visible-xs visible-sm' style='height: 5px;'></div>
         <input type='submit' class='search clear' value={% if kw == 'find' %}'FIND'{% else %}'CONTAINS'{% endif %}>
     </form>
 </div>
