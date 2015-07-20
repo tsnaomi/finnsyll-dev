@@ -4,16 +4,31 @@ import re
 
 from phonology import replace_umlauts
 
+# The idea is to use a rule-based detection to curate a "gold list", and to
+# then use machine learning to detect non-delimited compound boundaries, the
+# performance of which will be evaluated against the rule-curated gold list.
+
+# Ulimately:
+#   Token.is_compound  --> hand-verified compound
+#   Token.is_rb_compound  --> rule-based compound (is_test_compound)
+#   Token.is_ml_compound  --> machine-learned compound
+#   Token.is_nondelimited_compound()  --> subset of compounds that do not
+#                                         contain spaces of hyphens
+
+
+# Rule-based ------------------------------------------------------------------
 
 def detect(word):
-    # detect if the word is a non-delimited compound
+    '''Detect if a word is a non-delimited compound.'''
     word = replace_umlauts(word)
-    pattern = r'[ieAyOauo]+[^ -]*([^ieAyOauo]{1}(uo|yO))'
 
-    return bool(re.search(pattern, word))
+    # any syllable with a /uo/ or /yö/ nucleus denotes a word boundary,  always
+    # appearing word-initially
+    return bool(re.search(r'[ieAyOauo]+[^ -]*([^ieAyOauo]{1}(uo|yO))', word))
 
 
 def split(word):
+    '''Insert syllable breaks at non-delimited compound boundaries.'''
     # any syllable with a /uo/ or /yö/ nucleus denotes a word boundary, always
     # appearing word-initially
     pattern = r'[ieAyOauo]+[^ -]*([^ieAyOauo]{1}(uo|yO))'
@@ -26,3 +41,5 @@ def split(word):
         offset += 1
 
     return word
+
+# -----------------------------------------------------------------------------
