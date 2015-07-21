@@ -1,8 +1,9 @@
 *.pyc
 
+_prosodic/
 aamulehti-1999/
+prosodic/
 research/
 syllabifier/falk
-syllabifier/prosodic
 
 nohup.out
