@@ -10,10 +10,10 @@
 <br>
 <br>
 <div>
-    <form class='search' method='POST'>
+    <form class='search center' method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
         <input type='text' name='search' class='search clear' placeholder="type in a {% if kw == 'find' %}word{% else %}sequence{% endif %}..." {% if find %}value={{ find }}{% endif %}> 
-        <div class='visible-xs visible-sm' style='height: 5px;'></div>
+        <div class='visible-xs visible-sm height'></div>
         <input type='submit' class='search clear' value={% if kw == 'find' %}'FIND'{% else %}'CONTAINS'{% endif %}>
     </form>
 </div>
@@ -33,7 +33,7 @@
                 <a data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='attr-orth {{ t|goldclass }}'>{{ t.orth }}</a>
             </span>
         </div>
-        <div style='margin-bottom: 8px;'></div>
+        <div class='height'></div>
         <div class='row'>
             <span class='col-xs-2 col-md-1 attr-label'>rules</span>
             <span class='col-xs-10 col-md-2'>{{ t.rules1 }}</span>
@@ -112,7 +112,7 @@
 </div>
 <br>
 {% else %}
-<span class='message'>No matches found.</span>
+<span class='message center'>No matches found.</span>
 {% endif %}
 {% endif %}
 {% endblock %}

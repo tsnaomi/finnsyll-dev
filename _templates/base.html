@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-{% from 'macros.html' import modal, paginate, populate, title, tokenify %}
+{% from 'macros.html' import modal, populate, title, tokenify %}
 
 <html lang='en'>
     <title>FinnSyll {% if config.TESTING %}- Development{% endif %}</title>
@@ -67,7 +67,27 @@
         <br>
         <div class='block-body'>
             {% block body %}{% endblock %}
-        {% if pagination %}{{ paginate(pagination) }}{% endif %}
+            {% if pagination %}
+            <div class='pagination center'>
+                {% if pagination.has_prev %}
+                <a href="{{ url_for_other_page(pagination.page - 1) }}">&laquo; Previous</a>
+                {% endif %}
+                {% for page in pagination.iter_pages() %}
+                {% if page %}
+                {% if page != pagination.page %}
+                <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+                {% else %}
+                <strong>{{ page }}</strong>
+                {% endif %}
+                {% else %}
+                <span class='ellipsis'>…</span>
+                {% endif %}
+                {% endfor %}
+                {% if pagination.has_next %}
+                <a href="{{ url_for_other_page(pagination.page + 1) }}">Next &raquo;</a>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
         <br>
         <br>

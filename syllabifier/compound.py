@@ -15,6 +15,10 @@ from phonology import replace_umlauts
 #   Token.is_nondelimited_compound()  --> subset of compounds that do not
 #                                         contain spaces of hyphens
 
+# Consider:
+#   - /uo/ or /yö/ sequences
+#   - word length
+
 
 # Rule-based ------------------------------------------------------------------
 

@@ -11,9 +11,9 @@
         {% if secondary == 'list' %}
         This page lists all of the words that display variation, whether in their <i>test</i> syllabifications, <i>gold</i> syllabifications, or both.
         {% elif secondary == 'test' %}
-        This page lists all previously verified words that display variation in their <i>test</i> syllabifications, but not in their gold syllabifications.
+        This page lists all previously verified words that display variation in their <i>test</i> syllabifications but not in their gold syllabifications.
         {% elif secondary == 'gold' %}
-        This page lists all previously verified words that display variation in their <i>gold</i> syllabifications, but not in their test syllabifications.
+        This page lists all previously verified words that display variation in their <i>gold</i> syllabifications but not in their test syllabifications.
         {% endif %}
         <br>
         <i>{{ count }} matches</i>
@@ -64,7 +64,7 @@
                 </span>
                 <span class='col-xs-12 col-md-1'>
                     <input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}>
-                    <span class='attr-label visible-xs visible-sm' style='float: left;'>compound&nbsp;&nbsp;</span>
+                    <span class='attr-label visible-xs visible-sm float-left'>compound&nbsp;&nbsp;</span>
                 </span>
             </div>
             <div class='row'>
@@ -100,11 +100,11 @@
                 </span>
                 <span class='col-xs-12 col-md-1'>
                     {{ t.precision }} / {{ t.recall }}
-                    <span class='attr-label visible-xs visible-sm' style='float: left;'>p/r&nbsp;&nbsp;</span>
+                    <span class='attr-label visible-xs visible-sm float-left'>p/r&nbsp;&nbsp;</span>
                 </span>
                 <span class='col-xs-12 col-md-1'>
                     <input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}>
-                    <span class='attr-label visible-xs visible-sm' style='float: left;'>compound&nbsp;&nbsp;</span>
+                    <span class='attr-label visible-xs visible-sm float-left'>compound&nbsp;&nbsp;</span>
                 </span>
             </div>
             <div class='row'>

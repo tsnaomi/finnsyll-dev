@@ -19,7 +19,7 @@
 <div class='doc-text container'>   
 {% for t in TEXT %}
     {% if t is token %}
-    <a data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='word {{ t|goldclass }}{% if t.is_compound %} compound{% endif %}'> {{ t.test_syll }} </a>
+    <a data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='word {{ t|goldclass }}{% if t.is_compound %} compound{% endif %}'> {{ t.test_syll1 }} </a>
     {% elif t == '.' %}
     <span class='punct'>.</span>
     <br>

@@ -47,7 +47,7 @@
                             </div>
                             <div class='row'>
                                 <span class='col-xs-3'>
-                                    <textarea id='note' name='note' class='gray' style='height: 133px; resize: none;'></textarea>
+                                    <textarea id='note' name='note' class='gray'></textarea>
                                 </span>
                                 <span class='col-xs-9'>
                                     <div>
@@ -87,7 +87,7 @@
                                 <input type='checkbox' id='stopword' name='is_stopword' class='col-xs-3' style="left: 12px; bottom: -1px;" value=1 disabled>
                             </div>
                             <br>
-                            <div style='text-align: center; display: block;'>
+                            <div class='center'>
                                 <input type='submit' class='OK' value='OK!'>
                             </div>
                             <br>
@@ -96,28 +96,6 @@
                 </div>
             </div>
         </div>
-    </div>
-{%- endmacro %}
-
-{% macro paginate(pagination) -%}
-    <div class='pagination'>
-        {% if pagination.has_prev %}
-        <a href="{{ url_for_other_page(pagination.page - 1) }}">&laquo; Previous</a>
-        {% endif %}
-        {% for page in pagination.iter_pages() %}
-        {% if page %}
-        {% if page != pagination.page %}
-        <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
-        {% else %}
-        <strong>{{ page }}</strong>
-        {% endif %}
-        {% else %}
-        <span class='ellipsis'>…</span>
-        {% endif %}
-        {% endfor %}
-        {% if pagination.has_next %}
-        <a href="{{ url_for_other_page(pagination.page + 1) }}">Next &raquo;</a>
-        {% endif %}
     </div>
 {%- endmacro %}
 
@@ -146,6 +124,8 @@
         <span class='col-xs-12 col-md-3'>
             <a class='{{ t|goldclass }}' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" title='{{ title(t) }}'>{{ t.orth }}</a>
         </span>
+        <div class='visible-xs visible-sm col-xs-12 height'>
+        </div>
         <span class='visible-xs visible-sm col-xs-12 attr-label'>
             <div class='row'>
                 <span class='col-xs-4'>rules</span><span class='col-xs-8'>test</span>
@@ -170,6 +150,7 @@
         </span>
     </div>
     <br>
-    <br class='visible-xs visible-sm'>
+    <div class='divide'></div>
+    <br>
     {% endfor %}
 {%- endmacro %}

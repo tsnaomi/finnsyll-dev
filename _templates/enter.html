@@ -3,7 +3,7 @@
 <html lang='en'>
     <title>FinnSyll</title>
     <head>
-        <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
+        <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='entrance.css') }}">
         <link rel='stylesheet' type='text/css' href='//fonts.googleapis.com/css?family=Pacifico|EB+Garamond'>
         {% if config.TESTING %}
         <link rel="icon" type="image/png" href="{{ url_for('static', filename='finnsyll-testing.png') }}">
@@ -14,14 +14,14 @@
         <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1'>
     </head>
     <body>
-        <form class='entrance' method='POST'>
+        <form method='POST'>
             <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
             <br>
-            <input type='text' class='entrance-auth' name='username' placeholder='username'>
+            <input type='text' name='username' placeholder='username'>
             <br>
-            <input type='password' class='entrance-auth' name='password' placeholder='password'>
+            <input type='password' name='password' placeholder='password'>
             <br>
-            <input type='submit' class='entrance-submit' value='Sign In'>
+            <input type='submit' value='Sign In'>
         </form>
         {% for message in get_flashed_messages() %}
         <div class='flash'>{{ message }}</div>
