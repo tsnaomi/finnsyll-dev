@@ -595,34 +595,39 @@ def main_view():
     VERIFIED = Token.query.filter(Token.is_gold.isnot(None))
     GOLD = Token.query.filter_by(is_gold=True)
 
-    class Stats(object):
-        token_count = 991730  # Token.query.count()
-        doc_count = 61529  # Document.query.count()
+    token_count = 991730  # Token.query.count()
+    doc_count = 61529  # Document.query.count()
 
-        # caculate accuracy excluding compounds
-        verified = VERIFIED.filter_by(is_compound=False).count()
-        gold = GOLD.filter_by(is_compound=False).count()
-        accuracy = (float(gold) / verified) * 100
+    # caculate accuracy excluding compounds
+    verified = VERIFIED.filter_by(is_compound=False).count()
+    gold = GOLD.filter_by(is_compound=False).count()
+    accuracy = (float(gold) / verified) * 100
 
-        # calculate accuracy including compounds
-        verified = VERIFIED.count()
-        gold = GOLD.count()
-        compound_accuracy = (float(gold) / verified) * 100
+    # calculate accuracy including compounds
+    verified = VERIFIED.count()
+    gold = GOLD.count()
+    compound_accuracy = (float(gold) / verified) * 100
 
-        remaining = token_count - verified
-        reviewed = Document.query.filter_by(reviewed=True).count()
+    # calculate aamulehti numbers
+    remaining = token_count - verified
+    reviewed = 823  # Document.query.filter_by(reviewed=True).count()
 
-        # final statistics
-        token_count = format(token_count, ',d')
-        doc_count = format(doc_count, ',d')
-        verified = format(verified, ',d')
-        gold = format(gold, ',d')
-        accuracy = round(accuracy, 2)
-        compound_accuracy = round(compound_accuracy, 2)
-        remaining = format(remaining, ',d')
-        reviewed = format(reviewed, ',d')
+    # calculate average precision and recall
+    precision = float(sum([t.precision for t in VERIFIED])) / verified
+    recall = float(sum([t.recall for t in VERIFIED])) / verified
 
-    stats = Stats()
+    stats = {
+        'token_count': format(token_count, ',d'),
+        'doc_count': format(doc_count, ',d'),
+        'verified': format(verified, ',d'),
+        'gold': format(gold, ',d'),
+        'accuracy': round(accuracy, 2),
+        'compound_accuracy': round(compound_accuracy, 2),
+        'remaining': format(remaining, ',d'),
+        'reviewed': format(reviewed, ',d'),
+        'precision': round(precision, 2),
+        'recall': round(recall, 2)
+        }
 
     return render_template('main.html', kw='main', stats=stats)
 
