@@ -593,7 +593,7 @@ def apply_bulk_form(http_form):
 def main_view():
     '''List statistics on the syllabifier's performance.'''
     VERIFIED = Token.query.filter(Token.is_gold.isnot(None))
-    GOLD = Token.query.filter_by(is_gold=True)
+    GOLD = VERIFIED.filter_by(is_gold=True)
 
     token_count = 991730  # Token.query.count()
     doc_count = 61529  # Document.query.count()
@@ -776,6 +776,7 @@ def bad_view(page):
         apply_form(request.form)
 
     tokens = get_bad_tokens()
+    count = format(tokens.count(), ',d')
     tokens, pagination = paginate(page, tokens)
 
     return render_template(
@@ -783,6 +784,7 @@ def bad_view(page):
         tokens=tokens,
         kw='bad',
         pagination=pagination,
+        count=count,
         )
 
 
@@ -804,42 +806,22 @@ def lemma_view(page):
         )
 
 
-@app.route('/<tag>-variation/', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/<tag>-variation/page/<int:page>', methods=['GET', 'POST'])
-def variation_view(tag, page):
+@app.route('/variation/', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/variation/page/<int:page>', methods=['GET', 'POST'])
+def variation_view(page):
     '''List all ambiguous tokens and process corrections.'''
     if request.method == 'POST':
+        apply_form(request.form)
 
-        if request.form.get('syll1'):
-            apply_form(request.form)
-
-        else:
-            apply_bulk_form(request.form)
-
-    if tag == 'list':
-        tokens = get_variation()
-        per_page = 40
-
-    elif tag == 'test':
-        tokens = get_test_verified_variation()
-        per_page = 10
-
-    elif tag == 'gold':
-        tokens = get_gold_verified_variation()
-        per_page = 10
-
-    else:
-        abort(404)
-
+    tokens = get_variation()
     count = format(tokens.count(), ',d')
-    tokens, pagination = paginate(page, tokens, per_page)
+    tokens, pagination = paginate(page, tokens)
 
     return render_template(
         'tokens.html',
         tokens=tokens,
         kw='variation',
         pagination=pagination,
-        secondary=tag,
         count=count,
         )
 

@@ -6,25 +6,23 @@
 <br> 
 
 <div class='container'>
-    {% if secondary %}
+    {% if kw == 'variation' or kw == 'bad' %}
     <div class='description'>
-        {% if secondary == 'list' %}
+        {% if kw == 'variation' %}
         This page lists all of the words that display variation, whether in their <i>test</i> syllabifications, <i>gold</i> syllabifications, or both.
-        {% elif secondary == 'test' %}
-        This page lists all previously verified words that display variation in their <i>test</i> syllabifications but not in their gold syllabifications.
-        {% elif secondary == 'gold' %}
-        This page lists all previously verified words that display variation in their <i>gold</i> syllabifications but not in their test syllabifications.
+        {% else %}
+        This page lists all of the words that fail to have perfect <i>recall</i>.
         {% endif %}
         <br>
         <i>{{ count }} matches</i>
     </div>
     {% endif %}
     <div class='tokens'>
-        {% if kw == 'unverified' or kw == 'variation' and secondary != 'list' %}
+        {% if kw == 'unverified' %} <!-- unverified -->
         <form method='POST'>
             <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
             <div class='row hidden-xs hidden-sm'>
-                {% if kw == 'unverified' %}<span class='attr-label col-md-1'>freq</span>{% endif %}
+                <span class='attr-label col-md-1'>freq</span>
                 <span class='attr-label col-md-2'>orth</span>
                 <span class='col-md-5'>
                     <div class='row'>
@@ -33,11 +31,9 @@
                     </div>
                 </span>
                 <span class='attr-label col-md-3'>syll</span>
-                {% if kw == 'variation' %}<span class='attr-label col-md-1'>p / r</span>{% endif %}
                 <span class='attr-label col-md-1'>compound</span>
             </div>
             <br class='hidden-xs hidden-sm'>
-            {% if kw == 'unverified' %} <!--  unverified -->
             {% for t in tokens %}
             <div class='row'>
                 <input type='hidden' name='id_{{ loop.index }}' value='{{ t.id }}'> 
@@ -76,47 +72,6 @@
             <br>
             <br>
             {% endfor %}
-            {% else %}  <!--  test variation, gold variation -->
-            {% for t in tokens %}
-            <div class='row'>
-                <input type='hidden' name='id_{{ loop.index }}' value='{{ t.id }}'> 
-                <span class='col-xs-12 col-md-2'>
-                    <span class='{{ t|goldclass }}' title='{{ title(t) }}'>{{ t.orth }}</span>
-                </span>
-                <span class='col-xs-12 col-md-5'>
-                    <div class='row'>
-                        <span class='col-xs-4 col-md-5'>{{ t.rules1 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll1 }}</span>
-                        {% if t.rules2 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules2 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll2 }}</span></div>
-                        {% if t.rules3 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules3 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll3 }}</span></div>
-                        {% if t.rules4 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules4 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll4 }}</span></div>
-                        {% endif %}{% endif %}{% endif %}
-                    </div>
-                </span>
-                <span class='col-xs-12 col-md-3'>
-                    <input type='text' class='gray' name='syll1_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll1 }}'><br>
-                    <input type='text' class='gray' name='syll2_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll2 }}'><br>
-                    <input type='text' class='gray' name='syll3_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll3 }}'><br>
-                    <input type='text' class='gray' name='syll4_{{ loop.index }}' placeholder='alternative syll' value='{{ t.syll4 }}'>
-                </span>
-                <span class='col-xs-12 col-md-1'>
-                    {{ t.precision }} / {{ t.recall }}
-                    <span class='attr-label visible-xs visible-sm float-left'>p/r&nbsp;&nbsp;</span>
-                </span>
-                <span class='col-xs-12 col-md-1'>
-                    <input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}>
-                    <span class='attr-label visible-xs visible-sm float-left'>compound&nbsp;&nbsp;</span>
-                </span>
-            </div>
-            <div class='row'>
-                <span class='hidden-xs hidden-sm col-md-2'></span>
-                <span class='col-xs-12 col-md-10'>
-                    <textarea class='gray note' name='note_{{ loop.index }}' placeholder='Note...'>{{ t.note }}</textarea>
-                </span>
-            </div>
-            <br>
-            <br>
-            {% endfor %}
-            {% endif %}
             <div class='center'>
                 <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');" value='OK!'>
             </div>
