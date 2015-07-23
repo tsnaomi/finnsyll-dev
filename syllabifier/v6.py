@@ -194,7 +194,6 @@ def _syllabify(word, T4=True, T1E=True, T1G=0):
 
 # T1 --------------------------------------------------------------------------
 
-
 def apply_T1(word, T1E=True, T1G=0):  # SIMPLIFY
     # split consonants and vowels: 'balloon' -> ['b', 'a', 'll', 'oo', 'n']
     WORD = [w for w in re.split('([ieAyOauo]+)', word) if w]
@@ -244,40 +243,6 @@ def apply_T1(word, T1E=True, T1G=0):  # SIMPLIFY
                 else:
                     WORD[i] = '.' + v
 
-            # elif is_cluster(v[1:]):
-
-            #     # T1E
-            #     # If there is a word-medial "Finnish" consonant cluster that is
-            #     # preceded by a sonorant consonant, this introduces variation.
-            #     # In one variant, if the previous syllable receives stress,
-            #     # the sonorant consonant and the first consonant of the cluster
-            #     # form the coda of the previous syllable. Otherwise, if the
-            #     # previous syllable is unstressed, only the sonorant consonant
-            #     # forms the coda of the previous syllable:
-            #     # 'VlCC > VlC.C, VlCC > Vl.CC
-            #     # In the second variant, the sonorant consonant always forms
-            #     # the coda of the previous syllble, regardless of stress:
-            #     # 'VlCC > Vl.CC, VlCC > Vl.CC
-            #     if is_sonorant(v[0]):
-            #         E = 'E'
-
-            #         # if the previous syllable is odd and receives stress
-            #         if unstressed and T1E:
-            #             WORD[i] = v[:2] + '.' + v[2:]
-
-            #         else:
-            #             WORD[i] = v[0] + '.' + v[1:]
-
-            #     # T1F
-            #     # If there is a word-medial "Finnish" cluster that follows a
-            #     # non-sonorant consonant, that first non-sonorant consonant
-            #     # forms the coda of the previous syllable, and the cluster
-            #     # forms the onset of the current syllable:
-            #     # VCkr > VC.kr
-            #     else:
-            #         F = 'F'
-            #         WORD[i] = v[0] + '.' + v[1:]
-
             elif is_cluster(v[1:]):
 
                 # T1E (optional)
@@ -301,17 +266,6 @@ def apply_T1(word, T1E=True, T1G=0):  # SIMPLIFY
                 else:
                     F = 'F'
                     WORD[i] = v[0] + '.' + v[1:]
-
-                # T1F
-                # else:
-                #     F = 'F'
-
-                #     if i == 1:
-                #         print word, v
-                #         WORD[i] = v[:2] + '.' + v[2:]
-
-                #     else:
-                #         WORD[i] = v[0] + '.' + v[1:]  # original
 
             # elif len(v) >= 3:  # foreign clusters
             #     G = 'G'
