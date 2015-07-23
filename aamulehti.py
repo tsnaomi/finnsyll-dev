@@ -198,39 +198,39 @@ def syllabify_unseen_lemmas():
 def tabulate_to_file(tokens, filename):
     parse = lambda t: [
         t.freq,
-        'good' if t.is_gold else 'bad' if t.is_gold is False else '',
+        # 'good' if t.is_gold else 'bad' if t.is_gold is False else '',
         'C' if t.is_compound else '',  # C for compound
         t.orth,
-        t.rules1,
-        t.test_syll1,
-        t.rules2,
-        t.test_syll2,
+        # t.rules1,
+        # t.test_syll1,
+        # t.rules2,
+        # t.test_syll2,
         # t.rules3,
         # t.test_syll3,
         # t.rules4,
         # t.test_syll4,
-        t.syll1,
-        t.syll2,
-        t.syll3,
+        # t.syll1,
+        # t.syll2,
+        # t.syll3,
         # t.syll4,
         ]
 
     headers = [
         'freq',
-        'status',
+        # 'status',
         'compound',
         'orth',
-        'rules 1',
-        'test 1',
-        'rules 2',
-        'test 2',
+        # 'rules 1',
+        # 'test 1',
+        # 'rules 2',
+        # 'test 2',
         # 'rules 3',
         # 'test 3',
         # 'rules 4',
         # 'test 4',
-        'gold 1',
-        'gold 2',
-        'gold 3',
+        # 'gold 1',
+        # 'gold 2',
+        # 'gold 3',
         # 'gold 4',
         ]
 
@@ -248,13 +248,22 @@ def transition(pdf=False):
     '''Temporarily re-syllabify tokens and create a transition report.'''
     changed = lambda t: t._is_gold != t.is_gold
     parse = lambda t: [
-        t._test_syll1, t._rules1,
-        t._test_syll2, t._rules2,
-        t._test_syll3, t._rules3,
+        t._test_syll1,  # t._rules1,
+        t._test_syll2,  # t._rules2,
+        t._test_syll3,  # t._rules3,
+        t._test_syll4,  # t._rules4,
+        '%s / %s' % (round(t._precision, 2), round(t._recall, 2)),
         '>',
-        t.test_syll1, t.rules1,
-        t.test_syll2, t.rules2,
-        t.test_syll3, t.rules3,
+        t.test_syll1,  # t.rules1,
+        t.test_syll2,  # t.rules2,
+        t.test_syll3,  # t.rules3,
+        t.test_syll4,  # t.rules4,
+        '%s / %s' % (round(t.precision, 2), round(t.recall, 2)),
+        'C' if t.is_compound else '',
+        t.syll1,
+        t.syll2,
+        t.syll3,
+        t.syll4,
         ]
 
     tokens = finn.Token.query.filter(finn.Token.is_gold.isnot(None))
@@ -263,10 +272,14 @@ def transition(pdf=False):
         t._test_syll1 = t.test_syll1
         t._test_syll2 = t.test_syll2
         t._test_syll3 = t.test_syll3
+        t._test_syll4 = t.test_syll4
         t._rules1 = t.rules1
         t._rules2 = t.rules2
         t._rules3 = t.rules3
+        t._rules4 = t.rules4
         t._is_gold = t.is_gold
+        t._precision = t.precision
+        t._recall = t.recall
         t.syllabify()
 
     good_to_bad = [parse(t) for t in tokens if changed(t) and not t.is_gold]
@@ -293,5 +306,7 @@ if __name__ == '__main__':
     # populate_db_tokens_from_aamulehti_1999()  # 13114.48 seconds
     # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
-    tabulate_to_file(finn.get_test_compounds(), 'test_compounds')
-    # transition(pdf='--pdf' in sys.argv)
+    # tabulate_to_file(finn.get_test_compounds(), 'test_compounds')
+    # finn.syllabify_tokens()
+    # finn.detect_compounds()
+    transition(pdf='--pdf' in sys.argv)

@@ -42,7 +42,11 @@ def is_consonant(ch):
     return not is_vowel(ch)  # includes 'w'
 
 
-def is_cluster(ch):  # KEEP?
+def is_sonorant(ch):
+    return ch in [u'm', u'n', u'l', u'r']
+
+
+def is_cluster(ch):
     return ch in CLUSTERS
 
 

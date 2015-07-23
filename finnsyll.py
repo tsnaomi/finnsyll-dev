@@ -22,7 +22,7 @@ from math import ceil
 from sqlalchemy import or_
 from syllabifier.compound import detect
 from syllabifier.phonology import FOREIGN_FINAL, get_sonorities, get_weights
-from syllabifier.v5 import syllabify
+from syllabifier.v6 import syllabify
 from werkzeug.exceptions import BadRequestKeyError
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
@@ -625,8 +625,8 @@ def main_view():
         'compound_accuracy': round(compound_accuracy, 2),
         'remaining': format(remaining, ',d'),
         'reviewed': format(reviewed, ',d'),
-        'precision': round(precision, 2),
-        'recall': round(recall, 2)
+        'precision': round(precision, 4),
+        'recall': round(recall, 4)
         }
 
     return render_template('main.html', kw='main', stats=stats)
