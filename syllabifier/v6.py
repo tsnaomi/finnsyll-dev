@@ -244,63 +244,63 @@ def apply_T1(word, T1E=True, T1G=0):  # SIMPLIFY
                 else:
                     WORD[i] = '.' + v
 
-            elif is_cluster(v[1:]):
-
-                # T1E
-                # If there is a word-medial "Finnish" consonant cluster that is
-                # preceded by a sonorant consonant, this introduces variation.
-                # In one variant, if the previous syllable receives stress,
-                # the sonorant consonant and the first consonant of the cluster
-                # form the coda of the previous syllable. Otherwise, if the
-                # previous syllable is unstressed, only the sonorant consonant
-                # forms the coda of the previous syllable:
-                # 'VlCC > VlC.C, VlCC > Vl.CC
-                # In the second variant, the sonorant consonant always forms
-                # the coda of the previous syllble, regardless of stress:
-                # 'VlCC > Vl.CC, VlCC > Vl.CC
-                if is_sonorant(v[0]):
-                    E = 'E'
-
-                    # if the previous syllable is odd and receives stress
-                    if unstressed and T1E:
-                        WORD[i] = v[:2] + '.' + v[2:]
-
-                    else:
-                        WORD[i] = v[0] + '.' + v[1:]
-
-                # T1F
-                # If there is a word-medial "Finnish" cluster that follows a
-                # non-sonorant consonant, that first non-sonorant consonant
-                # forms the coda of the previous syllable, and the cluster
-                # forms the onset of the current syllable:
-                # VCkr > VC.kr
-                else:
-                    F = 'F'
-                    WORD[i] = v[0] + '.' + v[1:]
-
             # elif is_cluster(v[1:]):
 
-            #     # T1E (optional)
+            #     # T1E
             #     # If there is a word-medial "Finnish" consonant cluster that is
-            #     # preceded by a sonorant consonant, if the previous syllable
-            #     # receives stress, the sonorant consonant and the first
-            #     # consonant of the cluster form the coda of the previous
-            #     # syllable, and the remainder of the cluster forms the onset of
-            #     # the current syllable:
-            #     # 'VlCC > VlC.C
-            #     if T1E and is_sonorant(v[0]) and unstressed:
+            #     # preceded by a sonorant consonant, this introduces variation.
+            #     # In one variant, if the previous syllable receives stress,
+            #     # the sonorant consonant and the first consonant of the cluster
+            #     # form the coda of the previous syllable. Otherwise, if the
+            #     # previous syllable is unstressed, only the sonorant consonant
+            #     # forms the coda of the previous syllable:
+            #     # 'VlCC > VlC.C, VlCC > Vl.CC
+            #     # In the second variant, the sonorant consonant always forms
+            #     # the coda of the previous syllble, regardless of stress:
+            #     # 'VlCC > Vl.CC, VlCC > Vl.CC
+            #     if is_sonorant(v[0]):
             #         E = 'E'
-            #         WORD[i] = v[:2] + '.' + v[2:]
+
+            #         # if the previous syllable is odd and receives stress
+            #         if unstressed and T1E:
+            #             WORD[i] = v[:2] + '.' + v[2:]
+
+            #         else:
+            #             WORD[i] = v[0] + '.' + v[1:]
 
             #     # T1F
             #     # If there is a word-medial "Finnish" cluster that follows a
-            #     # consonant, that first consonant forms the coda of the
-            #     # previous syllable, and the cluster forms the onset of the
-            #     # current syllable:
+            #     # non-sonorant consonant, that first non-sonorant consonant
+            #     # forms the coda of the previous syllable, and the cluster
+            #     # forms the onset of the current syllable:
             #     # VCkr > VC.kr
             #     else:
             #         F = 'F'
             #         WORD[i] = v[0] + '.' + v[1:]
+
+            elif is_cluster(v[1:]):
+
+                # T1E (optional)
+                # If there is a word-medial "Finnish" consonant cluster that is
+                # preceded by a sonorant consonant, if the previous syllable
+                # receives stress, the sonorant consonant and the first
+                # consonant of the cluster form the coda of the previous
+                # syllable, and the remainder of the cluster forms the onset of
+                # the current syllable:
+                # 'VlCC > VlC.C
+                if T1E and is_sonorant(v[0]) and unstressed:
+                    E = 'E'
+                    WORD[i] = v[:2] + '.' + v[2:]
+
+                # T1F
+                # If there is a word-medial "Finnish" cluster that follows a
+                # consonant, that first consonant forms the coda of the
+                # previous syllable, and the cluster forms the onset of the
+                # current syllable:
+                # VCkr > VC.kr
+                else:
+                    F = 'F'
+                    WORD[i] = v[0] + '.' + v[1:]
 
                 # T1F
                 # else:
