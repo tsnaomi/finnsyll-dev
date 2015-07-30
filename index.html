@@ -19,28 +19,43 @@
     </section>
 
     <section class="main-content">
-      <h1>
-<a id="finnsyll" class="anchor" href="#finnsyll" aria-hidden="true"><span class="octicon octicon-link"></span></a>FinnSyll</h1>
-
-<p>Syllabifying Finnish in Python.</p>
-
-<h3>
-<a id="primary-goals" class="anchor" href="#primary-goals" aria-hidden="true"><span class="octicon octicon-link"></span></a>Primary goals</h3>
+      <h2>
+<a id="primary-goals" class="anchor" href="#primary-goals" aria-hidden="true"><span class="octicon octicon-link"></span></a>primary goals</h2>
 
 <ul>
-<li>Identifying unmarked compound boundaries</li>
-<li>Exploring vowel (T4) variation using Prosodic</li>
+<li>identify unmarked compound boundaries</li>
+<li>explore vowel (T4) variation using Prosodic</li>
 </ul>
 
-<h3>
-<a id="secondary-goals" class="anchor" href="#secondary-goals" aria-hidden="true"><span class="octicon octicon-link"></span></a>Secondary goals</h3>
+<h2>
+<a id="secondary-goals" class="anchor" href="#secondary-goals" aria-hidden="true"><span class="octicon octicon-link"></span></a>secondary goals</h2>
 
 <ul>
-<li>Exploring variation in Finnish consonant clusters</li>
+<li>explore variation in Finnish consonant clusters</li>
 </ul>
 
-<h3>
-<a id="open-questions" class="anchor" href="#open-questions" aria-hidden="true"><span class="octicon octicon-link"></span></a>Open questions</h3>
+<h2>
+<a id="todo-list" class="anchor" href="#todo-list" aria-hidden="true"><span class="octicon octicon-link"></span></a>todo list</h2>
+
+<h4>
+<a id="syllabifier" class="anchor" href="#syllabifier" aria-hidden="true"><span class="octicon octicon-link"></span></a>syllabifier</h4>
+
+<ul>
+<li>complicate T4 to be insensitive not codas</li>
+<li>use front/back vowel harmony to detect compound boundaries</li>
+</ul>
+
+<h4>
+<a id="webdev" class="anchor" href="#webdev" aria-hidden="true"><span class="octicon octicon-link"></span></a>webdev</h4>
+
+<ul>
+<li>implement stopword functionality</li>
+<li>when the entire corpus has been reviewed, syllabify all unseen lemmas</li>
+<li>when creating the data frame, do not create rows for Tokens where Token.freq == 0</li>
+</ul>
+
+<h2>
+<a id="open-questions" class="anchor" href="#open-questions" aria-hidden="true"><span class="octicon octicon-link"></span></a>open questions</h2>
 
 <ul>
 <li>Is /au/ always ambiguous in unstressed syllables? E.g., <em>rakkauden</em>.</li>
@@ -48,17 +63,86 @@
 <li>Can we use back/front vowel harmony to detect compound boundaries?</li>
 </ul>
 
-<h3>
-<a id="q--a" class="anchor" href="#q--a" aria-hidden="true"><span class="octicon octicon-link"></span></a>Q &amp; A</h3>
+<h2>
+<a id="q--a" class="anchor" href="#q--a" aria-hidden="true"><span class="octicon octicon-link"></span></a>q &amp; a</h2>
+
+<h4>
+<a id="syllabifier-1" class="anchor" href="#syllabifier-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>syllabifier</h4>
 
 <ul>
 <li>
 <strong>Does the syllabifier always join long vowels?</strong> Yes, this rule is encompassed in T6.</li>
 </ul>
 
-<hr>
+<h4>
+<a id="webdev-1" class="anchor" href="#webdev-1" aria-hidden="true"><span class="octicon octicon-link"></span></a>webdev</h4>
 
-<p><a href="https://github.com/tsnaomi/finnsyll/generated_pages/new">Edit</a></p>
+<ul>
+<li>
+<del>Include un-syllabified forms in the data frame?</del> Yes.</li>
+<li>
+<del>Should we syllabify abbreviations?</del> No.</li>
+<li>
+<del>Exclude words in all capital letters?</del> Yes.</li>
+<li>
+<del>Exclude words that contain acronyms?</del> No.</li>
+</ul>
+
+<h2>
+<a id="notes" class="anchor" href="#notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>notes</h2>
+
+<h4>
+<a id="ideally-bad-simplex-tokens-will-only-include-stopwords" class="anchor" href="#ideally-bad-simplex-tokens-will-only-include-stopwords" aria-hidden="true"><span class="octicon octicon-link"></span></a>Ideally, bad simplex tokens will only include stopwords</h4>
+
+<h4>
+<a id="split-unstressed-heavy-syllables" class="anchor" href="#split-unstressed-heavy-syllables" aria-hidden="true"><span class="octicon octicon-link"></span></a>Split unstressed heavy syllables</h4>
+
+<p><em>This rule is because of stress</em>. Since we can split these syllables, we do not see the repair in which the stress shifts to an even syllable. (Consider this repair during stress assignment later.) By implementing this at the syllabifier layer, we will not have to repair syllabifications at the stress assignment layer.</p>
+
+<p>     tie
+     da.ni.el, *da.niel</p>
+
+<p>     vei
+     es.se.is.ti, *es.seis.ti</p>
+
+<p>     tiu
+     e.van.ke.li.u.me.ja, *e.van.ke.liu.me.ja</p>
+
+<p>     no.vel.lien, *no.vel.li.en &lt; <em>the last syllable is extrametrical</em></p>
+
+<p>Extrametricality does not apply to the various morphemes in a compound -- it only applies to the compound as a whole. Perhaps, all of the stress rules apply in this way.</p>
+
+<p><strong>NB</strong>: Here, splitting is occurring where it shouldn't:</p>
+
+<pre><code>sosiaaliterapeutti    T1 T4 T6 T7    so.si.aa..li.te.ra.pe.ut.ti    so.si.aa.li.te.ra.peut.ti
+</code></pre>
+
+<h2>
+<a id="stopwords" class="anchor" href="#stopwords" aria-hidden="true"><span class="octicon octicon-link"></span></a>stopwords?</h2>
+
+<h4>
+<a id="ruoissa" class="anchor" href="#ruoissa" aria-hidden="true"><span class="octicon octicon-link"></span></a>ruo.is.sa</h4>
+
+<p>Using "find", I found the word "ruoissa", which was shown as coming from the root /ruko/. I marked "ru.ois.sa" as the correct syllabification (gold). However, I suspect in the context where I saw this word it might well come from the word /ruoka/ (i.e., the lexical analysis is wrong) in which case the correct syllabification would be "ruo.is.sa". Naomi, maybe we should undo this word's "gold" and mark it as unchecked, so I can check it in context. Or maybe we should leave it as is because the syllabification is correct for the root /ruko/. I think we should leave it as is.</p>
+
+<h4>
+<a id="taustaa" class="anchor" href="#taustaa" aria-hidden="true"><span class="octicon octicon-link"></span></a>taus.taa</h4>
+
+<p>An underlying [k] is deleted: "ta.[k]us.taa"</p>
+
+<h4>
+<a id="niäminen" class="anchor" href="#ni%C3%A4minen" aria-hidden="true"><span class="octicon octicon-link"></span></a>niäminen</h4>
+
+<p>dialectal (spelling post-lexical pronunciation)</p>
+
+<h4>
+<a id="tiäräks" class="anchor" href="#ti%C3%A4r%C3%A4ks" aria-hidden="true"><span class="octicon octicon-link"></span></a>tiäräks</h4>
+
+<p>dialectal (spelling post-lexical pronunciation)</p>
+
+<h2>
+<a id="" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a><a href="https://github.com/tsnaomi/finnsyll/generated_pages/new">§</a>
+</h2>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/tsnaomi/finnsyll">FinnSyll</a> is maintained by <a href="https://github.com/tsnaomi">tsnaomi</a>.</span>
