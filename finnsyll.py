@@ -646,18 +646,23 @@ def main_view():
     doc_count = 61529  # Document.query.count()
 
     # caculate accuracy excluding compounds
-    verified = VERIFIED.filter_by(is_compound=False).count()
-    gold = GOLD.filter_by(is_compound=False).count()
-    accuracy = (float(gold) / verified) * 100
+    simplex_verified = VERIFIED.filter_by(is_compound=False).count()
+    simplex_gold = GOLD.filter_by(is_compound=False).count()
+    simplex_accuracy = (float(simplex_gold) / simplex_verified) * 100
 
     # calculate accuracy including compounds
     verified = VERIFIED.count()
     gold = GOLD.count()
-    compound_accuracy = (float(gold) / verified) * 100
+    accuracy = (float(gold) / verified) * 100
 
     # calculate aamulehti numbers
     remaining = token_count - verified
     reviewed = 823  # Document.query.filter_by(reviewed=True).count()
+
+    # calculate compound numbers
+    compound_verified = verified - simplex_verified
+    compound_gold = VERIFIED.filter_by(is_test_compound=True).count()
+    compound_accuracy = (float(compound_gold) / compound_verified) * 100
 
     # calculate average precision and recall
     precision = float(sum([t.precision for t in VERIFIED])) / verified
@@ -668,9 +673,12 @@ def main_view():
         'doc_count': format(doc_count, ',d'),
         'verified': format(verified, ',d'),
         'gold': format(gold, ',d'),
+        'simplex_accuracy': round(simplex_accuracy, 2),
         'accuracy': round(accuracy, 2),
-        'compound_accuracy': round(compound_accuracy, 2),
         'remaining': format(remaining, ',d'),
+        'compound_verified': format(compound_verified, ',d'),
+        'compound_gold': format(compound_gold, ',d'),
+        'compound_accuracy': round(compound_accuracy, 2),
         'reviewed': format(reviewed, ',d'),
         'precision': round(precision, 4),
         'recall': round(recall, 4)
