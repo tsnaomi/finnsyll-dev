@@ -13,25 +13,51 @@
 **T0**:
 Indicates that no syllabification rules have applied.
 
-**T1**:
-There is a syllable boundary in front of every CV-sequence. If there is a legal consonant cluster, the first consonant of the cluster forms the coda of a stressed syllable; otherwise, the cluster forms the onset of an unstressed syllable.
+**T1b**: If there is a consonant cluster word-initially, the entire cluster forms the onset of the first syllable.
 
-        def apply_T1(word):
+**T1c**: If there is a consonant cluster word-finally, the entire cluster forms the coda of the final syllable.
+
+**T1d**: If there is a bare "Finnish" consonant cluster word-medially and the previous syllable receives stress, the first consonant of the cluster forms the coda of the previous syllable (to create a heavy syllable); otherwise, the whole cluster forms the onset of the current syllable (this is the /kr/ rule).
+
+**T1e**: If there is a word-medial "Finnish" consonant cluster that is preceded by a sonorant consonant, if the previous syllable receives stress, the sonorant consonant and the first consonant of the cluster form the coda of the previous syllable, and the remainder of the cluster forms the onset of the current syllable. *VARIATION: T1e optionally applies.*
+
+**T1f**: If there is a word-medial "Finnish" cluster that follows a consonant, that first consonant forms the coda of the previous syllable, and the cluster forms the onset of the current syllable. T1e bleeds T1f.
+
+**T1a**: There is a syllable boundary in front of every CV sequence.
+
+
+        def apply_T1(word, T1E=True):
             # split consonants and vowels: 'balloon' -> ['b', 'a', 'll', 'oo', 'n']
             WORD = [w for w in re.split('([ieAyOauo]+)', word) if w]
-            count = 0
+            count = 1  # a count divisible by 2 indicates an even syllable
             for i, v in enumerate(WORD):
+                # T1B
                 if i == 0 and is_consonant(v[0]):
-                    continue
-                elif is_consonant(v[0]) and i + 1 != len(WORD):
-                    if is_cluster(v):  # WSP
-                        if count % 2 == 0:
-                            WORD[i] = v[0] + '.' + v[1:]  # CC > C.C, CCC > C.CC
-                        else:
-                            WORD[i] = '.' + v  # CC > .CC, CCC > .CCC
-                    else:
-                        WORD[i] = v[:-1] + '.' + v[-1]  # CC > C.C, CCC > CC.C
+                    pass
+                elif is_consonant(v[0]):
                     count += 1
+                    # True if the current syllable is unstressed, else False
+                    unstressed = count % 2 == 0
+                    # T1C
+                    if i + 1 == len(WORD):
+                        pass
+                    # T1D
+                    elif is_cluster(v):
+                        # if the previous syllable is odd and receives stress
+                        if unstressed:
+                            WORD[i] = v[0] + '.' + v[1:]
+                        else:
+                            WORD[i] = '.' + v
+                    elif is_cluster(v[1:]):
+                        # T1E (optional)
+                        if T1E and is_sonorant(v[0]) and unstressed:
+                            WORD[i] = v[:2] + '.' + v[2:]
+                        # T1F
+                        else:
+                            WORD[i] = v[0] + '.' + v[1:]
+                    # T1A
+                    else:
+                        WORD[i] = v[:-1] + '.' + v[-1]
             WORD = ''.join(WORD)
             return WORD
 
@@ -77,7 +103,7 @@ Split /iu/ sequences that do not appear in the first, second, or final syllables
             return WORD, RULE
 
 **T4**:
-An agglutination diphthong that ends in /u, y/ usually contains a syllable boundary when -C# or -CCV follow, e.g., [lau.ka.us], [va.ka.ut.taa]. *VARIATION: In words that exhibit variation in their test syllabifications, this rule has not been allowed to apply in the second of those syllabifications.*
+An agglutination diphthong that ends in /u, y/ usually contains a syllable boundary when -C# or -CCV follow, e.g., [lau.ka.us], [va.ka.ut.taa]. *VARIATION: T4 optionally applies.*
 
         def apply_T4(word):
             WORD = word.split('.')

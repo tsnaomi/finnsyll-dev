@@ -8,11 +8,55 @@ from phonology import (
     is_consonant,
     is_diphthong,
     is_long,
+    # is_sonorant,
     is_vowel,
     replace_umlauts,
     )
 
-# SYLLABIFIER.V5 introduce variation
+# SYLLABIFIER.V5 introduces variation
+
+# Gold Variation Notes --------------------------------------------------------
+
+# NB: Onset clusters are dispreferred
+
+# 1 Consonant clusters:
+#       ju.gos.la.vi.an ~ ju.go.sla.vi.an                                [sl]
+#       manc.hes.ter ~ man.ches.ter                                      [ch]
+#       tshets.he.ni.as.sa ~ tshet.she.ni.as.sa ~ tshe.tshe.ni.as.sa     [tsch]
+#       belg.ra.din ~ bel.gra.din                                        [gr]
+#       armst.rong ~ arms.trong ~ arm.strong                             [str]
+#       belg.ra.dis.sa ~ bel.gra.dis.sa
+#       ka.tast.ro.fi ~ ka.tas.tro.fi ~ ka.ta.stro.fi
+#       inf.laaa.ti.o ~ in.flaa.ti.o                                     [fl]
+#       fisc.her ~ fis.cher ~ fi.scher                                   [sch]
+#       deutsch.he ~ deuts.che ~ deut.sche
+#       sha.kes.pe.a.re ~ sha.ke.spe.a.re                                [sp]
+#       mit.su.bis.hi ~ mit.su.bi.shi                                    [sh]
+#       wimb.le.do.nin ~ wim.ble.do.nin                                  [bl]
+#       e.rit.re.an ~ e.ri.tre.an                                        [tr]
+
+# 2 Vowel/glide ambiguity:
+#       y.or.kin ~ yor.kin
+#       y.or.kis.sa ~ yor.kis.sa
+#       and.rew ~ an.drew
+
+# 3 Vowels:
+
+#       pi.an ~ pian
+#       pi.a.no ~ pia.no
+#       blue.es
+#       pi.ak.koin ~ piak.koin
+#       luin ~ luin
+#       sel.viy.ty.ä ~ sel.vi.t.ty.ä
+#       taus.ta ~ ta.us.ta [stopword]
+
+#       lais.sa ~ la.is.sa
+#       be.at ~ beat
+#       kva.er.ne.rin ~ kvaer.ne.rin
+#       haus.sa ~ ha.us.sa
+#       maun ~ ma.un
+#       yh.ti.ö.ko.ko.us ~ yh.ti.ó.ko.kous
+#       te.am ~ team
 
 
 # Syllabifier -----------------------------------------------------------------
@@ -22,15 +66,14 @@ def syllabify(word):
     word = split(word)  # detect any non-delimited compounds
     compound = True if re.search(r'-| |\.', word) else False
     syllabify = _syllabify_compound if compound else _syllabify
-    syll, rules = syllabify(word, variation=False)
+    syll, rules = syllabify(word)
 
     yield syll, rules
 
     n = 3
 
-    # derive variation
     if 'T4' in rules:
-        yield syllabify(word, variation=True)
+        yield syllabify(word, T4=False)
         n -= 1
 
     # yield empty syllabifications and rules
@@ -38,20 +81,20 @@ def syllabify(word):
         yield '', ''
 
 
-def _syllabify_compound(word, variation):
+def _syllabify_compound(word, T4=True):
     WORD, RULES = [], []
 
     # if the word contains a delimiter (a hyphens or space), split the word
     # along the delimiter(s) and syllabify the individual parts separately
     for w in re.split(r'(-| |\.)', word):
-        syll, rules = (w, ' |') if w in '- .' else _syllabify(w, variation)
+        syll, rules = (w, ' |') if w in '- .' else _syllabify(w, T4=T4)
         WORD.append(syll)
         RULES.append(rules)
 
     return ''.join(WORD), ''.join(RULES)
 
 
-def _syllabify(word, variation):
+def _syllabify(word, T4=True):
     '''Syllabify the given word.'''
     word = replace_umlauts(word)
     word, rules = apply_T1(word)
@@ -60,7 +103,7 @@ def _syllabify(word, variation):
         word, T2 = apply_T2(word)
         word, T8 = apply_T8(word)
         word, T9 = apply_T9(word)
-        word, T4 = apply_T4(word) if not variation else (word, '')
+        word, T4 = apply_T4(word) if T4 else (word, '')
         rules += T2 + T8 + T9 + T4
 
     if re.search(r'[ieAyOauo]{3}', word):
@@ -142,6 +185,13 @@ def apply_T1(word):
                 else:
                     WORD[i] = '.' + v  # CC > .CC, CCC > .CCC
 
+            # elif is_sonorant(v[0]) and is_cluster(v[1:]):  # NEW
+            #     if count % 2 == 0:
+            #         WORD[i] = v[0:2] + '.' + v[2:]
+
+            #     else:
+            #         WORD[i] = v[0] + '.' + v[1:]
+
             else:
                 WORD[i] = v[:-1] + '.' + v[-1]  # CC > C.C, CCC > CC.C
 
@@ -156,7 +206,7 @@ def apply_T1(word):
 # T2 --------------------------------------------------------------------------
 
 def apply_T2(word):
-    '''There is a syllable boundary within a sequence VV of two nonidentical
+    '''There is a syllable boundary within a VV sequence of two nonidentical
     vowels that are not a genuine diphthong, e.g., [ta.e], [ko.et.taa].'''
     WORD = word
     offset = 0
@@ -206,7 +256,7 @@ def apply_T4(word):
 # T5 --------------------------------------------------------------------------
 
 def apply_T5(word):
-    '''If a (V)VVV-sequence contains a VV-sequence that could be an /i/-final
+    '''If a (V)VVV sequence contains a VV sequence that could be an /i/-final
     diphthong, there is a syllable boundary between it and the third vowel,
     e.g., [raa.ois.sa], [huo.uim.me], [la.eis.sa], [sel.vi.äi.si], [tai.an],
     [säi.e], [oi.om.me].'''

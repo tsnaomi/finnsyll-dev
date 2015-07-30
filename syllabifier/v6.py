@@ -13,7 +13,7 @@ from phonology import (
     replace_umlauts,
     )
 
-# SYLLABIFIER.V6 goes from specific to general (Elsewhere Principle)
+# SYLLABIFIER.V6 attempts to go from specific to general (Elsewhere Principle)
 
 # SYLLABIFIER.V5 --------------------------------------------------------------
 
@@ -79,9 +79,7 @@ from phonology import (
 # Rules T1A through T1E concern consonants and consonant clusters, whereas the
 # latter rules concern vowel sequences. (Note: T4 is potentially sensitive to
 # the T1 rules.) Thus, it is mainly a matter of ranking the consonant rules
-# amongst each other and the vowel rules amongst each other. Implicit in all of
-# these rules is the constraint that a consonant cannot form a syllable without
-# a vowel (they cannot be nucleui).
+# amongst each other and the vowel rules amongst each other.
 
 # T1B   If there is a consonant cluster word-initially, the entire cluster
 #       forms the onset of the first syllable:
@@ -91,32 +89,58 @@ from phonology import (
 #       the coda of the final syllable:
 #       VCC# > VCC#
 
-# T1E   If there is a word-medial "Finnish" consonant cluster that is preceded
-#       by a sonorant consonant, this introduces variation. In both cases, the
-#       sonorant consonant forms the coda of the previous syllable (to preserve
-#       the sonority peak of the current syllable). Then, the first consonant
-#       of cluster can either complete the coda of the previous syllable, or
-#       begin the onset of the current syllable. Potentially, the former occurs
-#       when the previous syllable revieves stress. (On the other hand, Finnish
-#       disprefers complex onsets.):
-#       'VlCC > VlC.C, VlCC > Vl.CC
-
-#       Alternatively, if there is a word-medial "Finnish" consonant cluster
-#       that is preceded by a sonorant consonant cluster, the sonorant and the
-#       first element of the cluster form the coda of the previous syllable,
-#       potentially only when the previous syllable receives stress. This rule
-#       applies optionally. Then, T1A later applies, splitting up CCV sequences
-#       into C.CV sequences.
-
-# T1D   If there is a bare "Finnish" consonant cluster word-medially, if the
+# T1D   If there is a bare "Finnish" consonant cluster word-medially and the
 #       previous syllable receives stress, the first consonant of the cluster
 #       forms the coda of the previous syllable (to create a heavy syllable);
-#       otherwise, the cluster forms the onset of the current syllable (this
-#       is the /kr/ rule):
+#       otherwise, the whole cluster forms the onset of the current syllable
+#       (this is the /kr/ rule):
 #       'VCCV > 'VC.CV,  VCCV > V.CCV
+
+# T1E   (optional)
+#       If there is a word-medial "Finnish" consonant cluster that is preceded
+#       by a sonorant consonant, if the previous syllable receives stress, the
+#       sonorant consonant and the first consonant of the cluster form the coda
+#       of the previous syllable, and the remainder of the cluster forms the
+#       onset of the current syllable:
+#       'VlCC > VlC.C
+
+# T1F   (bled by T1E)
+#       If there is a word-medial "Finnish" cluster that follows a consonant,
+#       that first consonant forms the coda of the previous syllable, and
+#       the cluster forms the onset of the current syllable:
+#       VCkr > VC.kr
 
 # T1A   There is a syllable boundary in front of every CV sequence:
 #       VCV > V.CV, CCV > C.CV
+
+# T2    There is a syllable boundary within a VV sequence of two nonidentical
+#       vowels that are not a genuine diphthong:
+#       VV > V.V
+
+# T4    An agglutination diphthong that ends in /u, y/ contains a syllable
+#       boundary when appearing before -C# or -CCV follow (i.e., codas) in
+#       unstressed syllables. T4 also applies optionally:
+#       VuC# > V.uC, VuCCV > V.uCCV, 'VuCCV > 'VuCCV
+
+# T5    If a (V)VVV sequence contains a VV sequence that could be an /i/-final
+#       diphthong, there is a syllable boundary between it and the third vowel:
+#       VVi > V.Vi, ViV > Vi.V
+
+# T6    If a VVV sequence contains a long vowel, there is a syllable boundary
+#       between it and the third vowel (every vowel constitutes its own
+#       syllable):
+#       aaV > aa.V, Vaa > V.aa
+
+# T7    If a VVV sequence does not contain a potential /i/-final diphthong,
+#       there is a syllable boundary between the second and third vowels:
+#       VVV > VV.V
+
+# T8    Split /ie/ sequences in syllables that no not take primary stress:
+#       'Cie > 'Cie, Cie > Ci.e
+
+# T9    Split /iu/ sequence in syllables that do not appear in the first,
+#       second, or final syllables:
+#       #Ciu > Ciu, CVCVCiuCv > CVCVCi.uCV
 
 
 # Syllabifier -----------------------------------------------------------------
@@ -136,41 +160,42 @@ def syllabify(word):
         yield syllabify(word, T4=False)
         n -= 1
 
-    if 'E' in rules:
+    if 'e' in rules:
         yield syllabify(word, T1E=False)
         n -= 1
 
-    if 'E' in rules and 'T4' in rules:
+    if 'e' in rules and 'T4' in rules:
         yield syllabify(word, T4=False, T1E=False)
         n -= 1
 
-    if 'G' in rules:
-        yield syllabify(word, T1G=1)
-        yield syllabify(word, T1G=2)
-        n -= 2
-
     # yield empty syllabifications and rules
-    for n in range(3):
+    for n in range(7):
         yield '', ''
 
 
-def _syllabify_compound(word, T4=True, T1E=True, T1G=0):
+def _syllabify_compound(word, T4=True, T1E=True):
     WORD, RULES = [], []
 
     # if the word contains a delimiter (a hyphens or space), split the word
     # along the delimiter(s) and syllabify the individual parts separately
     for w in re.split(r'(-| |\.)', word):
-        syll, rules = (w, ' |') if w in '- .' else _syllabify(w, T4=T4, T1E=T1E, T1G=T1G)
+
+        if w in '- .':
+            syll, rules = w, ' |'
+
+        else:
+            syll, rules = _syllabify(w, T4=T4, T1E=T1E)
+
         WORD.append(syll)
         RULES.append(rules)
 
     return ''.join(WORD), ''.join(RULES)
 
 
-def _syllabify(word, T4=True, T1E=True, T1G=0):
+def _syllabify(word, T4=True, T1E=True):
     '''Syllabify the given word.'''
     word = replace_umlauts(word)
-    word, rules = apply_T1(word, T1E=T1E, T1G=T1G)
+    word, rules = apply_T1(word, T1E=T1E)
 
     if re.search(r'[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*', word):
         word, T2 = apply_T2(word)
@@ -194,14 +219,14 @@ def _syllabify(word, T4=True, T1E=True, T1G=0):
 
 # T1 --------------------------------------------------------------------------
 
-def apply_T1(word, T1E=True, T1G=0):  # SIMPLIFY
+def apply_T1(word, T1E=True):  # TODO: SIMPLIFY
     # split consonants and vowels: 'balloon' -> ['b', 'a', 'll', 'oo', 'n']
     WORD = [w for w in re.split('([ieAyOauo]+)', word) if w]
 
     # these are to keep track of which sub-rules are applying
     A, B, C, D, E, F, G = '', '', '', '', '', '', ''
 
-    # heuristically, a count divisible by 2 indiicates an even syllable
+    # a count divisible by 2 indicates an even syllable
     count = 1
 
     for i, v in enumerate(WORD):
@@ -211,7 +236,7 @@ def apply_T1(word, T1E=True, T1G=0):  # SIMPLIFY
         # forms the onset of the first syllable:
         # CCV > #CCV
         if i == 0 and is_consonant(v[0]):
-            B = 'B'
+            B = 'b'
 
         elif is_consonant(v[0]):
             count += 1
@@ -224,17 +249,17 @@ def apply_T1(word, T1E=True, T1G=0):  # SIMPLIFY
             # forms the coda of the final syllable:
             # VCC# > VCC#
             if i + 1 == len(WORD):
-                C = 'C'
+                C = 'c'
 
             # T1D
-            # If there is a bare "Finnish" consonant cluster word-medially, if
+            # If there is a bare "Finnish" consonant cluster word-medially and
             # the previous syllable receives stress, the first consonant of the
             # cluster forms the coda of the previous syllable (to create a
             # heavy syllable); otherwise, the whole cluster forms the onset of
             # the current syllable (thisis the /kr/ rule):
             # 'VCCV > 'VC.CV,  VCCV > V.CCV
             elif is_cluster(v):
-                D = 'D'
+                D = 'd'
 
                 # if the previous syllable is odd and receives stress
                 if unstressed:
@@ -254,7 +279,7 @@ def apply_T1(word, T1E=True, T1G=0):  # SIMPLIFY
                 # the current syllable:
                 # 'VlCC > VlC.C
                 if T1E and is_sonorant(v[0]) and unstressed:
-                    E = 'E'
+                    E = 'e'
                     WORD[i] = v[:2] + '.' + v[2:]
 
                 # T1F
@@ -264,22 +289,15 @@ def apply_T1(word, T1E=True, T1G=0):  # SIMPLIFY
                 # current syllable:
                 # VCkr > VC.kr
                 else:
-                    F = 'F'
+                    F = 'f'
                     WORD[i] = v[0] + '.' + v[1:]
-
-            # elif len(v) >= 3:  # foreign clusters
-            #     G = 'G'
-            #     offset = 1 if is_sonorant(v[0]) else 0
-            #     offset += 1 if is_sonorant(v[1]) else 0
-            #     offset += T1G
-            #     WORD[i] = v[:offset] + '.' + v[offset:]
 
             # T1A
             # There is a syllable boundary in front of every CV sequence:
             # VCV > V.CV, CCV > C.CV
             else:
                 WORD[i] = v[:-1] + '.' + v[-1]
-                A = 'A'
+                A = 'a'
 
     WORD = ''.join(WORD)
     RULE = ' T1' + A + B + C + D + E + F + G if word != WORD else ''
@@ -501,7 +519,8 @@ if __name__ == '__main__':
         # u'eteläesplanadilla',       # e.te.lä.esp.la.na.dil.la
         # u'battaglia',               # bat.tag.li.a (?)
         # u'tshetsheniaan',
-        u'armstrong',
+        # u'armstrong',
+        u'ekspress',
         ]
 
     for word in words:

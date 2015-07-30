@@ -100,7 +100,7 @@
 {%- endmacro %}
 
 {% macro populate(t) -%}
-    populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.freq }}', '{{ t.pos }}', '{{ t.msd }}', '{{ t.rules1 }}', '{{ t.rules2 }}', '{{ t.rules3 }}', '{{ t.rules4 }}', '{{ t.test_syll1 }}', '{{ t.test_syll2 }}', '{{ t.test_syll3 }}', '{{ t.test_syll4 }}', '{{ t.syll1 }}', '{{ t.syll2 }}', '{{ t.syll3 }}', '{{ t.syll4 }}', '{{ t.precision }}', '{{ t.recall }}', '{{ t.is_compound }}', '{{ t.is_stopword }}', '{{ t.is_foreign }}', '{{ t.note }}');
+    populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.freq }}', '{{ t.pos }}', '{{ t.msd }}', '{{ t.rules1 }}', '{{ t.rules2 }}', '{{ t.rules3 }}', '{{ t.rules4 }}', '{{ t.test_syll1 }}', '{{ t.test_syll2 }}', '{{ t.test_syll3 }}', '{{ t.test_syll4 }}', '{{ t.syll1 }}', '{{ t.syll2 }}', '{{ t.syll3 }}', '{{ t.syll4 }}', '{{ t.precision }}', '{{ t.recall }}', '{{ t.is_compound }}', '{{ t.is_stopword }}', '{{ t.is_foreign }}', '{{ t.note|js_safe }}');
 {%- endmacro %}
 
 {% macro title(t) -%}
@@ -137,7 +137,11 @@
                 {% if t.rules2 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules2 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll2 }}</span></div>
                 {% if t.rules3 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules3 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll3 }}</span></div>
                 {% if t.rules4 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules4 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll4 }}</span></div>
-                {% endif %}{% endif %}{% endif %}
+                {% if t.rules5 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules5 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll5 }}</span></div>
+                {% if t.rules6 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules6 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll6 }}</span></div>
+                {% if t.rules7 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules7 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll7 }}</span></div>
+                {% if t.rules8 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules8 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll8 }}</span></div>
+                {% endif %}{% endif %}{% endif %}{% endif %}{% endif %}{% endif %}{% endif %}
             </div>
         </span>
         {% if t.is_gold is not none %}<span class='visible-xs visible-sm col-xs-12 attr-label'>gold</span>{% endif %}
@@ -146,7 +150,11 @@
             {% if t.syll2 %}<div>{{ t.syll2 }}</div>
             {% if t.syll3 %}<div>{{ t.syll3 }}</div>
             {% if t.syll4 %}<div>{{ t.syll4 }}</div>
-            {% endif %}{% endif %}{% endif %}
+            {% if t.syll5 %}<div>{{ t.syll5 }}</div>
+            {% if t.syll6 %}<div>{{ t.syll6 }}</div>
+            {% if t.syll7 %}<div>{{ t.syll7 }}</div>
+            {% if t.syll8 %}<div>{{ t.syll8 }}</div>
+            {% endif %}{% endif %}{% endif %}{% endif %}{% endif %}{% endif %}{% endif %}
         </span>
     </div>
     <br>

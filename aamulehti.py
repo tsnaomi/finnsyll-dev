@@ -248,10 +248,10 @@ def transition(pdf=False):
     '''Temporarily re-syllabify tokens and create a transition report.'''
     changed = lambda t: t._is_gold != t.is_gold
     parse = lambda t: [
-        t._test_syll1,  # t._rules1,
-        t._test_syll2,  # t._rules2,
-        t._test_syll3,  # t._rules3,
-        t._test_syll4,  # t._rules4,
+        t._test_syll1, t._rules1,
+        t._test_syll2, t._rules2,
+        t._test_syll3, t._rules3,
+        t._test_syll4, t._rules4,
         '%s / %s' % (round(t._precision, 2), round(t._recall, 2)),
         '>',
         t.test_syll1, t.rules1,

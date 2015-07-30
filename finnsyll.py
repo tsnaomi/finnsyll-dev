@@ -84,6 +84,18 @@ class Token(db.Model):
     # a string of the rules applied in test_syll4
     rules4 = db.Column(db.String(80, convert_unicode=True), default='')
 
+    # a string of the rules applied in test_syll5
+    rules5 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # a string of the rules applied in test_syll6
+    rules6 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # a string of the rules applied in test_syll7
+    rules7 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # a string of the rules applied in test_syll8
+    rules8 = db.Column(db.String(80, convert_unicode=True), default='')
+
     # test syllabification
     test_syll1 = db.Column(db.String(80, convert_unicode=True), default='')
 
@@ -96,6 +108,18 @@ class Token(db.Model):
     # test syllabification
     test_syll4 = db.Column(db.String(80, convert_unicode=True), default='')
 
+    # test syllabification
+    test_syll5 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # test syllabification
+    test_syll6 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # test syllabification
+    test_syll7 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # test syllabification
+    test_syll8 = db.Column(db.String(80, convert_unicode=True), default='')
+
     # correct syllabification (hand-verified)
     syll1 = db.Column(db.String(80, convert_unicode=True), default='')
 
@@ -107,6 +131,18 @@ class Token(db.Model):
 
     # correct syllabification (hand-verified)
     syll4 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # correct syllabification (hand-verified)
+    syll5 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # correct syllabification (hand-verified)
+    syll6 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # correct syllabification (hand-verified)
+    syll7 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # correct syllabification (hand-verified)
+    syll8 = db.Column(db.String(80, convert_unicode=True), default='')
 
     # the word's part-of-speech
     pos = db.Column(db.String(80, convert_unicode=True), default='')
@@ -139,9 +175,6 @@ class Token(db.Model):
     # a temporary boolean to indicate whether Arto had verified the token prior
     # to updating the database to accommodate variation in test syllabifcations
     verified = db.Column(db.Boolean, default=False)
-
-    # a temporary boolean to indicate whether Arto has re-verified the token
-    verified_again = db.Column(db.Boolean, default=False)
 
     __mapper_args__ = {
         'order_by': [is_gold, is_compound, freq.desc()],
@@ -211,6 +244,10 @@ class Token(db.Model):
             self.test_syll2,
             self.test_syll3,
             self.test_syll4,
+            self.test_syll5,
+            self.test_syll6,
+            self.test_syll7,
+            self.test_syll8,
             ]))
 
     def sylls(self):
@@ -220,6 +257,10 @@ class Token(db.Model):
             self.syll2,
             self.syll3,
             self.syll4,
+            self.syll5,
+            self.syll6,
+            self.syll7,
+            self.syll8,
             ]))
 
     def syllabify(self):
@@ -459,7 +500,7 @@ def get_foreign_words():
 
 def get_notes():
     ''' '''
-    return Token.query.filter(Token.note != '').order_by(Token.orth)
+    return Token.query.filter(Token.note != '').order_by(Token.freq.desc())
 
 
 # Variation queries -----------------------------------------------------------
@@ -480,7 +521,6 @@ def get_unverified_variation():
 def get_test_verified_variation():
     '''Return verified tokens with only alternative test syllabifications.'''
     tokens = Token.query.filter_by(verified=True)
-    tokens = tokens.filter(Token.verified_again.is_(None))
     tokens = tokens.filter(Token.test_syll2 != '').filter(Token.syll2 == '')
 
     return tokens
@@ -489,7 +529,6 @@ def get_test_verified_variation():
 def get_gold_verified_variation():
     '''Return tokens with alternative syllabifications prior to migration.'''
     tokens = Token.query.filter_by(verified=True)
-    tokens = tokens.filter(Token.verified_again.is_(None))
     tokens = tokens.filter(Token.syll2 != '').filter(Token.test_syll2 == '')
 
     return tokens
@@ -539,7 +578,11 @@ def apply_form(http_form, commit=True):
         syll2 = http_form.get('syll2', '')
         syll3 = http_form.get('syll3', '')
         syll4 = http_form.get('syll4', '')
-        note = http_form.get('note', '').replace('\r\n', ' ')
+        # syll5 = http_form.get('syll5', '')
+        # syll6 = http_form.get('syll6', '')
+        # syll7 = http_form.get('syll7', '')
+        # syll8 = http_form.get('syll8', '')
+        note = http_form.get('note', '')
 
         try:
             is_compound = bool(http_form.getlist('is_compound'))
@@ -554,6 +597,10 @@ def apply_form(http_form, commit=True):
             syll2=syll2,
             syll3=syll3,
             syll4=syll4,
+            # syll5=syll5,
+            # syll6=syll6,
+            # syll7=syll7,
+            # syll8=syll8,
             is_compound=is_compound,
             # is_stopword=is_stopword,
             note=note,
@@ -702,8 +749,8 @@ def contains_view():
             results = Token.query.filter(or_(
                 Token.test_syll1.contains(find),
                 Token.test_syll2.contains(find),
-                # Token.test_syll3.contains(find),
-                # Token.test_syll4.contains(find),
+                Token.test_syll3.contains(find),
+                Token.test_syll4.contains(find),
                 ))
 
         else:
@@ -739,6 +786,7 @@ def find_view():
 
         find = request.form.get('search') or request.form['syll1']
         FIND = find.strip().translate({ord('.'): None, })  # strip periods
+        # FIND = find.strip().translate(None, '.')  # strip periods
         results = Token.query.filter(Token.orth.ilike(FIND))
         results = results if results.count() > 0 else None
 
@@ -826,20 +874,34 @@ def variation_view(page):
         )
 
 
-@app.route('/hidden', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/hidden/page/<int:page>', methods=['GET', 'POST'])
-def hidden_view(page):
+@app.route('/<query>', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/<query>/page/<int:page>', methods=['GET', 'POST'])
+def hidden_view(page, query):
     '''List special queries.'''
     if request.method == 'POST':
         apply_form(request.form)
 
     # Monosyllabic test syllabifications
-    # tokens = Token.query.filter(~Token.test_syll1.contains('.'))
+    mono = lambda: Token.query.filter(~Token.test_syll1.contains('.'))
 
     # Test compounds
-    tokens = get_test_compounds()
+    compounds = lambda: get_test_compounds()
 
-    tokens, pagination = paginate(page, tokens)
+    # Tokens with three+ test syllabifications
+    three = lambda: Token.query.filter(Token.test_syll3 != '')
+
+    queries = {
+        'mono': mono,
+        'compounds': compounds,
+        'three': three,
+        }
+
+    try:
+        tokens = queries[query]()
+        tokens, pagination = paginate(page, tokens)
+
+    except KeyError:
+        abort(404)
 
     return render_template(
         'tokens.html',
@@ -889,7 +951,16 @@ def goldclass(t):
 
     return gold + compound
 
+
+def js_safe(s):
+    s = s.replace('\r\n', '&#13;&#10;')
+    s = s.replace('(', '&#40;').replace(')', '&#41;')
+    s = s.replace('"', '&#34;').replace("'", '&#34;')
+
+    return s
+
 app.jinja_env.filters['goldclass'] = goldclass
+app.jinja_env.filters['js_safe'] = js_safe
 app.jinja_env.tests['token'] = lambda t: hasattr(t, 'syll1')
 
 

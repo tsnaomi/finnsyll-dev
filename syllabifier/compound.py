@@ -10,14 +10,15 @@ from phonology import replace_umlauts
 
 # Ulimately:
 #   Token.is_compound  --> hand-verified compound
-#   Token.is_rb_compound  --> rule-based compound (is_test_compound)
-#   Token.is_ml_compound  --> machine-learned compound
+#   Token.is_rule_based_compound  --> rule-based compound (is_test_compound)
+#   Token.is_machine_learned_compound  --> machine-learned compound
 #   Token.is_nondelimited_compound()  --> subset of compounds that do not
 #                                         contain spaces of hyphens
 
 # Consider:
 #   - /uo/ or /yö/ sequences
 #   - word length
+#   - where vowel harmony deviation appears in a word
 
 
 # Rule-based ------------------------------------------------------------------
@@ -26,16 +27,18 @@ def detect(word):
     '''Detect if a word is a non-delimited compound.'''
     word = replace_umlauts(word)
 
-    # any syllable with a /uo/ or /yö/ nucleus denotes a word boundary,  always
+    # any syllable with a /uo/ or /yö/ nucleus denotes a word boundary, always
     # appearing word-initially
-    return bool(re.search(r'[ieAyOauo]+[^ -]*([^ieAyOauo]{1}(uo|yO))', word))
+    pattern = r'[ieAyOauo]+[^ -]*[^ieAyOauo]{1}(uo|yO)[^ieAyOauo]+'
+
+    return bool(re.search(pattern, word))
 
 
 def split(word):
     '''Insert syllable breaks at non-delimited compound boundaries.'''
     # any syllable with a /uo/ or /yö/ nucleus denotes a word boundary, always
     # appearing word-initially
-    pattern = r'[ieAyOauo]+[^ -]*([^ieAyOauo]{1}(uo|yO))'
+    pattern = r'[ieAyOauo]+[^ -]*([^ieAyOauo]{1}(uo|yO))[^ieAyOauo]+'
 
     offset = 0
 
