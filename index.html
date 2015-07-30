@@ -48,6 +48,7 @@
 
 <ul>
 <li>complicate T4 to be insensitive to codas</li>
+<li>split /oy/ and /ay/ sequences in compound detection</li>
 <li>use front/back vowel harmony to detect compound boundaries</li>
 <li>pull in the parts of Prosodic that are relevant to FinnSyll</li>
 </ul>
@@ -68,6 +69,7 @@
 <ul>
 <li>word length</li>
 <li>the presence of /uo/ and /yö/ sequences word-medially</li>
+<li>splitting /oy/ and /ay/ sequences</li>
 <li>contradictory front/back vowel harmony</li>
 </ul>
 
@@ -97,10 +99,26 @@
 <a id="notes" class="anchor" href="#notes" aria-hidden="true"><span class="octicon octicon-link"></span></a>notes</h2>
 
 <h4>
-<a id="ideally-bad-simplex-tokens-will-only-include-stopwords" class="anchor" href="#ideally-bad-simplex-tokens-will-only-include-stopwords" aria-hidden="true"><span class="octicon octicon-link"></span></a>Ideally, bad simplex tokens will only include stopwords</h4>
+<a id="ideally-bad-simplex-tokens-will-only-include-stopwords-7-23-2015" class="anchor" href="#ideally-bad-simplex-tokens-will-only-include-stopwords-7-23-2015" aria-hidden="true"><span class="octicon octicon-link"></span></a>Ideally, bad simplex tokens will only include stopwords (7-23-2015)</h4>
 
 <h4>
-<a id="split-unstressed-heavy-syllables" class="anchor" href="#split-unstressed-heavy-syllables" aria-hidden="true"><span class="octicon octicon-link"></span></a>Split unstressed heavy syllables</h4>
+<a id="virtuositeetti-7-22-2015" class="anchor" href="#virtuositeetti-7-22-2015" aria-hidden="true"><span class="octicon octicon-link"></span></a>Virtuositeetti (7-22-2015)</h4>
+
+<p><em>As you know, this is not a compound, but it is syllabified vir.tu.o.si.teet.ti for reasons that are somewhat unclear to me. The usual rule is that any /uo/-sequence is split beyond the first syllable. That may be correct, but in our system that would make lots of mistakes because of undetected compound boundaries. Another possible reason is that the usual rule is wrong and in fact this syllabification is exceptional and based on the related word vir.tu.oo.si where the syllable boundary falls before /oo/ for regular reasons and is "inherited" to vir.tu.o.si.teet.ti, i.e., we have opacity.</em> </p>
+
+<p>This syllabifier does assume that the usual rule of /uo/-sequences splitting word-medially is incorrect. Currently, the syllabifier assumes that anytime a /uo/ sequence is found word-medially, this indicates that the word is a compound. In the eyes of our system, then, the syllabifier incorrectly identifies 'virtuositeetti' as a compound because it is exceptional and a stopword. But, because we have only hand-verified compounds that were (at some point) mis-syllabified, we do not have a good, systematic way of detecting words that the syllabifier incorrectly predicts are compounds.</p>
+
+<h4>
+<a id="loppuottelussa-loppuotteluun-etc-7-22-2015" class="anchor" href="#loppuottelussa-loppuotteluun-etc-7-22-2015" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loppuottelussa, loppuotteluun, etc. (7-22-2015)</h4>
+
+<p>The correct compound boundary is <em>loppu=ottelu</em>. As Arto notes, while /uo/ is useful for detecting non-delimited compounds, it is less useful for detecting compound <strong>boundaries</strong>: <em>The compound structure is loppu=ottelu, so here /uo/ is split and is thus not a reliable cue for a word-initial cluster. Interestingly, we know that the compound structure cannot be lop=puottelu because the first part of the compound would be CVC and that is not possible in Finnish: every content word has to have at least two vowels.</em></p>
+
+<p>Further examples: <em>urheiluopistolla</em>, <em>juhannusyönä</em>, <em>moottoritietyömaalla</em>, * ammattikorkeakouluopiskelijayhdistysten*, +</p>
+
+<p>The compound splitter must be revised with respect to /uo/ sequences.</p>
+
+<h4>
+<a id="split-unstressed-heavy-syllables-5-1-2015" class="anchor" href="#split-unstressed-heavy-syllables-5-1-2015" aria-hidden="true"><span class="octicon octicon-link"></span></a>Split unstressed heavy syllables (5-1-2015)</h4>
 
 <p><em>This rule is because of stress</em>. Since we can split these syllables, we do not see the repair in which the stress shifts to an even syllable. (Consider this repair during stress assignment later.) By implementing this at the syllabifier layer, we will not have to repair syllabifications at the stress assignment layer.</p>
 
