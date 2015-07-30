@@ -104,7 +104,7 @@
 <script>
     function populatemodal(id, orth, gold, freq, pos, msd, rules1, rules2, rules3, rules4, test1, test2, test3, test4, syll1, syll2, syll3, syll4, precision, recall, compound, stopword, foreign, note) {
         $('#orth').text(orth);
-        $('#orth').addClass(gold);
+        $('#orth').attr('class', 'attr-orth ' + gold);
         $('#freq').text(freq);
         $('#pos').text(pos);
         $('#msd').text(msd);
@@ -118,10 +118,17 @@
         $('#test2').text(test2);
         $('#test3').text(test3);
         $('#test4').text(test4);
-        $('#syll1').val(syll1);
-        $('#syll2').val(syll2);
-        $('#syll3').val(syll3);
-        $('#syll4').val(syll4);
+        if (gold == 'unverified') {
+            $('#syll1').val(test1);
+            $('#syll2').val(test2);
+            $('#syll3').val(test3);
+            $('#syll4').val(test4);
+        } else {
+            $('#syll1').val(syll1);
+            $('#syll2').val(syll2);
+            $('#syll3').val(syll3);
+            $('#syll4').val(syll4);
+        };
         $('#note').text(note.replace(/&#13;&#10;/g, '\r\n').replace(/&#40;/g, '(').replace(/&#41;/g, ')').replace(/&#34;/g, '"').replace(/&#39;/g, "'"));
         $('#id').val(id);
         if (compound == 'True') {

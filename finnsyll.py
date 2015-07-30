@@ -887,13 +887,13 @@ def hidden_view(page, query):
     # Test compounds
     compounds = lambda: get_test_compounds()
 
-    # Tokens with three+ test syllabifications
-    three = lambda: Token.query.filter(Token.test_syll3 != '')
+    # Tokens with four+ test syllabifications
+    four = lambda: Token.query.filter(Token.test_syll4 != '')
 
     queries = {
         'mono': mono,
         'compounds': compounds,
-        'three': three,
+        'four': four,
         }
 
     try:
