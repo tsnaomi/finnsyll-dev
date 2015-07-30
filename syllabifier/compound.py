@@ -25,6 +25,9 @@ from phonology import replace_umlauts
 
 def detect(word):
     '''Detect if a word is a non-delimited compound.'''
+    if '-' in word or ' ' in word:
+        return True
+
     word = replace_umlauts(word)
 
     # any syllable with a /uo/ or /yö/ nucleus denotes a word boundary, always
