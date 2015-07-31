@@ -22,7 +22,7 @@ from math import ceil
 from sqlalchemy import or_
 from syllabifier.compound import detect
 from syllabifier.phonology import FOREIGN_FINAL, get_sonorities, get_weights
-from syllabifier.v6 import syllabify
+from syllabifier.v7 import syllabify
 from werkzeug.exceptions import BadRequestKeyError
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
@@ -319,6 +319,11 @@ class Token(db.Model):
 
         except ZeroDivisionError:
             return 0.0
+
+    @property
+    def p_r(self):
+        ''' '''
+        return '%s / %s' % (round(self.precision, 2), round(self.recall, 2))
 
 
 class Document(db.Model):
