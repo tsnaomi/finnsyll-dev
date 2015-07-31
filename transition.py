@@ -21,7 +21,7 @@ def get_headers(grid):
         li = grid[0]
         length = len(li)
         caret = li.index('>')
-        headers = HEADERS[:caret - 1] + ['p / r', ' ']
+        headers = HEADERS[:caret - 1] + ['p / r', '']
         headers += HEADERS[:length - caret - 1]
 
         if length % 2 == 0:
@@ -71,33 +71,32 @@ def prune(grid):
 
 
 def transition(pdf=False):
-    '''Temporarily re-syllabify tokens and create a transition report.'''
+    '''Temporarily re-syllabify verified tokens and create a report.'''
     tokens = finn.Token.query.filter(finn.Token.is_gold.isnot(None))
 
     for t in tokens:
-        t._test_syll1 = t.test_syll1
-        t._test_syll2 = t.test_syll2
-        t._test_syll3 = t.test_syll3
-        t._test_syll4 = t.test_syll4
-        t._rules1 = t.rules1
-        t._rules2 = t.rules2
-        t._rules3 = t.rules3
-        t._rules4 = t.rules4
+        t._test_syll1, t._rules1 = t.test_syll1, t.rules1
+        t._test_syll2, t._rules2 = t.test_syll2, t.rules2
+        t._test_syll3, t._rules3 = t.test_syll3, t.rules3
+        t._test_syll4, t._rules4 = t.test_syll4, t.rules4
         t._is_gold = t.is_gold
         t._p_r = t.p_r
         t.syllabify()
 
-    bad_to_good = [parse(t) for t in tokens if has_changed(t) and t.is_gold]
-    bad_to_good = prune(bad_to_good)
+    # curate a list of all of the tokens whose gold statuses have changed
+    changed = [t for t in tokens if has_changed(t)]
 
-    good_to_bad = [parse(t) for t in tokens if has_changed(t) and not t.is_gold]  # noqa
-    good_to_bad = prune(good_to_bad)
+    bad_to_good = prune(map(lambda t: parse(t), filter(lambda t: t.is_gold, changed)))   # noqa
+    good_to_bad = prune(map(lambda t: parse(t), filter(lambda t: not t.is_gold, changed)))   # noqa
 
-    report = 'FROM BAD TO GOOD (%s)\n\n' % len(bad_to_good)
-    report += tabulate(bad_to_good, headers=get_headers(bad_to_good))
-    report += '\n\n\nFROM GOOD TO BAD (%s)\n\n' % len(good_to_bad)
-    report += tabulate(good_to_bad, headers=get_headers(good_to_bad))
-    report += '\n\n\n%s BAD TOKENS' % tokens.filter_by(is_gold=False).count()
+    good_headers = get_headers(bad_to_good)
+    bad_headers = get_headers(good_to_bad)
+
+    report = 'FROM BAD TO GOOD (%s)\n' % len(bad_to_good)
+    report += tabulate(bad_to_good, headers=good_headers)
+    report += '\n\nFROM GOOD TO BAD (%s)\n' % len(good_to_bad)
+    report += tabulate(good_to_bad, headers=bad_headers)
+    report += '\n\n%s BAD TOKENS' % tokens.filter_by(is_gold=False).count()
 
     if pdf:
         filename = 'syllabifier/reports/%s.txt' % str(datetime.utcnow())
