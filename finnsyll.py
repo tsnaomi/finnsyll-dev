@@ -21,7 +21,7 @@ from functools import wraps
 from math import ceil
 from sqlalchemy import or_
 from syllabifier.compound import detect
-from syllabifier.phonology import FOREIGN_FINAL, get_sonorities, get_weights
+from syllabifier.phonology import get_sonorities, get_weights
 from syllabifier.v7 import syllabify
 from werkzeug.exceptions import BadRequestKeyError
 
@@ -490,19 +490,6 @@ def get_stopwords():
     return tokens
 
 
-def get_foreign_words():
-    '''Return a list of potential foreign words and interjections.
-
-    This function returns all of the words that do not end in either a vowel or
-    coronal consonant.
-    '''
-    query = lambda c: Token.query.filter(Token.orth.endswith(c))
-    tokens = [t for c in FOREIGN_FINAL for t in query(c)]
-    tokens = sorted(tokens, key=lambda t: (t.is_gold, t.freq), reverse=True)
-
-    return tokens
-
-
 def get_notes():
     ''' '''
     return Token.query.filter(Token.note != '').order_by(Token.freq.desc())
@@ -889,7 +876,7 @@ def variation_view(page):
 
 @app.route('/<query>', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/<query>/page/<int:page>', methods=['GET', 'POST'])
-def hidden_view(page, query):
+def hidden_view(page, query):  # TODO
     '''List special queries.'''
     if request.method == 'POST':
         apply_form(request.form)
