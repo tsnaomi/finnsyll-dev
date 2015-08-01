@@ -32,9 +32,15 @@ def detect(word):
 
     # any syllable with a /uo/ or /yö/ nucleus denotes a word boundary, always
     # appearing word-initially
-    pattern = r'[ieAyOauo]+[^ -]*[^ieAyOauo]{1}(uo|yO)[^ieAyOauo]+'
+    if re.search(r'[ieAyOauo]+[^ -]*[^ieAyOauo]{1}(uo|yO)[^ieAyOauo]+', word):
+        return True
 
-    return bool(re.search(pattern, word))
+    # any sequence of /oy/ or /ay/ is an unnatural diphthong and denotes a
+    # syllable boundary
+    if re.search(r'[ieAyOauo]+[^ieAyOauo]+[ieAyOauo]?(oy|ay)[ieAyOauo]?[^ieAyOauo]+[^$]', word):  # noqa
+        return True
+
+    return False
 
 
 def split(word):
@@ -50,6 +56,29 @@ def split(word):
         word = word[:i] + '.' + word[i:]
         offset += 1
 
+    # any sequence of /oy/ or /ay/ is an unnatural diphthong and denotes a
+    # syllable boundary (this "bleeds" T4)
+    pattern = r'[ieAyOauo]+[^ieAyOauo]+[ieAyOauo]?(oy|ay)[ieAyOauo]?[^ieAyOauo]+[^$]'  # noqa
+
+    offset = 0
+
+    for vv in re.finditer(pattern, word):
+        i = vv.start(1) + offset + 1
+        word = word[:i] + '.' + word[i:]
+        offset += 1
+
     return word
 
 # -----------------------------------------------------------------------------
+
+if __name__ == '__main__':
+
+    words = [
+        u'seurakuntayhtymä',
+        u'emoyhtiö',
+        u'lentoyhtiö',
+        u'tietoyhteiskunnan',
+        ]
+
+    for word in words:
+        print split(replace_umlauts(word))
