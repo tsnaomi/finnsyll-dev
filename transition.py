@@ -37,7 +37,7 @@ def get_headers(grid):
 
 def has_changed(token):
     ''' '''
-    return token._is_gold != token.is_gold
+    return token._is_gold != token.is_gold or token._p_r != token.p_r
 
 
 def parse(token):
