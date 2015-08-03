@@ -5,7 +5,7 @@
     <title>FinnSyll by tsnaomi</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
-    <link href='http://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
   </head>
@@ -54,7 +54,7 @@
 <li><del>make T4 insensitive to codas</del></li>
 <li><del>split /oy/ and /ay/ sequences in compound detection</del></li>
 <li>use front/back vowel harmony to detect compound boundaries</li>
-<li>expand T4 variation, treating each occurrence of a sequence as independent</li>
+<li>treat each occurrence of a variable sequence as independent</li>
 <li>read "A Parametric Theory of Poetic Meter" by Hanson and Kiparsky in <em>Language</em> (1996)</li>
 </ul>
 
@@ -118,7 +118,7 @@
 
 <p>The correct compound boundary is <em>loppu=ottelu</em>. As Arto notes, while /uo/ is useful for detecting non-delimited compounds, it is less useful for detecting compound <strong>boundaries</strong>: <em>The compound structure is loppu=ottelu, so here /uo/ is split and is thus not a reliable cue for a word-initial cluster. Interestingly, we know that the compound structure cannot be lop=puottelu because the first part of the compound would be CVC and that is not possible in Finnish: every content word has to have at least two vowels.</em></p>
 
-<p>Further examples: <em>urheiluopistolla</em>, <em>juhannusyönä</em>, <em>moottoritietyömaalla</em>, <em>ammattikorkeakouluopiskelijayhdistysten</em>, +</p>
+<p>Further examples: <em>urheiluopistolla, juhannusyönä, moottoritietyömaalla, ammattikorkeakouluopiskelijayhdistysten,</em> +</p>
 
 <p>The compound splitter must be revised with respect to /uo/ sequences.</p>
 
@@ -146,6 +146,171 @@
 </code></pre>
 
 <h2>
+<a id="poetry" class="anchor" href="#poetry" aria-hidden="true"><span class="octicon octicon-link"></span></a>poetry</h2>
+
+<p><em>Lönnrot, Leino, Erkko, Siljo, Kaatra, Koskenniemi, Kramsu, Hellaakoski, Kailas</em></p>
+
+<ul>
+<li>Title: The Kalevala
+
+<ul>
+<li>Author: Elias Lönnrot</li>
+<li>Posting Date: September 20, 2010 [EBook #7000]</li>
+<li>Release Date: November, 2004</li>
+<li>First Posted: October 23, 2002</li>
+<li>Last Updated: February 25, 2005</li>
+</ul>
+</li>
+<li>Title: Helkavirsiä I-II
+
+<ul>
+<li>Author: Eino Leino</li>
+<li>Release Date: August 7, 2004 [EBook #13129]</li>
+</ul>
+</li>
+<li>Title: Kangastuksia; Talvi-yö; Halla; Tähtitarha
+
+<ul>
+<li>Author: Eino Leino</li>
+<li>Release Date: January 17, 2005 [EBook #14724]</li>
+</ul>
+</li>
+<li>Title: Painuva päivä; Elämän koreus; Leirivalkeat; Ajatar; Syreenien kukkiessa
+
+<ul>
+<li>Author: Eino Leino</li>
+<li>Release Date: January 24, 2005 [EBook #14774]</li>
+</ul>
+</li>
+<li>Title: Sata ja yksi laulua; Hiihtäjän virsiä; Pyhä kevät
+
+<ul>
+<li>Author: Eino Leino</li>
+<li>Release Date: January 10, 2005 [EBook #14649]</li>
+</ul>
+</li>
+<li>Title: Maaliskuun lauluja; Tarina suuresta tammesta; Yökehrääjä
+
+<ul>
+<li>Author: Eino Leino</li>
+<li>Release Date: December 14, 2004 [EBook #14351]</li>
+</ul>
+</li>
+<li>Title: Kootut teokset I: Edellinen osa
+
+<ul>
+<li>Author: J. H. Erkko</li>
+<li>Release Date: July 30, 2004 [EBook #13063]</li>
+</ul>
+</li>
+<li>Title: Kootut teokset II: Runoelmia 1886-1906
+
+<ul>
+<li>Author: J. H. Erkko</li>
+<li>Release Date: May 2, 2006 [EBook #18301]</li>
+</ul>
+</li>
+<li>Title: Maan puoleen Runoja
+
+<ul>
+<li>Author: Juhani Siljo</li>
+<li>Release Date: November 12, 2008 [EBook #27247]</li>
+</ul>
+</li>
+<li>Title: Runoja
+
+<ul>
+<li>Author: Juhani Siljo</li>
+<li>Release Date: November 23, 2012 [EBook #41449]</li>
+</ul>
+</li>
+<li>Title: Kynnyksellä Runoja
+
+<ul>
+<li>Author: Kössi Kaatra</li>
+<li>Release Date: April 18, 2015  [eBook #48739]</li>
+</ul>
+</li>
+<li>Title: Elämästä Runoja
+
+<ul>
+<li>Author: Kössi Kaatra</li>
+<li>Release Date: April 20, 2015  [eBook #48755]</li>
+</ul>
+</li>
+<li>Title: "Suurlakkokuvia" y.m. työväenlauluja
+
+<ul>
+<li>Author: Kössi Kaatra</li>
+<li>Release Date: April 27, 2015  [eBook #48814]</li>
+</ul>
+</li>
+<li>Title: Runoja
+
+<ul>
+<li>Author: Kössi Kaatra</li>
+<li>Release Date: April 28, 2015 [EBook #48817]</li>
+</ul>
+</li>
+<li>Title: Elegioja
+
+<ul>
+<li>Author: V. A. Koskenniemi</li>
+<li>Release Date: December 20, 2006 [EBook #20145]</li>
+</ul>
+</li>
+<li>Title: Hiilivalkea
+
+<ul>
+<li>Author: V. A. Koskenniemi</li>
+<li>Release Date: December 19, 2006 [EBook #20140]</li>
+</ul>
+</li>
+<li>Title: Runoja
+
+<ul>
+<li>Author: V. A. Koskenniemi</li>
+<li>Release Date: December 14, 2006 [EBook #20100]</li>
+</ul>
+</li>
+<li>Title: Valkeat kaupungit
+
+<ul>
+<li>Author: V. A. Koskenniemi</li>
+<li>Release Date: December 16, 2006 [EBook #20118]</li>
+</ul>
+</li>
+<li>Title: Hannu; Nuori Anssi; Sydän ja Kuolema
+
+<ul>
+<li>Author: V. A. Koskenniemi</li>
+<li>Release Date: December 21, 2006 [EBook #20148]</li>
+</ul>
+</li>
+<li>Title: Runoelmia
+
+<ul>
+<li>Author: Kaarlo Kramsu</li>
+<li>Release Date: July 30, 2005 [EBook #16395]</li>
+</ul>
+</li>
+<li>Title: Runoja
+
+<ul>
+<li>Author: Aaro Hellaakoski</li>
+<li>Release Date: September 3, 2004 [EBook #13099]</li>
+</ul>
+</li>
+<li>Title: Tuuli ja tähkä ynnä muita runoja
+
+<ul>
+<li>Author: Uuno Kailas</li>
+<li>Release Date: April 27, 2004 [EBook #12178]</li>
+</ul>
+</li>
+</ul>
+
+<h2>
 <a id="paper-ideas" class="anchor" href="#paper-ideas" aria-hidden="true"><span class="octicon octicon-link"></span></a>paper ideas</h2>
 
       <footer class="site-footer">
@@ -159,4 +324,3 @@
   
   </body>
 </html>
-
