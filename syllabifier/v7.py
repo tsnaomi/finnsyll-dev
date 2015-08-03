@@ -2,7 +2,6 @@
 
 import re
 
-from compound import split
 from phonology import (
     is_cluster,
     is_consonant,
@@ -10,19 +9,16 @@ from phonology import (
     is_long,
     is_sonorant,
     is_vowel,
-    replace_umlauts,
     )
 
 
 # Syllabifier -----------------------------------------------------------------
 
-def syllabify(word):
+def syllabify(word, compound=None):
     '''Syllabify the given word, whether simplex or complex.'''
-    # detect any non-delimited compound boundaries
-    word = split(word)
+    if compound is None:
+        compound = bool(re.search(r'(-| |=)', word))
 
-    # commense syllabifications
-    compound = True if re.search(r'-| |\.', word) else False
     syllabify = _syllabify_compound if compound else _syllabify
     syll, rules = syllabify(word)
 
@@ -50,20 +46,22 @@ def syllabify(word):
 def _syllabify_compound(word, **kwargs):
     WORD, RULES = [], []
 
-    # if the word contains a delimiter (a hyphens or space), split the word
-    # along the delimiter(s) and syllabify the individual parts separately
-    for w in re.split(r'(-| |\.)', word):
-        syll, rules = (w, ' |') if w in '- .' else _syllabify(w, **kwargs)
+    # split the word along any delimiters (a hyphen, space, or equal sign) and
+    # syllabify the individual parts separately
+    for w in re.split(r'(-| |=)', word):
+        syll, rules = (w, ' |') if w in '- =' else _syllabify(w, **kwargs)
 
         WORD.append(syll)
         RULES.append(rules)
 
-    return ''.join(WORD), ''.join(RULES)
+    WORD = ''.join(WORD).replace('=', '.')  # remove equal signs
+    RULES = ''.join(RULES)
+
+    return WORD, RULES
 
 
 def _syllabify(word, T4=True, T1E=True):
     '''Syllabify the given word.'''
-    word = replace_umlauts(word)
     word, rules = apply_T1(word, T1E=T1E)
 
     if re.search(r'[^ieAyOauo]*([ieAyOauo]{2})[^ieAyOauo]*', word):
@@ -80,7 +78,6 @@ def _syllabify(word, T4=True, T1E=True):
         word, T2 = apply_T2(word)
         rules += T5 + T6 + T7 + T2
 
-    word = replace_umlauts(word, put_back=True)
     rules = rules or ' T0'  # T0 means no rules have applied
 
     return word, rules
@@ -379,7 +376,8 @@ if __name__ == '__main__':
         # u'battaglia',               # bat.tag.li.a (?)
         # u'tshetsheniaan',
         # u'armstrong',
-        u'ekspress',
+        # u'ekspress',
+        u'hääyöaie',
         ]
 
     for word in words:

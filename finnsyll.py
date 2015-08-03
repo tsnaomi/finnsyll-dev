@@ -20,8 +20,8 @@ from flask.ext.bcrypt import Bcrypt
 from functools import wraps
 from math import ceil
 from sqlalchemy import or_
-from syllabifier.compound import detect
-from syllabifier.phonology import get_sonorities, get_weights
+from syllabifier.compound import detect, split
+from syllabifier.phonology import get_sonorities, get_weights, replace_umlauts
 from syllabifier.v7 import syllabify
 from werkzeug.exceptions import BadRequestKeyError
 
@@ -34,7 +34,6 @@ manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
 # To mirate database:
-#     python finnsyll.py db init (only for initial migration)
 #     python finnsyll.py db migrate
 #     python finnsyll.py db upgrade
 
@@ -68,6 +67,10 @@ class Token(db.Model):
 
     # the word's orthography
     orth = db.Column(db.String(80, convert_unicode=True), nullable=False)
+
+    # the word's orthography in lowercase, with umlauts replaced and compound
+    # boundaries delimited; the syllabifier takes in Token.base
+    base = db.Column(db.String(80, convert_unicode=True), nullable=True)
 
     # the word's lemma/citation form
     lemma = db.Column(db.String(80, convert_unicode=True), default='')
@@ -174,6 +177,7 @@ class Token(db.Model):
 
     # a temporary boolean to indicate whether Arto had verified the token prior
     # to updating the database to accommodate variation in test syllabifcations
+    # (this is likely safe to delete now)
     verified = db.Column(db.Boolean, default=False)
 
     __mapper_args__ = {
@@ -237,6 +241,44 @@ class Token(db.Model):
 
     # Syllabification methods -------------------------------------------------
 
+    def inform_base(self):
+        ''' '''
+        # syllabifcations do not preserve capitalization
+        self.base = split(replace_umlauts(self.orth.lower()))
+
+    def detect_is_compound(self):
+        '''Programmatically detect if the Token is a compound.'''
+        # super fancy programmatic detection
+        self.is_test_compound = detect(self.base)
+
+    def syllabify(self):
+        '''Programmatically syllabify Token based on its orthography.'''
+        syllabifications = list(syllabify(self.base, self.is_test_compound))
+
+        for i, (test_syll, rules) in enumerate(syllabifications, start=1):
+            test_syll = replace_umlauts(test_syll, put_back=True)
+            setattr(self, 'test_syll' + str(i), test_syll)
+            setattr(self, 'rules' + str(i), rules)
+
+        if self.syll1:
+            self.update_gold()
+
+    def correct(self, **kwargs):
+        '''Save new attribute values to Token and update gold status.'''
+        for attr, value in kwargs.iteritems():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
+
+        self.update_gold()
+
+    def update_gold(self):
+        '''Compare test syllabifcations against true syllabifications.
+
+        Token.is_gold is True iff all of the gold syllabifications are
+        represented in the test syllabifications.
+        '''
+        self.is_gold = self.sylls().issubset(self.test_sylls())
+
     def test_sylls(self):
         ''' '''
         return set(filter(None, [
@@ -262,41 +304,6 @@ class Token(db.Model):
             self.syll7,
             self.syll8,
             ]))
-
-    def syllabify(self):
-        '''Programmatically syllabify Token based on its orthography.'''
-        # syllabifcations do not preserve capitalization
-        token = self.orth.lower()
-        syllabifications = list(syllabify(token))
-
-        for i, (test_syll, rules) in enumerate(syllabifications, start=1):
-            setattr(self, 'test_syll' + str(i), test_syll)
-            setattr(self, 'rules' + str(i), rules)
-
-        if self.syll1:
-            self.update_gold()
-
-    def correct(self, **kwargs):
-        '''Save new attribute values to Token and update gold status.'''
-        for attr, value in kwargs.iteritems():
-            if hasattr(self, attr):
-                setattr(self, attr, value)
-
-        self.update_gold()
-
-    def update_gold(self):
-        '''Compare test syllabifcations against true syllabifications.
-
-        Token.is_gold is True iff all of the gold syllabifications are
-        represented in the test syllabifications.
-        '''
-        self.is_gold = self.sylls().issubset(self.test_sylls())
-
-    # Compound functions ------------------------------------------------------
-
-    def detect_if_compound(self):
-        '''Programmatically detect if the Token is a compound.'''
-        self.is_test_compound = detect(self.orth.lower())
 
     # Evaluation methods ------------------------------------------------------
 
@@ -402,6 +409,32 @@ class Document(db.Model):
 
 # Database functions ----------------------------------------------------------
 
+def detect_compounds():
+    '''Detect compounds.'''
+    print 'Detecting compounds... ' + datetime.utcnow().strftime('%I:%M')
+
+    count = Token.query.count()
+    start = 0
+    end = x = 1000
+
+    while start + x < count:
+        for token in Token.query.order_by(Token.id).slice(start, end):
+            token.inform_base()
+            token.detect_is_compound()
+
+        db.session.commit()
+        start = end
+        end += x
+
+    for token in Token.query.order_by(Token.id).slice(start, count):
+        token.inform_base()
+        token.detect_is_compound()
+
+    db.session.commit()
+
+    print 'Detection complete. ' + datetime.utcnow().strftime('%I:%M')
+
+
 def syllabify_tokens():
     '''Syllabify all tokens.'''
     print 'Syllabifying... ' + datetime.utcnow().strftime('%I:%M')
@@ -424,30 +457,6 @@ def syllabify_tokens():
     db.session.commit()
 
     print 'Syllabifications complete. ' + datetime.utcnow().strftime('%I:%M')
-
-
-def detect_compounds():
-    '''Detect non-delimited compounds.'''
-    print 'Detecting compounds... ' + datetime.utcnow().strftime('%I:%M')
-
-    count = Token.query.count()
-    start = 0
-    end = x = 1000
-
-    while start + x < count:
-        for token in Token.query.order_by(Token.id).slice(start, end):
-            token.detect_if_compound()
-
-        db.session.commit()
-        start = end
-        end += x
-
-    for token in Token.query.order_by(Token.id).slice(start, count):
-        token.detect_if_compound()
-
-    db.session.commit()
-
-    print 'Detection complete. ' + datetime.utcnow().strftime('%I:%M')
 
 
 def find_token(orth):

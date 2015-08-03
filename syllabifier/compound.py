@@ -15,59 +15,62 @@ from phonology import replace_umlauts
 #   Token.is_nondelimited_compound()  --> subset of compounds that do not
 #                                         contain spaces of hyphens
 
-# Consider:
-#   - /uo/ or /yö/ sequences
-#   - word length
-#   - where vowel harmony deviation appears in a word
-
 
 # Rule-based ------------------------------------------------------------------
 
 def detect(word):
     '''Detect if a word is a non-delimited compound.'''
-    if '-' in word or ' ' in word:
-        return True
-
-    word = replace_umlauts(word)
-
-    # any syllable with a /uo/ or /yö/ nucleus denotes a word boundary, always
-    # appearing word-initially
-    if re.search(r'[ieAyOauo]+[^ -]*[^ieAyOauo]{1}(uo|yO)[^ieAyOauo]+', word):
-        return True
-
-    # any sequence of /oy/ or /ay/ is an unnatural diphthong and denotes a
-    # syllable boundary
-    if re.search(r'[ieAyOauo]+[^ieAyOauo]+[ieAyOauo]?(oy|ay)[ieAyOauo]?[^ieAyOauo]+[^$]', word):  # noqa
-        return True
-
-    return False
+    return bool(re.search(r'(-| |=)', word)) or bool(
+        # any word that possesses both front and back vowels is a compound
+        re.search(r'[AyO]+', word) and re.search(r'[auo]+', word))
 
 
 def split(word):
     '''Insert syllable breaks at non-delimited compound boundaries.'''
-    # any syllable with a /uo/ or /yö/ nucleus denotes a word boundary, always
-    # appearing word-initially
-    pattern = r'[ieAyOauo]+[^ -]*([^ieAyOauo]{1}(uo|yO))[^ieAyOauo]+'
+    litmus = [
+        # any syllable with a /uo/ or /yö/ nucleus denotes a word boundary,
+        # always appearing word-initially
+        (0, r'[ieAyOauo]+[^ -]*([^ieAyOauo]{1}(uo|yO))[^ieAyOauo]+'),
 
-    offset = 0
+        # any word-medial sequence of /oy/ or /ay/ is an unnatural diphthong
+        # and denotes a syllable boundary (this "bleeds" T4)
+        (1, r'[ieAyOauo]+[^ieAyOauo]+[ieAyOauo]?(oy|ay)[ieAyOauo]?[^ieAyOauo]+[^$]'),  # noqa
 
-    for vv in re.finditer(pattern, word):
-        i = vv.start(1) + offset
-        word = word[:i] + '.' + word[i:]
-        offset += 1
+        # any vowel sequence consisting of both front and back vowels denotes a
+        # syllable boundary (cf. vowel harmony)
+        (1, r'(Aa|Au|Ao|ya|yu|yo|Oa|Ou|Oo|aA|uA|oA|uy|aO|uO|oO)'),
+        ]
 
-    # any sequence of /oy/ or /ay/ is an unnatural diphthong and denotes a
-    # syllable boundary (this "bleeds" T4)
-    pattern = r'[ieAyOauo]+[^ieAyOauo]+[ieAyOauo]?(oy|ay)[ieAyOauo]?[^ieAyOauo]+[^$]'  # noqa
+    for i, pattern in litmus:
+        offset = 0
 
-    offset = 0
+        for vv in re.finditer(pattern, word):
+            j = vv.start(1) + offset + i
+            word = word[:j] + '=' + word[j:]
+            offset += 1
 
-    for vv in re.finditer(pattern, word):
-        i = vv.start(1) + offset + 1
-        word = word[:i] + '.' + word[i:]
-        offset += 1
+    litmus = [
+        # any word that possesses both front and back vowels is a compound
+        r'[AyO]+([^ieAyOauo -=]+)[auo]+',
+        r'[auo]+([^ieAyOauo -=]+)[AyO]+',
 
-    return word
+        # FROM GOOD TO BAD (3)
+        # test 1                  rules 1    p / r          test 1                  rules 1       p / r      compound     # noqa
+        # ----------------------  ---------  ---------  --  ----------------------  ------------  ---------  ----------   # noqa
+        # ää.nes.tys.pro.sent.ti  T1af       1.0 / 1.0  >   ää.nes.tysp.ro.sent.ti  T1ac | T1ab   0.0 / 0.0  C            # noqa
+        # käyt.tö.pro.sent.ti     T1abd      1.0 / 1.0  >   käyt.töp.ro.sent.ti     T1abc | T1ab  0.0 / 0.0  C            # noqa
+        # ly.hyt.proo.saa         T1abf      1.0 / 1.0  >   ly.hytp.roo.saa         T1abc | T1ab  0.0 / 0.0  C            # noqa
+        ]
+
+    for pattern in litmus:
+        offset = 0
+
+        for vv in re.finditer(pattern, word):
+            i = vv.end(1) - 1 + offset
+            word = word[:i] + '=' + word[i:]
+            offset += 1
+
+    return word.replace('==', '=')
 
 # -----------------------------------------------------------------------------
 
@@ -78,7 +81,9 @@ if __name__ == '__main__':
         u'emoyhtiö',
         u'lentoyhtiö',
         u'tietoyhteiskunnan',
+        u'hääyöaie',
+        u'äänestysprosentti',
         ]
 
     for word in words:
-        print split(replace_umlauts(word))
+        print replace_umlauts(split(replace_umlauts(word)), put_back=True)

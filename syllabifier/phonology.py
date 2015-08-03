@@ -7,9 +7,6 @@ VOWELS = [u'i', u'e', u'A', u'y', u'O', u'a', u'u', u'o']
 # ä is replaced by A
 # ö is replaced by O
 
-FRONT_VOWELS = [u'A', u'y', u'O']
-
-BACK_VOWELS = [u'a', u'u', u'o']
 
 # Finnish diphthongs
 DIPHTHONGS = [
@@ -29,7 +26,42 @@ CLUSTERS = [
     u'pl', u'pr', u'cl', u'qv', u'schm']
 
 
-CORONALS = [u's', u'z', u'd', u't', u'r', u'n', u'l']
+# Vowel harmony ---------------------------------------------------------------
+
+FRONT_VOWELS = [u'A', u'y', u'O']
+
+BACK_VOWELS = [u'a', u'u', u'o']
+
+NEUTRAL_VOWELS = [u'e', u'i']
+
+
+def is_front(ch):
+    return ch in FRONT_VOWELS
+
+
+def is_back(ch):
+    return ch in BACK_VOWELS
+
+
+def is_neutral(ch):
+    return ch in NEUTRAL_VOWELS
+
+
+DEPTH = {
+    'A': 'front',
+    'y': 'front',
+    'O': 'front',
+    'a': 'back',
+    'u': 'back',
+    'o': 'back',
+    }
+
+
+def is_harmonic(ch1, ch2):
+    if is_neutral(ch1) or is_neutral(ch2):
+        return True
+
+    return DEPTH[ch1] == DEPTH[ch2]
 
 
 # Phonemic functions ----------------------------------------------------------
@@ -41,6 +73,10 @@ def is_vowel(ch):
 def is_consonant(ch):
     # return ch in CONSONANTS
     return not is_vowel(ch)  # includes 'w'
+
+
+def is_coronal(ch):
+    return ch in [u's', u'z', u'd', u't', u'r', u'n', u'l']
 
 
 def is_sonorant(ch):
@@ -61,7 +97,7 @@ def is_long(chars):
 
 # Normalization functions -----------------------------------------------------
 
-def replace_umlauts(word, put_back=False):
+def replace_umlauts(word, put_back=False):  # TODO: use translate()
     '''If put_back is True, put in umlauts; else, take them out!'''
     if put_back:
         word = word.replace(u'A', u'ä').replace(u'A', u'\xc3\xa4')
@@ -141,5 +177,6 @@ def _get_syllable_weight(syllable):
 
     except ValueError:
         return u'?'
+
 
 # -----------------------------------------------------------------------------
