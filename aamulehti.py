@@ -247,6 +247,6 @@ if __name__ == '__main__':
     # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
     # tabulate_to_file(finn.get_test_compounds(), 'test_compounds')
-    # finn.detect_compounds()
+    finn.detect_compounds()
     # finn.syllabify_tokens()
     pass

@@ -82,7 +82,7 @@ def transition(pdf=False):
         t._is_gold = t.is_gold
         t._p_r = t.p_r
         t.inform_base()
-        t.detect_if_compound()
+        t.detect_is_compound()
         t.syllabify()
 
     # curate a list of all of the tokens whose gold statuses have changed

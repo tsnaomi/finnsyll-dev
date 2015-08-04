@@ -15,6 +15,12 @@ from phonology import replace_umlauts
 #   Token.is_nondelimited_compound()  --> subset of compounds that do not
 #                                         contain spaces of hyphens
 
+# Compound detection:
+#   * word length
+#   * the presence of /uo/ and /yö/ sequences word-medially
+#   * splitting /oy/ and /ay/ sequences
+#   * contradictory front/back vowel harmony
+
 
 # Rule-based ------------------------------------------------------------------
 
@@ -77,12 +83,13 @@ def split(word):
 if __name__ == '__main__':
 
     words = [
-        u'seurakuntayhtymä',
-        u'emoyhtiö',
-        u'lentoyhtiö',
-        u'tietoyhteiskunnan',
-        u'hääyöaie',
-        u'äänestysprosentti',
+        # u'seurakuntayhtymä',
+        # u'emoyhtiö',
+        # u'lentoyhtiö',
+        # u'tietoyhteiskunnan',
+        # u'hääyöaie',
+        # u'äänestysprosentti',
+        u'york',
         ]
 
     for word in words:
