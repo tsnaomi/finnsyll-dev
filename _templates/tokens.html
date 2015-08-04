@@ -6,12 +6,16 @@
 <br> 
 
 <div class='container'>
-    {% if kw == 'variation' or kw == 'bad' %}
+    {% if description %}
     <div class='description'>
         {% if kw == 'variation' %}
         This page lists all of the words that display variation, whether in their <i>test</i> syllabifications, <i>gold</i> syllabifications, or both.
-        {% else %}
+        {% elif kw == 'bad' %}
         This page lists all of the words that fail to have perfect <i>recall</i>.
+        {% elif kw == 'unverified_compounds' %}
+        This page lists all of the syllabifier-predicted compounds that have been verified but not marked as compounds.
+        {% elif kw == 'uncaptured_compounds' %}
+        This page lists all of the hand-verified compounds that the syllabifier fails to predict are compounds.
         {% endif %}
         <br>
         <i>{{ count }} matches</i>

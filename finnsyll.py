@@ -333,6 +333,18 @@ class Token(db.Model):
         return '%s / %s' % (round(self.precision, 2), round(self.recall, 2))
 
 
+# class Poem(db.Model):
+#     __tablename__ = 'Poem'
+#     id = db.Column(db.Integer, primary_key=True)
+#     pass
+
+
+# class Variation(db.Model):
+#     __tablename__ = 'Variation'
+#     id = db.Column(db.Integer, primary_key=True)
+#     pass
+
+
 class Document(db.Model):
     __tablename__ = 'Document'
     id = db.Column(db.Integer, primary_key=True)
@@ -540,6 +552,24 @@ def get_gold_verified_variation():
 def get_test_compounds():
     '''Return tokens predicted to be compounds.'''
     return Token.query.filter_by(is_test_compound=True)
+
+
+def get_unverified_test_compounds():
+    ''' '''
+    tokens = Token.query.filter(Token.is_gold.isnot(None))
+    tokens = tokens.filter_by(is_compound=False)
+    tokens = tokens.filter_by(is_test_compound=True)
+
+    return tokens
+
+
+def get_uncaptured_gold_compounds():
+    ''' '''
+    tokens = Token.query.filter(Token.is_gold.isnot(None))
+    tokens = tokens.filter_by(is_compound=True)
+    tokens = tokens.filter_by(is_test_compound=False)
+
+    return tokens
 
 
 # View helpers ----------------------------------------------------------------
@@ -808,6 +838,48 @@ def find_view():
         )
 
 
+@app.route('/compounds/unverified', defaults={'page': 1}, methods=['GET', 'POST'])  # noqa
+@app.route('/compounds/unverified/page/<int:page>', methods=['GET', 'POST'])
+def unverified_compounds_view(page):
+    ''' '''
+    if request.method == 'POST':
+        apply_form(request.form)
+
+    tokens = get_unverified_test_compounds()
+    count = format(tokens.count(), ',d')
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='unverified_compounds',
+        pagination=pagination,
+        count=count,
+        description=True,
+        )
+
+
+@app.route('/compounds/uncaptured', defaults={'page': 1}, methods=['GET', 'POST'])  # noqa
+@app.route('/compounds/uncaptured/page/<int:page>', methods=['GET', 'POST'])
+def uncaptured_compounds_view(page):
+    ''' '''
+    if request.method == 'POST':
+        apply_form(request.form)
+
+    tokens = get_uncaptured_gold_compounds()
+    count = format(tokens.count(), ',d')
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='uncaptured_compounds',
+        pagination=pagination,
+        count=count,
+        description=True,
+        )
+
+
 @app.route('/unverified', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/unverified/page/<int:page>', methods=['GET', 'POST'])
 def unverified_view(page):
@@ -843,6 +915,7 @@ def bad_view(page):
         kw='bad',
         pagination=pagination,
         count=count,
+        description=True,
         )
 
 
@@ -881,37 +954,27 @@ def variation_view(page):
         kw='variation',
         pagination=pagination,
         count=count,
+        description=True,
         )
 
 
-@app.route('/<query>', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/<query>/page/<int:page>', methods=['GET', 'POST'])
+@app.route('/hidden', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/hidden/page/<int:page>', methods=['GET', 'POST'])
 def hidden_view(page, query):  # TODO
     '''List special queries.'''
     if request.method == 'POST':
         apply_form(request.form)
 
     # Monosyllabic test syllabifications
-    mono = lambda: Token.query.filter(~Token.test_syll1.contains('.'))
+    # tokens = Token.query.filter(~Token.test_syll1.contains('.'))
 
     # Test compounds
-    compounds = lambda: get_test_compounds()
+    # tokens = get_test_compounds()
 
     # Tokens with four+ test syllabifications
-    four = lambda: Token.query.filter(Token.test_syll4 != '')
+    tokens = Token.query.filter(Token.test_syll4 != '')
 
-    queries = {
-        'mono': mono,
-        'compounds': compounds,
-        'four': four,
-        }
-
-    try:
-        tokens = queries[query]()
-        tokens, pagination = paginate(page, tokens)
-
-    except KeyError:
-        abort(404)
+    tokens, pagination = paginate(page, tokens)
 
     return render_template(
         'tokens.html',
