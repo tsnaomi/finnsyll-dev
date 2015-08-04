@@ -188,7 +188,7 @@ def apply_T2(word):
 
 # T4 --------------------------------------------------------------------------
 
-def apply_T4(word, coda=True):
+def apply_T4(word):
     '''An agglutination diphthong that ends in /u, y/ contains a syllable
     boundary when the sequence would appear in an unstressed syllable, e.g.,
     [lau.ka.us], [va.ka.ut.taa].'''
@@ -357,7 +357,7 @@ def i_final_diphthong_vvv_sequences(word):
 def u_y_final_diphthongs(word):
     # this pattern searchs for any VV sequence that ends in /u/ or /y/ (incl.
     # long vowels), and that is not directly preceded or followed by a vowel
-    return re.search(r'^[^ieAyOauo]*([ieAyOao]{1}(u|y))[^ieAyOauo]*$', word)
+    return re.search(r'^[^ieAyOauo]*([ieAyOauo]{1}(u|y))[^ieAyOauo]*$', word)
 
 
 # -----------------------------------------------------------------------------
