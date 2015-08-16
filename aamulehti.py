@@ -86,7 +86,14 @@ def distill_tokens(freqs):
 
 def save_tokens(tokens):
     for token, freq in tokens.iteritems():
-        t = finn.Token(token.orth, token.lemma, token.msd, token.pos, freq)
+        t = finn.Token(
+            orth=token.orth,
+            lemma=token.lemma,
+            msd=token.msd,
+            pos=token.pos,
+            freq=freq,
+            is_aamulehti=True,
+            )
         finn.db.session.add(t)
 
     finn.db.session.commit()
@@ -247,6 +254,7 @@ if __name__ == '__main__':
     # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
     # tabulate_to_file(finn.get_test_compounds(), 'test_compounds')
-    finn.detect_compounds()
-    # finn.syllabify_tokens()
+    # tabulate_to_file(finn.get_delimited_compounds(), 'delimited_compounds')
+    # finn.detect_compounds()
+    finn.syllabify_tokens()
     pass
