@@ -19,10 +19,11 @@ from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from functools import wraps
 from math import ceil
-from sqlalchemy import or_
+from sqlalchemy import or_, and_  # func
+from sqlalchemy.ext.hybrid import hybrid_property
 from syllabifier.compound import detect, split
-from syllabifier.phonology import get_sonorities, get_weights, replace_umlauts
-from syllabifier.v7 import syllabify
+from syllabifier.phonology import replace_umlauts
+from syllabifier.v8 import syllabify
 from werkzeug.exceptions import BadRequestKeyError
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
@@ -65,6 +66,13 @@ class Token(db.Model):
     __tablename__ = 'Token'
     id = db.Column(db.Integer, primary_key=True)
 
+    # a boolean indicating if this word appears in the Aamulehti newspaper
+    # corpus
+    is_aamulehti = db.Column(db.Boolean, default=False)
+
+    # a boolean indicating if this word appears in the Gutenberg poetry
+    is_gutenberg = db.Column(db.Boolean, default=False)
+
     # the word's orthography
     orth = db.Column(db.String(80, convert_unicode=True), nullable=False)
 
@@ -75,77 +83,109 @@ class Token(db.Model):
     # the word's lemma/citation form
     lemma = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # a string of the rules applied in test_syll1
+    # rules applied in test syllabifications ----------------------------------
+
     rules1 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # a string of the rules applied in test_syll2
     rules2 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # a string of the rules applied in test_syll3
     rules3 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # a string of the rules applied in test_syll4
     rules4 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # a string of the rules applied in test_syll5
     rules5 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # a string of the rules applied in test_syll6
     rules6 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # a string of the rules applied in test_syll7
     rules7 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # a string of the rules applied in test_syll8
     rules8 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # test syllabification
+    rules9 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    rules10 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    rules11 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    rules12 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    rules13 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    rules14 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    rules15 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    rules16 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # test syllabifications ---------------------------------------------------
+
     test_syll1 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # test syllabification
     test_syll2 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # test syllabification
     test_syll3 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # test syllabification
     test_syll4 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # test syllabification
     test_syll5 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # test syllabification
     test_syll6 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # test syllabification
     test_syll7 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # test syllabification
     test_syll8 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # correct syllabification (hand-verified)
+    test_syll9 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    test_syll10 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    test_syll11 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    test_syll12 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    test_syll13 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    test_syll14 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    test_syll15 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    test_syll16 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # correct syllabifications (hand-verified) --------------------------------
+
     syll1 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # correct syllabification (hand-verified)
     syll2 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # correct syllabification (hand-verified)
     syll3 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # correct syllabification (hand-verified)
     syll4 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # correct syllabification (hand-verified)
     syll5 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # correct syllabification (hand-verified)
     syll6 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # correct syllabification (hand-verified)
     syll7 = db.Column(db.String(80, convert_unicode=True), default='')
 
-    # correct syllabification (hand-verified)
     syll8 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    syll9 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    syll10 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    syll11 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    syll12 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    syll13 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    syll14 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    syll15 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    syll16 = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # -------------------------------------------------------------------------
 
     # the word's part-of-speech
     pos = db.Column(db.String(80, convert_unicode=True), default='')
@@ -180,16 +220,28 @@ class Token(db.Model):
     # (this is likely safe to delete now)
     verified = db.Column(db.Boolean, default=False)
 
+    # a one-to-many relationship with the Variation table (many Variations per
+    # one Token)
+    variations = db.relationship(
+        'Variation',
+        backref='t_variation',
+        lazy='dynamic',
+        )
+
     __mapper_args__ = {
         'order_by': [is_gold, is_compound, freq.desc()],
         }
 
-    def __init__(self, orth, lemma, msd, pos, freq):
+    def __init__(self, orth, **kwargs):
         self.orth = orth
-        self.lemma = lemma
-        self.msd = msd
-        self.pos = pos
-        self.freq = freq
+
+        for attr, value in kwargs.iteritems():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
+
+        self.inform_base()
+        self.detect_is_compound()
+        self.syllabify()
 
     def __repr__(self):
         return self.orth
@@ -197,66 +249,34 @@ class Token(db.Model):
     def __unicode__(self):
         return self.__repr__()
 
-    # Token attribute methods -------------------------------------------------
-
-    @property
-    def syllable_count(self):  # TODO
-        '''Return the number of syllables the word contains.'''
-        return self.test_syll.count('.') + 1
-
-        # This only takes into consideration the number of syllables in the
-        # first syllabification. It also fails when counting the number of
-        # syllables in delimited compounds.
-
-    @property
-    def syllables(self):  # TODO
-        '''Return a list of the word's syllables.'''
-        return self.test_syll.split('.')
-
-        # This fails when listing the syllables of delimited compounds.
-
-    @property
-    def weights(self):  # TODO
-        '''Return the weight structure of the test syllabification.'''
-        return get_weights(self.test_syll)
-
-        # This only takes into consiterdation the syllable weights of the
-        # first syllabification.
-
-    @property
-    def sonorities(self):  # TODO
-        '''Return the sonority structure of the test syllabification.'''
-        return get_sonorities(self.test_syll)
-
-        # This only takes into consiterdation the sonority structure of the
-        # first syllabification.
-
     def readable_lemma(self):
-        '''Return a rreadable form of the lemma.'''
+        '''Return a readable form of the lemma.'''
         return self.lemma.replace('_', ' ')
 
     def is_lemma(self):
         '''Return True if the word is in its citation form, else False.'''
-        return self.orth.lower() == self.readable_lemma.lower()
+        return self.orth.lower() == self.readable_lemma().lower()
 
     # Syllabification methods -------------------------------------------------
 
     def inform_base(self):
-        ''' '''
-        # syllabifcations do not preserve capitalization
+        '''Populate Token.base with a syllabifier-friendly form of the orth.'''
+        # syllabifcations do not preserve capitalization or umlauts
         self.base = split(replace_umlauts(self.orth.lower()))
 
     def detect_is_compound(self):
-        '''Programmatically detect if the Token is a compound.'''
+        '''Populate Token.is_test_compound.'''
         # super fancy programmatic detection
         self.is_test_compound = detect(self.base)
 
     def syllabify(self):
-        '''Programmatically syllabify Token based on its orthography.'''
+        '''Programmatically syllabify the Token based on its base form.'''
         syllabifications = list(syllabify(self.base, self.is_test_compound))
 
         for i, (test_syll, rules) in enumerate(syllabifications, start=1):
             test_syll = replace_umlauts(test_syll, put_back=True)
+            rules = rules.translate(None, 'abcdefg')
+
             setattr(self, 'test_syll' + str(i), test_syll)
             setattr(self, 'rules' + str(i), rules)
 
@@ -264,7 +284,7 @@ class Token(db.Model):
             self.update_gold()
 
     def correct(self, **kwargs):
-        '''Save new attribute values to Token and update gold status.'''
+        '''Save new attributes to the Token and update its gold status.'''
         for attr, value in kwargs.iteritems():
             if hasattr(self, attr):
                 setattr(self, attr, value)
@@ -272,77 +292,248 @@ class Token(db.Model):
         self.update_gold()
 
     def update_gold(self):
-        '''Compare test syllabifcations against true syllabifications.
-
-        Token.is_gold is True iff all of the gold syllabifications are
-        represented in the test syllabifications.
-        '''
-        self.is_gold = self.sylls().issubset(self.test_sylls())
+        '''Token.is_gold is True iff there is perfect precision and recall.'''
+        self.is_gold = self.sylls() == self.test_sylls()
 
     def test_sylls(self):
-        ''' '''
-        return set(filter(None, [
-            self.test_syll1,
-            self.test_syll2,
-            self.test_syll3,
-            self.test_syll4,
-            self.test_syll5,
-            self.test_syll6,
-            self.test_syll7,
-            self.test_syll8,
-            ]))
+        '''Return a set of all of the Token's test syllabifications.'''
+        test_sylls = [getattr(self, 'test_syll%s' % n) for n in range(1, 9)]
+        test_sylls = set(filter(None, test_sylls))
+        # test_sylls = set(test_sylls).remove('')
+
+        return test_sylls
 
     def sylls(self):
-        ''' '''
-        return set(filter(None, [
-            self.syll1,
-            self.syll2,
-            self.syll3,
-            self.syll4,
-            self.syll5,
-            self.syll6,
-            self.syll7,
-            self.syll8,
-            ]))
+        '''Return a set of all of the Token's correct syllabifications.'''
+        sylls = [getattr(self, 'syll%s' % n) for n in range(1, 9)]
+        sylls = set(filter(None, sylls))
+        # sylls = set(sylls).remove('')
+
+        return sylls
+
+    # Variation methods -------------------------------------------------------
+
+    @hybrid_property
+    def is_ambiguous(self):
+        '''A boolean indicating if the Token exhibits variation.'''
+        return bool(self.test_syll2 or self.syll2)
+
+    @is_ambiguous.expression
+    def is_ambiguous(cls):
+        '''A boolean indicating if the Token exhibits variation.'''
+        return or_(cls.test_syll2 != '', cls.syll2 != '')
 
     # Evaluation methods ------------------------------------------------------
 
     @property
+    def p_r(self):
+        '''A string repr of the Token's precision and recall (P / R).'''
+        return '%s / %s' % (round(self.precision, 2), round(self.recall, 2))
+
+    @property
     def precision(self):
-        ''' '''
+        '''See https://en.wikipedia.org/wiki/Precision_and_recall#Precision.'''
         try:
-            tests, sylls = self.test_sylls(), self.sylls()
-            return round(len(tests.intersection(sylls)) * 1.0 / len(tests), 2)
+            return round(
+                len(self.test_sylls().intersection(self.sylls())) * 1.0 /
+                len(self.test_sylls()),
+                2)
 
         except ZeroDivisionError:
             return 0.0
 
     @property
     def recall(self):
-        ''' '''
+        '''See https://en.wikipedia.org/wiki/Precision_and_recall#Recall.'''
         try:
-            tests, sylls = self.test_sylls(), self.sylls()
-            return round(len(tests.intersection(sylls)) * 1.0 / len(sylls), 2)
+            return round(
+                len(self.test_sylls().intersection(self.sylls())) * 1.0 /
+                len(self.sylls()),
+                2)
 
         except ZeroDivisionError:
             return 0.0
 
+
+class Poem(db.Model):
+    __tablename__ = 'Poem'
+    id = db.Column(db.Integer, primary_key=True)
+
+    # the title of the poem
+    title = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # the name of the poet
+    poet = db.Column(db.Enum(
+        u'J. H. Erkko',
+        u'Aaro Hellaakoski',
+        u'Kössi Kaatra',
+        u'Uuno Kailas',
+        u'V. A. Koskenniemi',
+        u'Kaarlo Kramsu',
+        u'Eino Leino',
+        u'Elias Lönnrot',
+        u'Juhani Siljo',
+        name='poet',
+        convert_unicode=True,
+        ))
+
+    # each book of poetry is split into portions of roughly 1600 lines,
+    # manually spread across several Poem objects
+    portion = db.Column(db.Integer, default=1)
+
+    # the poem's Gutenberg ebook number
+    ebook_number = db.Column(db.Integer)
+
+    # the poem's release date
+    date_released = db.Column(db.DateTime)
+
+    # the date the poem was last updated on Gutenberg, if different from the
+    # the relase date
+    last_updated = db.Column(db.DateTime)
+
+    # the poem as a tokenized lists, incl. Variation IDs and strings of words
+    tokenized_poem = db.Column(db.PickleType)
+
+    # a boolean indicating if all of the poem's variations have been reviewed
+    reviewed = db.Column(db.Boolean, default=False)
+
+    # a one-to-many relationship with the Variation table (many Variations per
+    # Poem)
+    variations = db.relationship(
+        'Variation',
+        backref='p_variation',
+        lazy='dynamic',
+        )
+
+    def __init__(self, **kwargs):
+        for attr, value in kwargs.iteritems():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
+
+    def __repr__(self):
+        return '%s by %s' % (self.title, self.poet)
+
+    def __unicode__(self):
+        return self.__repr__()
+
     @property
-    def p_r(self):
-        ''' '''
-        return '%s / %s' % (round(self.precision, 2), round(self.recall, 2))
+    def ebook(self):
+        '''The poem/book of poems' Gutenberg identifier.'''
+        return 'EBook #%s' % self.ebook_number
+
+    def query_poem(self):
+        '''Return a list of Variations and words as they appear in the poem.'''
+        variations = {v.id: v for v in self.variations}
+        poem = [variations.get(w, w) for w in self.tokenized_poem]
+
+        return poem
+
+    def update_review(self):
+        '''Set reviewed to True if all of the variations have been verified.'''
+        reviewed = all(variation.verified for variation in self.variations)
+        self.reviewed = reviewed
 
 
-# class Poem(db.Model):
-#     __tablename__ = 'Poem'
-#     id = db.Column(db.Integer, primary_key=True)
-#     pass
+class Variation(db.Model):
+    __tablename__ = 'Variation'
+    id = db.Column(db.Integer, primary_key=True)
+
+    # a one-to-many relationship with the Token table (many Variations per
+    # Token)
+    token_id = db.Column(db.Integer, db.ForeignKey('Token.id'))
+
+    # a one-to-many relationship with the Poem table (many Variations per
+    # Poem)
+    poem_id = db.Column(db.Integer, db.ForeignKey('Poem.id'))
+
+    # a one-to-many relationship with the Sequence table (many Sequences per
+    # Variation)
+    sequences = db.relationship(
+        'Sequence',
+        backref='v_sequence',
+        lazy='dynamic',
+        )
+
+    def __init__(self, token, poem):
+        self.token_id = token
+        self.poem_id = poem
+
+    def __repr__(self):
+        return 'Variation %s' % self.id
+
+    def __unicode__(self):
+        return self.__repr__()
+
+    @property
+    def verified(self):
+        '''A boolean indicating if this Variation has been hand-verified.'''
+        return all(seq.verified for seq in self.sequences)
+
+    def display(self):
+        '''A string represenation of this Variation.'''
+        return self.t_variation.orth.lower()
+
+    def get_sequences(self):
+        '''Return a list of related Sequence objects.'''
+        return [seq for seq in self.sequences]
 
 
-# class Variation(db.Model):
-#     __tablename__ = 'Variation'
-#     id = db.Column(db.Integer, primary_key=True)
-#     pass
+class Sequence(db.Model):
+    __tablename__ = 'Sequence'
+    id = db.Column(db.Integer, primary_key=True)
+
+    # a one-to-many relationship with the Variation table (many Sequences per
+    # one Variation)
+    variation_id = db.Column(db.Integer, db.ForeignKey('Variation.id'))
+
+    # the sequence of vowels under consideration
+    sequence = db.Column(db.String(10, convert_unicode=True), default='')
+
+    # the html representation of the related token, highlighting the sequence
+    html = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # an enum indicating if this sequence splits or joins
+    split = db.Column(db.Enum('split', 'join', 'unknown', name='split'))
+
+    # the scansion or metric precision of this sequence:
+    # S - strong, W - weak, UNK - unknown
+    scansion = db.Column(db.Enum(
+        'S', 'W', 'SW', 'WS', 'SS', 'WW', 'UNK',
+        name='scansion',
+        ))
+
+    # a note field to jot down notes about this sequence
+    note = db.Column(db.Text, default='')
+
+    def __init__(self, variation, sequence, **kwargs):
+        self.variation_id = variation
+        self.sequence = sequence
+
+        for attr, value in kwargs.iteritems():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
+
+    def __repr__(self):
+        return self.html.replace('<br>', '{').replace('</br>', '}')
+
+    def __unicode__(self):
+        return self.__repr__()
+
+    @hybrid_property
+    def verified(self):
+        '''A boolean indicating if this Sequence has been hand-verified.'''
+        return bool(self.split and self.scansion)
+
+    @verified.expression
+    def verified(cls):
+        '''A boolean indicating if this Sequence has been hand-verified.'''
+        return and_(cls.split.isnot(None), cls.scansion.isnot(None))
+
+    def correct(self, split=None, scansion=None, note=''):
+        '''Save new attributes to the Sequence.'''
+        self.split = split
+        self.scansion = scansion
+        self.note = note
 
 
 class Document(db.Model):
@@ -470,6 +661,9 @@ def syllabify_tokens():
 
     print 'Syllabifications complete. ' + datetime.utcnow().strftime('%I:%M')
 
+    # calculate average precision and recall
+    update_precision_and_recall()
+
 
 def find_token(orth):
     '''Retrieve a token by its orthography.'''
@@ -480,6 +674,28 @@ def find_token(orth):
 
     except KeyError:
         return None
+
+
+def update_poems():
+    '''Update the reviewed status of each Poem object.'''
+    for poem in Poem.query.all():
+        poem.update_review()
+
+    db.session.commit()
+
+
+def update_precision_and_recall():
+    with open('_precision_and_recall.txt', 'w') as f:
+        VERIFIED = Token.query.filter(Token.is_gold.isnot(None))
+        verified = VERIFIED.count()
+
+        # calculate average precision and recall
+        P = round(float(sum([t.precision for t in VERIFIED])) / verified, 4)
+        R = round(float(sum([t.recall for t in VERIFIED])) / verified, 4)
+
+        f.write('%s\n%s' % (P, R))
+
+        print '%s / %s' % (P, R)
 
 
 # Baisc queries ---------------------------------------------------------------
@@ -496,12 +712,15 @@ def get_good_tokens():
 
 def get_unverified_tokens():
     '''Return tokens with uncertain syllabifications.'''
-    return Token.query.filter_by(is_gold=None)
+    return Token.query.filter_by(is_aamulehti=True).filter_by(is_gold=None)
 
 
 def get_unseen_lemmas():
     '''Return unseen lemmas with uncertain syllabfications.'''
-    return Token.query.filter_by(freq=0).order_by(Token.lemma)
+    tokens = Token.query.filter_by(is_aamulehti=True).filter_by(freq=0)
+    tokens = tokens.order_by(Token.lemma)
+
+    return tokens
 
 
 def get_stopwords():
@@ -512,7 +731,7 @@ def get_stopwords():
 
 
 def get_notes():
-    ''' '''
+    '''Return all of the tokens that contain notes.'''
     return Token.query.filter(Token.note != '').order_by(Token.freq.desc())
 
 
@@ -520,31 +739,7 @@ def get_notes():
 
 def get_variation():
     '''Return tokens with alternative test or gold syllabifications.'''
-    return Token.query.filter(or_(Token.syll2 != '', Token.test_syll2 != ''))
-
-
-def get_unverified_variation():
-    '''Return unverified tokens with alternative test syllabifications.'''
-    tokens = Token.query.filter(Token.test_syll2 != '')
-    tokens = tokens.filter(Token.is_gold.is_(None))
-
-    return tokens
-
-
-def get_test_verified_variation():
-    '''Return verified tokens with only alternative test syllabifications.'''
-    tokens = Token.query.filter_by(verified=True)
-    tokens = tokens.filter(Token.test_syll2 != '').filter(Token.syll2 == '')
-
-    return tokens
-
-
-def get_gold_verified_variation():
-    '''Return tokens with alternative syllabifications prior to migration.'''
-    tokens = Token.query.filter_by(verified=True)
-    tokens = tokens.filter(Token.syll2 != '').filter(Token.test_syll2 == '')
-
-    return tokens
+    return Token.query.filter_by(is_aamulehti=True).filter(Token.is_ambiguous)
 
 
 # Compound queries ------------------------------------------------------------
@@ -555,16 +750,15 @@ def get_test_compounds():
 
 
 def get_unverified_test_compounds():
-    ''' '''
-    tokens = Token.query.filter(Token.is_gold.isnot(None))
+    '''Return predicted compounds that are not hand-verified compounds.'''
+    tokens = get_test_compounds().filter(Token.is_gold.isnot(None))
     tokens = tokens.filter_by(is_compound=False)
-    tokens = tokens.filter_by(is_test_compound=True)
 
     return tokens
 
 
 def get_uncaptured_gold_compounds():
-    ''' '''
+    '''Return hand-verified compounds that are not predicted compounds.'''
     tokens = Token.query.filter(Token.is_gold.isnot(None))
     tokens = tokens.filter_by(is_compound=True)
     tokens = tokens.filter_by(is_test_compound=False)
@@ -599,6 +793,14 @@ def serve_docs():
     docs = docs.order_by(Document.unique_count).limit(10)
 
     return dict(docs=docs)
+
+
+@app.context_processor
+def serve_peoms():
+    # Serve poems to navbar
+    poems = Poem.query.filter_by(reviewed=False).limit(10)
+
+    return dict(poems=poems)
 
 
 def apply_form(http_form, commit=True):
@@ -653,7 +855,7 @@ def apply_bulk_form(http_form):
     for i in range(1, 41):
         for attr in attrs:
             try:
-                forms[i][attr] = request.form['%s_%s' % (attr, i)]
+                forms[i][attr] = http_form['%s_%s' % (attr, i)]
 
             except BadRequestKeyError:
                 pass
@@ -664,16 +866,42 @@ def apply_bulk_form(http_form):
     db.session.commit()
 
 
+def apply_sequence_form(http_form):
+    # Apply changes to multiple Sequence instances based on POST request
+    n = 2 if http_form.get('id_2') else 1
+    forms = {k: {} for k in range(1, n + 1)}
+    attrs = ['id', 'split', 'scansion', 'note']
+
+    for i in range(1, n + 1):
+        for attr in attrs:
+            try:
+                forms[i][attr] = http_form.get('%s_%s' % (attr, i))
+
+            except BadRequestKeyError:
+                pass
+
+    for form in forms.itervalues():
+        seq = Sequence.query.get(form['id'])
+        seq.correct(
+            split=form['split'],
+            scansion=form['scansion'],
+            note=form['note'],
+            )
+
+    db.session.commit()
+
+
 # Views -----------------------------------------------------------------------
+
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def main_view():
     '''List statistics on the syllabifier's performance.'''
-    VERIFIED = Token.query.filter(Token.is_gold.isnot(None))
+    VERIFIED = db.session.query(Token.id).filter(Token.is_gold.isnot(None))
     GOLD = VERIFIED.filter_by(is_gold=True)
 
-    token_count = 991730  # Token.query.count()
+    token_count = 991730  # Token.query.filter_by(is_aamulehti=True).count()
     doc_count = 61529  # Document.query.count()
 
     # calculate accuracy excluding compounds
@@ -696,9 +924,9 @@ def main_view():
     compound_gold = COMPOUNDS.count()
     compound_accuracy = (float(compound_test) / compound_gold) * 100
 
-    # calculate average precision and recall
-    precision = float(sum([t.precision for t in VERIFIED])) / verified
-    recall = float(sum([t.recall for t in VERIFIED])) / verified
+    # read average precision and recall
+    with open('_precision_and_recall.txt', 'r') as f:
+        precision, recall = f.read().split()
 
     stats = {
         'token_count': format(token_count, ',d'),
@@ -712,11 +940,57 @@ def main_view():
         'compound_test': format(compound_test, ',d'),
         'compound_accuracy': round(compound_accuracy, 2),
         'reviewed': format(reviewed, ',d'),
-        'precision': round(precision, 4),
-        'recall': round(recall, 4)
+        'precision': precision,
+        'recall': recall,
         }
 
     return render_template('main.html', kw='main', stats=stats)
+
+
+@app.route('/rules', methods=['GET', ])
+@login_required
+def rules_view():
+    '''List syllabification rules.'''
+    return render_template('rules.html', kw='rules')
+
+
+@app.route('/notes', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/notes/page/<int:page>', methods=['GET', 'POST'])
+@login_required
+def notes_view(page):
+    '''List all tokens that contain notes.'''
+    if request.method == 'POST':
+        apply_form(request.form)
+
+    tokens = get_notes()
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='notes',
+        )
+
+
+@app.route('/poem/<id>', methods=['GET', 'POST'])
+@login_required
+def poem_view(id):
+    '''Present detail view of specified doc, composed of editable Tokens.'''
+    if request.method == 'POST':
+        apply_sequence_form(request.form)
+
+    poem = Poem.query.get_or_404(id)
+    POEM = poem.query_poem()
+
+    return render_template('poem.html', poem=poem, POEM=POEM, kw='poem')
+
+
+@app.route('/poem/update', methods=['GET', ])
+@login_required
+def poem_update_view():
+    '''Call update_poems().'''
+    update_poems()
+
+    return redirect(url_for('poem_view', id=1))
 
 
 @app.route('/doc/<id>', methods=['GET', 'POST'])
@@ -750,29 +1024,6 @@ def approve_doc_view(id):
     return redirect(url_for('doc_view', id=id))
 
 
-@app.route('/rules', methods=['GET', ])
-@login_required
-def rules_view():
-    '''List syllabification rules.'''
-    return render_template('rules.html', kw='rules')
-
-
-@app.route('/notes/', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/notes/page/<int:page>', methods=['GET', 'POST'])
-def notes_view(page):
-    '''List all tokens that contain notes.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
-    tokens = get_notes()
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='notes',
-        )
-
-
 @app.route('/contains', methods=['GET', 'POST'])
 @login_required
 def contains_view():
@@ -786,7 +1037,7 @@ def contains_view():
             apply_form(request.form)
 
         if '.' in find:
-            results = Token.query.filter(or_(
+            results = Token.query.filter_by(is_aamulehti=True).filter(or_(
                 Token.test_syll1.contains(find),
                 Token.test_syll2.contains(find),
                 Token.test_syll3.contains(find),
@@ -828,6 +1079,7 @@ def find_view():
         FIND = find.strip().translate({ord('.'): None, })  # strip periods
         # FIND = find.strip().translate(None, '.')  # strip periods
         results = Token.query.filter(Token.orth.ilike(FIND))
+        results = results.filter_by(is_aamulehti=True)
         results = results if results.count() > 0 else None
 
     return render_template(
@@ -838,10 +1090,15 @@ def find_view():
         )
 
 
-@app.route('/compounds/unverified', defaults={'page': 1}, methods=['GET', 'POST'])  # noqa
+@app.route(
+    '/compounds/unverified',
+    defaults={'page': 1},
+    methods=['GET', 'POST'],
+    )
 @app.route('/compounds/unverified/page/<int:page>', methods=['GET', 'POST'])
+@login_required
 def unverified_compounds_view(page):
-    ''' '''
+    '''List all unverified compounds and process corrections.'''
     if request.method == 'POST':
         apply_form(request.form)
 
@@ -859,10 +1116,15 @@ def unverified_compounds_view(page):
         )
 
 
-@app.route('/compounds/uncaptured', defaults={'page': 1}, methods=['GET', 'POST'])  # noqa
+@app.route(
+    '/compounds/uncaptured',
+    defaults={'page': 1},
+    methods=['GET', 'POST'],
+    )
 @app.route('/compounds/uncaptured/page/<int:page>', methods=['GET', 'POST'])
+@login_required
 def uncaptured_compounds_view(page):
-    ''' '''
+    '''List all uncaptured compounds and process corrections.'''
     if request.method == 'POST':
         apply_form(request.form)
 
@@ -882,6 +1144,7 @@ def uncaptured_compounds_view(page):
 
 @app.route('/unverified', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/unverified/page/<int:page>', methods=['GET', 'POST'])
+@login_required
 def unverified_view(page):
     '''List all unverified Tokens and process corrections.'''
     if request.method == 'POST':
@@ -900,6 +1163,7 @@ def unverified_view(page):
 
 @app.route('/bad', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/bad/page/<int:page>', methods=['GET', 'POST'])
+@login_required
 def bad_view(page):
     '''List all incorrectly syllabified Tokens and process corrections.'''
     if request.method == 'POST':
@@ -921,6 +1185,7 @@ def bad_view(page):
 
 @app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/lemma/page/<int:page>', methods=['GET', 'POST'])
+@login_required
 def lemma_view(page):
     '''List all unverified unseen lemmas and process corrections.'''
     if request.method == 'POST':
@@ -939,6 +1204,7 @@ def lemma_view(page):
 
 @app.route('/variation/', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/variation/page/<int:page>', methods=['GET', 'POST'])
+@login_required
 def variation_view(page):
     '''List all ambiguous tokens and process corrections.'''
     if request.method == 'POST':
@@ -958,28 +1224,20 @@ def variation_view(page):
         )
 
 
-@app.route('/hidden', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/hidden/', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/hidden/page/<int:page>', methods=['GET', 'POST'])
-def hidden_view(page, query):  # TODO
-    '''List special queries.'''
+@login_required
+def hidden_view(page):
+    '''List all ambiguous tokens and process corrections.'''
     if request.method == 'POST':
         apply_form(request.form)
 
-    # Monosyllabic test syllabifications
-    # tokens = Token.query.filter(~Token.test_syll1.contains('.'))
-
-    # Test compounds
-    # tokens = get_test_compounds()
-
-    # Tokens with four+ test syllabifications
-    tokens = Token.query.filter(Token.test_syll4 != '')
-
+    tokens = Token.query.filter(Token.rules1.contains('T4'))
     tokens, pagination = paginate(page, tokens)
 
     return render_template(
         'tokens.html',
         tokens=tokens,
-        kw='hidden',
         pagination=pagination,
         )
 
@@ -1025,6 +1283,10 @@ def goldclass(t):
     return gold + compound
 
 
+def variationclass(v):
+    return 'variation-verified' if v.verified else 'variation-unverified'
+
+
 def js_safe(s):
     s = s.replace('\r\n', '&#13;&#10;')
     s = s.replace('(', '&#40;').replace(')', '&#41;')
@@ -1033,8 +1295,10 @@ def js_safe(s):
     return s
 
 app.jinja_env.filters['goldclass'] = goldclass
+app.jinja_env.filters['variationclass'] = variationclass
 app.jinja_env.filters['js_safe'] = js_safe
 app.jinja_env.tests['token'] = lambda t: hasattr(t, 'syll1')
+app.jinja_env.tests['variation'] = lambda v: hasattr(v, 'sequences')
 
 
 # Pagination ------------------------------------------------------------------

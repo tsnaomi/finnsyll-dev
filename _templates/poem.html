@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<script>
+    // scroll to first unverified variation on page load
+    $(document).ready(function () {
+        $('html, body').animate({
+            scrollTop: $('.variation-unverified').offset().top - 400
+        }, 'slow');
+    });
+    var unverified = document.getElementsByClassName('.variation-unverified')
+    if (unverified == null) {
+        $.ajax({
+            type: 'GET',
+            url: "{{ url_for('poem_update_view') }}",
+        });
+    }
+</script>
+{% endblock %}
+
+{% macro _populate(v) -%}
+    {% set sequences = v.get_sequences() %}
+    populatemodal({{ sequences.0.id }}, '{{ sequences.0.html|safe }}', '{{ sequences.0.split }}', '{{ sequences.0.scansion }}', '{{ sequences.0.note|js_safe }}', {% if sequences|length > 1 %}'{{ sequences.1.id }}', '{{ sequences.1.html|safe }}', '{{ sequences.1.split }}', '{{ sequences.1.scansion }}', '{{ sequences.1.note|js_safe }}',{% else %}'', '', '', ''{% endif %});
+{%- endmacro %}
+
+{% block body %}
+<!-- modal (start)-->
+<div class='modal fade' id='modal' tabindex='-1' role='dialog' aria-labelledby='myModalLabel'>
+    <div class='modal-dialog' role='document'>
+        <div class='modal-content'>
+            <div class='modal-body'>
+                <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
+                <form class='doc-tokens' method='POST'>
+                    <div class='container-fluid sequences'>
+                        <br>
+                        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+                        {% for i in range(2) %}
+                        <div class='sequence-{{ loop.index }}'>
+                            {% if loop.index != 1 %}
+                            <div class='divide'></div>
+                            {% endif %}
+                            <input type='hidden' name='id_{{ loop.index }}' id='id_{{ loop.index }}' value=''>
+                            <div id='html_{{ loop.index }}' class='variation-orth'></div>
+                            <div class='row hidden-xs'>
+                                <div class='col-sm-1'></div>
+                                <div class='col-sm-3'>
+                                    <span class='attr-label'>split / join</span>
+                                </div>
+                                <div class='col-sm-1'></div>
+                                <div class='col-sm-2'>
+                                    <span class='attr-label'>scansion</span>
+                                </div>
+                            </div>
+                            <div class='row'>
+                                <div class='col-xs-1'></div>
+                                <div class='col-xs-9 col-sm-3 seq-attr'>
+                                    <input type='radio' name='split_{{ loop.index }}' id='split_{{ loop.index }}' value='split'> split<br>
+                                    <input type='radio' name='split_{{ loop.index }}' id='join_{{ loop.index }}' value='join'> join<br>
+                                    <input type='radio' name='split_{{ loop.index }}' id='unknown_{{ loop.index }}' value='unknown'> unsure<br>
+                                </div>
+                                <div class='visible-xs col-xs-1 seq-attr'>
+                                    <div>&nbsp;</div>
+                                    <div>&nbsp;</div>
+                                    <div>&nbsp;</div>
+                                </div>
+                                <div class='col-xs-12 col-sm-1'>
+                                    <div class='visible-xs' style='height: 10px'></div>
+                                </div>
+                                <div class='visible-xs col-xs-1'></div>
+                                <div class='col-xs-3 col-sm-2 seq-attr'>
+                                    <input type='radio' name='scansion_{{ loop.index }}' id='S_{{ loop.index }}' value='S'> S<br>
+                                    <input type='radio' name='scansion_{{ loop.index }}' id='SW_{{ loop.index }}' value='SW'> SW<br>
+                                    <input type='radio' name='scansion_{{ loop.index }}' id='SS_{{ loop.index }}' value='SS'> SS<br>
+                                </div>
+                                <div class='col-xs-3 col-sm-2 seq-attr'>
+                                    <input type='radio' name='scansion_{{ loop.index }}' id='W_{{ loop.index }}' value='W'> W<br>
+                                    <input type='radio' name='scansion_{{ loop.index }}' id='WS_{{ loop.index }}' value='WS'> WS<br>
+                                    <input type='radio' name='scansion_{{ loop.index }}' id='WW_{{ loop.index }}' value='WW'> WW<br>
+                                </div>
+                                <div class='col-xs-3 col-sm-2 seq-attr'>
+                                    <input type='radio' name='scansion_{{ loop.index }}' id='UNK_{{ loop.index }}' value='UNK'> unsure<br>
+                                    <div>&nbsp;</div>
+                                    <div>&nbsp;</div>
+                                </div>
+                                <div class='visible-xs col-xs-1 seq-attr'>
+                                    <div>&nbsp;</div>
+                                    <div>&nbsp;</div>
+                                    <div>&nbsp;</div>
+                                </div>
+                            </div>
+                            <div class='row' style='margin-top: 8px;'>
+                                <div class='hidden-xs hidden-sm col-sm-1'></div>
+                                <div class='hidden-xs hidden-sm col-sm-11'>
+                                    <span class='attr-label'>note</span>
+                                </div>
+                            </div>
+                             <div class='row'>
+                                <div class='col-xs-1'></div>
+                                <textarea id='note_{{ loop.index }}' name='note_{{ loop.index }}' class='seq-note col-xs-10' placeholder='Note...'></textarea>
+                                <div class='col-xs-1'></div>
+                            </div>
+                            <br>
+                        </div>
+                        {% endfor %}
+                        <div class='center' style='margin-top: 10px;'>
+                            <input type='submit' class='OK' value='OK!'>
+                        </div>
+                        <br>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- modal (end) -->
+<br>
+<br>
+<div style='width: 60%; margin: auto;'>
+    <div class='poem-title center'>{{ poem.title }}</div>
+    <br>
+    <div class='poem-poet center'>by {{ poem.poet }}</div>
+</div>
+<br>
+<div class='poem-text container'>   
+{% for v in POEM %}
+    {% if v is variation %}
+    <a data-toggle='modal' data-target='#modal' onclick="{{ _populate(v) }}" class='variation {{ v|variationclass }}'> {{ v.display() }} </a>
+    {% else %}
+    <span>{{ v|safe }}</span>
+    {% endif %}
+{% endfor %}
+</div>
+{% endblock %}
+
+{% block footer %}
+<script>
+    function populatemodal(id1, html1, split1, scansion1, note1, id2, html2, split2, scansion2, note2) {
+        $('.sequences').find('input[type=radio]:checked').removeAttr('checked');
+        $('#id_1').val(id1);
+        $('#html_1').html(html1);
+        $('#note_1').text(note1.replace(/&#13;&#10;/g, '\r\n').replace(/&#40;/g, '(').replace(/&#41;/g, ')').replace(/&#34;/g, '"').replace(/&#39;/g, "'"));
+        if (split1 == 'split') {
+            $('#split_1').prop('checked', true)
+        } else if (split1 == 'join') {
+            $('#join_1').prop('checked', true)
+        } else if (split1 == 'unknown') {
+            $('#unkown_1').prop('checked', true)
+        };
+        if (scansion1 == 'S') {
+            $('#S_1').prop('checked', true)
+        } else if (scansion1 == 'W') {
+            $('#W_1').prop('checked', true)
+        } else if (scansion1 == 'SW') {
+            $('#SW_1').prop('checked', true)
+        } else if (scansion1 == 'WS') {
+            $('#WS_1').prop('checked', true)
+        } else if (scansion1 == 'SS') {
+            $('#SS_1').prop('checked', true)
+        } else if (scansion1 == 'WW') {
+            $('#WW_1').prop('checked', true)
+        } else if (scansion1 == 'UNK') {
+            $('#UNK_1').prop('checked', true)
+        };
+        if (id2 != '') {
+            $('#id_2').val(id2);
+            $('#html_2').html(html2);
+            $('#note_2').text(note2.replace(/&#13;&#10;/g, '\r\n').replace(/&#40;/g, '(').replace(/&#41;/g, ')').replace(/&#34;/g, '"').replace(/&#39;/g, "'"));
+            $('.sequence-2').show()
+            $('.sequence-2 :input').attr('disabled', false);
+
+            if (split2 == 'split') {
+                $('#split_2').prop('checked', true)
+            } else if (split2 == 'join') {
+                $('#join_2').prop('checked', true)
+            } else if (split2 == 'unknown') {
+                $('#unkown_2').prop('checked', true)
+            };
+
+            if (scansion2 == 'S') {
+                $('#S_2').prop('checked', true)
+            } else if (scansion2 == 'W') {
+                $('#W_2').prop('checked', true)
+            } else if (scansion2 == 'SW') {
+                $('#SW_2').prop('checked', true)
+            } else if (scansion2 == 'WS') {
+                $('#WS_2').prop('checked', true)
+            } else if (scansion2 == 'SS') {
+                $('#SS_2').prop('checked', true)
+            } else if (scansion2 == 'WW') {
+                $('#WW_2').prop('checked', true)
+            } else if (scansion2 == 'UNK') {
+                $('#UNK_2').prop('checked', true)
+            };
+        } else {
+            $('#html_2').html(html2);
+            $('.sequence-2 :input').attr('disabled', true);
+            $('.sequence-2').hide()
+        };
+    }
+</script>
+{% endblock %}
