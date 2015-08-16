@@ -1,0 +1,52 @@
+syllabifier.v8
+
+Remove consonant clustering variation -- T1E is always active.
+
+
+FROM BAD TO GOOD (30)
+test 1                    rules 1    test 2                    rules 2    p / r          test 1                    rules 1    p / r      compound
+------------------------  ---------  ------------------------  ---------  ---------  --  ------------------------  ---------  ---------  ----------
+eng.lan.nin               T1         en.glan.nin               T1         0.5 / 1.0  >   eng.lan.nin               T1         1.0 / 1.0
+eng.lan.nis.sa            T1         en.glan.nis.sa            T1         0.5 / 1.0  >   eng.lan.nis.sa            T1         1.0 / 1.0
+eng.lan.ti.lai.nen        T1         en.glan.ti.lai.nen        T1         0.5 / 1.0  >   eng.lan.ti.lai.nen        T1         1.0 / 1.0
+eng.lan.ti                T1         en.glan.ti                T1         0.5 / 1.0  >   eng.lan.ti                T1         1.0 / 1.0
+eng.lan.nin               T1         en.glan.nin               T1         0.5 / 1.0  >   eng.lan.nin               T1         1.0 / 1.0
+eng.lan.nik.si            T1         en.glan.nik.si            T1         0.5 / 1.0  >   eng.lan.nik.si            T1         1.0 / 1.0
+eng.lan.ti.a              T1 T2      en.glan.ti.a              T1 T2      0.5 / 1.0  >   eng.lan.ti.a              T1 T2      1.0 / 1.0
+eng.lan.ti.lai.sen        T1         en.glan.ti.lai.sen        T1         0.5 / 1.0  >   eng.lan.ti.lai.sen        T1         1.0 / 1.0
+and.re                    T1         an.dre                    T1         0.5 / 1.0  >   and.re                    T1         1.0 / 1.0
+and.rei                   T1         an.drei                   T1         0.5 / 1.0  >   and.rei                   T1         1.0 / 1.0
+and.re.as                 T1 T2      an.dre.as                 T1 T2      0.5 / 1.0  >   and.re.as                 T1 T2      1.0 / 1.0
+samp.ras                  T1         sam.pras                  T1         0.5 / 1.0  >   samp.ras                  T1         1.0 / 1.0
+eng.lan.nis.ta            T1         en.glan.nis.ta            T1         0.5 / 1.0  >   eng.lan.nis.ta            T1         1.0 / 1.0
+inf.laa.ti.on             T1 T2      in.flaa.ti.on             T1 T2      0.5 / 1.0  >   inf.laa.ti.on             T1 T2      1.0 / 1.0
+konk.reet.ti.ses.ti       T1         kon.kreet.ti.ses.ti       T1         0.5 / 1.0  >   konk.reet.ti.ses.ti       T1         1.0 / 1.0
+kong.res.sin              T1         kon.gres.sin              T1         0.5 / 1.0  >   kong.res.sin              T1         1.0 / 1.0
+alf.red                   T1         al.fred                   T1         0.5 / 1.0  >   alf.red                   T1         1.0 / 1.0
+konk.reet.ti.si.a         T1 T2      kon.kreet.ti.si.a         T1 T2      0.5 / 1.0  >   konk.reet.ti.si.a         T1 T2      1.0 / 1.0
+eng.lan.tiin              T1         en.glan.tiin              T1         0.5 / 1.0  >   eng.lan.tiin              T1         1.0 / 1.0
+and.re.a                  T1 T2      an.dre.a                  T1 T2      0.5 / 1.0  >   and.re.a                  T1 T2      1.0 / 1.0
+lind.ros                  T1         lin.dros                  T1         0.5 / 1.0  >   lind.ros                  T1         1.0 / 1.0
+komp.ro.mis.sin           T1         kom.pro.mis.sin           T1         0.5 / 1.0  >   komp.ro.mis.sin           T1         1.0 / 1.0
+eng.lan.ti.lai.ses.sa     T1         en.glan.ti.lai.ses.sa     T1         0.5 / 1.0  >   eng.lan.ti.lai.ses.sa     T1         1.0 / 1.0
+wink.ler                  T1         win.kler                  T1         0.5 / 1.0  >   wink.ler                  T1         1.0 / 1.0
+fing.rid                  T1         fin.grid                  T1         0.5 / 1.0  >   fing.rid                  T1         1.0 / 1.0
+and.re.a                  T1 T2      an.dre.a                  T1 T2      0.5 / 1.0  >   and.re.a                  T1 T2      1.0 / 1.0
+eng.lan.nin.ki.e.lis.ten  T1 T8      en.glan.nin.ki.e.lis.ten  T1 T8      0.5 / 1.0  >   eng.lan.nin.ki.e.lis.ten  T1 T8      1.0 / 1.0
+lind.ro.si.a              T1 T2      lin.dro.si.a              T1 T2      0.5 / 1.0  >   lind.ro.si.a              T1 T2      1.0 / 1.0
+lind.roos                 T1         lin.droos                 T1         0.5 / 1.0  >   lind.roos                 T1         1.0 / 1.0  C
+inf.laa.ti.o.u.hat        T1 T7 T2   in.flaa.ti.o.u.hat        T1 T7 T2   0.5 / 1.0  >   inf.laa.ti.o.u.hat        T1 T7 T2   1.0 / 1.0  C
+
+FROM GOOD TO BAD (8)
+test 1          rules 1    test 2          rules 2    p / r          test 1          rules 1    p / r
+--------------  ---------  --------------  ---------  ---------  --  --------------  ---------  ---------
+belg.ra.din     T1         bel.gra.din     T1         1.0 / 1.0  >   belg.ra.din     T1         1.0 / 0.5
+belg.ra.dis.sa  T1         bel.gra.dis.sa  T1         1.0 / 1.0  >   belg.ra.dis.sa  T1         1.0 / 0.5
+belg.rad        T1         bel.grad        T1         1.0 / 1.0  >   belg.rad        T1         1.0 / 0.5
+inf.laa.ti.o    T1 T2      in.flaa.ti.o    T1 T2      1.0 / 1.0  >   inf.laa.ti.o    T1 T2      1.0 / 0.5
+and.rew         T1         an.drew         T1         1.0 / 1.0  >   and.rew         T1         1.0 / 0.5
+belg.ra.diin    T1         bel.gra.diin    T1         1.0 / 1.0  >   belg.ra.diin    T1         1.0 / 0.5
+wimb.le.do.nin  T1         wim.ble.do.nin  T1         1.0 / 1.0  >   wimb.le.do.nin  T1         1.0 / 0.5
+kong.res.si     T1         kon.gres.si     T1         1.0 / 1.0  >   kong.res.si     T1         1.0 / 0.5
+
+659 BAD TOKENS

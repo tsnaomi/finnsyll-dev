@@ -19,7 +19,7 @@ Indicates that no syllabification rules have applied.
 
 **T1d**: If there is a bare "Finnish" consonant cluster word-medially and the previous syllable receives stress, the first consonant of the cluster forms the coda of the previous syllable (to create a heavy syllable); otherwise, the whole cluster forms the onset of the current syllable (this is the /kr/ rule).
 
-**T1e**: If there is a word-medial "Finnish" consonant cluster that is preceded by a sonorant consonant, if the previous syllable receives stress, the sonorant consonant and the first consonant of the cluster form the coda of the previous syllable, and the remainder of the cluster forms the onset of the current syllable. *VARIATION: T1e optionally applies.*
+**T1e**: If there is a word-medial "Finnish" consonant cluster that is preceded by a sonorant consonant, if the previous syllable receives stress, the sonorant consonant and the first consonant of the cluster form the coda of the previous syllable, and the remainder of the cluster forms the onset of the current syllable.
 
 **T1f**: If there is a word-medial "Finnish" cluster that follows a consonant, that first consonant forms the coda of the previous syllable, and the cluster forms the onset of the current syllable. T1e bleeds T1f.
 
@@ -88,7 +88,7 @@ Split /ie/ sequences in syllables that do not take primary stress.
             return WORD
 
 **T9**:
-Split /iu/ sequences that do not appear in the first, second, or final syllables.
+Split /iu/ sequences that do not appear in the first, second, or final syllables. Split /iu/ sequences in the final syllable iff the final syllable would receive stress.
         
         def apply_T9(word):
             WORD = word
@@ -100,10 +100,15 @@ Split /iu/ sequences that do not appear in the first, second, or final syllables
                     WORD = WORD[:i] + '.' + WORD[i:]
                     index = iu.start(1)
                     offset += 1
+            if WORD.count('.') % 2 == 0:
+                iu = iu_sequences(WORD, word_final=True)
+                if iu:
+                    i = iu.start(1) + 1
+                    WORD = WORD[:i] + '.' + WORD[i:]
             return WORD, RULE
 
 **T4**:
-An agglutination diphthong that ends in /u, y/ usually contains a syllable boundary when -C# or -CCV follow, e.g., [lau.ka.us], [va.ka.ut.taa]. *VARIATION: T4 optionally applies.*
+An agglutination diphthong that ends in /u, y/ optionally contains a syllable boundary when -C# or -CCV follow, e.g., [lau.ka.us], [va.ka.ut.taa]. *VARIATION: T4 optionally applies.*
 
         def apply_T4(word):
             WORD = word.split('.')
@@ -197,10 +202,15 @@ There is a syllable boundary within a sequence VV of two nonidentical vowels tha
             pattern = r'(?=\.[^ieAyOauo]*(ie)[^ieAyOauo]*($|\.))'
             return re.finditer(pattern, word)
 
-        def iu_sequences(word):
-            # this pattern searches for any /iu/ sequence that does do occur in the
-            # first, second, or final syllables, and that is not directly preceded or
-            # followed by a vowel
+        def iu_sequences(word, word_final=False):
+            # this pattern searches for any /iu/ sequence that does not occur in the
+            # first or second syllables and that is not directly preceded or followed
+            # by a vowel
+            # if word_final is False, this pattern will not match sequences in the
+            # finall syllable
+            if word_final:
+                pattern = r'\.[^ieAyOauo]*(iu)[^ieAyOauo]*$'
+                return re.search(pattern, word)
             pattern = r'\..+\.[^ieAyOauo]*(iu)[^ieAyOauo]*\.'
             return re.finditer(pattern, word)
 
