@@ -11,11 +11,11 @@
         {% if kw == 'variation' %}
         This page lists all of the words that display variation, whether in their <i>test</i> syllabifications, <i>gold</i> syllabifications, or both.
         {% elif kw == 'bad' %}
-        This page lists all of the words that fail to have perfect <i>recall</i>.
+        This page lists all of the words that fail to have perfect <i>precision</i> and <i>recall</i>.
         {% elif kw == 'unverified_compounds' %}
-        This page lists all of the syllabifier-predicted compounds that have been verified but not marked as compounds.
+        This page lists all of the verified <i>syllabifier-predicted compounds</i> that have not been marked as compounds.
         {% elif kw == 'uncaptured_compounds' %}
-        This page lists all of the hand-verified compounds that the syllabifier fails to predict are compounds.
+        This page lists all of the <i>hand-verified compounds</i> that the syllabifier fails to predict are compounds.
         {% endif %}
         <br>
         <i>{{ count }} matches</i>
@@ -70,7 +70,7 @@
             <div class='row'>
                 <span class='hidden-xs hidden-sm col-md-3'></span>
                 <span class='col-xs-12 col-md-9'>
-                    <textarea class='gray note' name='note_{{ loop.index }}' placeholder='Note...' >{{ t.note }}</textarea>
+                    <textarea class='gray note' name='note_{{ loop.index }}' placeholder='<i>Note...</i>' >{{ t.note }}</textarea>
                 </span>
             </div>
             <br>

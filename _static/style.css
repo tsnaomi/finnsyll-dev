@@ -13,7 +13,10 @@
     }
 
     .doc-title,
-    .doc-text {
+    .doc-text,
+    .poem-title,
+    .poem-poet,
+    .poem-text {
         font-family: Garamond, 'EB Garamond', serif;
     }
 
@@ -27,12 +30,19 @@
 
 /* font sizes -------------------------------------------------------------- */
 
-    .doc-title {
+    .poem-title {
+        font-size: 42px;
+    }
+
+    .doc-title,
+    .poem-poet {
         font-size: 28px;
     }
 
     .doc-text,
-    .attr-orth {
+    .poem-text,
+    .attr-orth,
+    .variation-orth {
         font-size: 22px;
     }
 
@@ -68,7 +78,8 @@
         border-bottom: 2px solid #00FF7F; /* green */
     }
 
-    .word:hover {
+    .word:hover,
+    .variation, {
         color: #000;
         background-color: #80FFBF; /* light green */
     }
@@ -108,7 +119,9 @@
 
     pre,
     input.gray,
-    textarea.gray {
+    textarea.gray,
+    .seq-attr,
+    .seq-note {
         background-color: #F5F5F5; /* medium gray */
     }
 
@@ -117,11 +130,13 @@
         color: #C7C7C7; /* dark gray */
     }
 
-    .good {
+    .good,
+    .variation-verified {
         background: #D1EDFF; /* blue */
     }
 
-    .bad {
+    .bad,
+    .variation-unverified {
         background: #FFE4E1; /* red */
     }
 
@@ -173,6 +188,43 @@
 
     .punct {
         font-weight: bold;
+    }
+
+/* poem -------------------------------------------------------------------- */
+
+    .poem-title {
+        margin-top: 20px;
+    }
+
+    .poem-poet,
+    .poem-title {
+        text-transform: lowercase;
+    }
+
+    .poem-text {
+        line-height: 144%;
+        width: 60%;
+        margin: 20px auto;
+    }
+
+    .variation-orth {
+        font-style: italic;
+        margin: 10px 0;
+    }
+
+    .variation {
+        margin-left: -5px;
+        padding-left: 6px !important;
+    }
+
+    .seq-attr {
+        padding: 8px;
+    }
+
+    .seq-note {
+        /*margin-top: 10px;*/
+        border: none;
+        resize: none;
     }
 
 /* markdown ---------------------------------------------------------------- */
@@ -256,7 +308,8 @@
 
     .tokens .unverified,
     .tokens .good,
-    .tokens .bad {
+    .tokens .bad,
+    .variation {
         padding: 4px;
     }
 
@@ -275,6 +328,7 @@
 
     .modal-dialog {
         top: 90px;
+        max-width: 600px;
         margin: auto;
         }
 
@@ -356,19 +410,19 @@
             margin-top: -20px;
             }
 
-        .tokens input.gray::-webkit-input-placeholder {
+        .tokens input.gray, .seq-note::-webkit-input-placeholder {
             color: #F5F5F5;
             }
 
-        .tokens input.gray:-moz-placeholder {
+        .tokens input.gray, .seq-note:-moz-placeholder {
             color: #F5F5F5;  
             }
 
-        .tokens input.gray::-moz-placeholder {
+        .tokens input.gray, .seq-note::-moz-placeholder {
             color: #F5F5F5;  
             }
 
-        .tokens input.gray:-ms-input-placeholder {  
+        .tokens input.gray, .seq-note:-ms-input-placeholder {  
             color: #F5F5F5;  
             }
 
