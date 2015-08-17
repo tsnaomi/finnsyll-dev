@@ -33,20 +33,13 @@
                 <div class='collapse navbar-collapse' id='bs-example-navbar-collapse-1'>
                     <ul class='nav navbar-nav'>
                         <li><a href="{{ url_for('main_view') }}"><span class="{% if kw == 'main' %}highlight{% endif %}">Main</span></a></li>
+                        <li><a href="{{ url_for('poems_view') }}"><span class="{% if kw == 'poems' or kw == 'poem' %}highlight{% endif %}">Poems</span></a></li>
                         <li class='dropdown'>
                             <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw == 'rules' or kw == 'notes' %}highlight{% endif %}">Info</span> &#8623;</a>
                             <ul class='dropdown-menu'>
                                 <li><a href="{{ url_for('rules_view') }}"><span class="{% if kw == 'rules' %}highlight{% endif %}">Rules</span></a></li>
                                 <li><a href="{{ url_for('notes_view') }}"><span class="{% if kw == 'notes' %}highlight{% endif %}">Notes</span></a></li>
                                 <li><a href='http://tsnaomi.github.io/finnsyll/'><span>Github</span></a></li>
-                            </ul>
-                        </li>
-                        <li class='dropdown'>
-                            <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw == 'poem' %}highlight{% endif %}">Poems</span> &#8623;</a>
-                            <ul class='dropdown-menu'>
-                                {% for p in poems %}
-                                <li><a href="{{ url_for('poem_view', id=p.id) }}">no. {{ p.id }}</a></li>
-                                {% endfor %}
                             </ul>
                         </li>
                         <li class='dropdown'>

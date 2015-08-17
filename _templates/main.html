@@ -3,6 +3,7 @@
 {% block body %}
 <div class='description container'>
     <br class='hidden-xs hidden-sm'>
+    {% if kw == 'main' %}
     <br><b>{{ stats.gold }}</b> / <b>{{ stats.verified }}</b> word forms correctly syllabified
     <br><b>{{ stats.accuracy }}</b>% accuracy (<b>{{ stats.simplex_accuracy }}</b>% excluding compounds)
     <br>
@@ -15,5 +16,25 @@
     <br><b>{{ stats.remaining }}</b> word forms left to verify
     <br>
     <br><b>{{ stats.reviewed }}</b> / <b>{{ stats.doc_count }}</b> documents reviewed
+    <div>
+    {% elif kw == 'poems' %}
+    {% set prev = '' %}
+    {% for p in poems %}
+    {% if prev != p.ebook_number %}
+    {% if prev %}</div></div>{% endif %}
+    <span style='text-transform: lowercase;'>
+        <strong>{{ p.title }}</strong> by <strong>{{ p.poet_surname }}</strong>
+    </span>
+    <br>
+    <div class='row' style='margin-bottom: 10px;'>
+        <div class='col-xs-1'></div>
+        <div class='col-xs-11'>
+    {% endif %}
+    <span>
+        <a href="{{ url_for('poem_view', id=p.id) }}" class='{% if p.reviewed %}good{% endif %}'><u>{{ p.portion }}</u></a>&nbsp;&nbsp;
+    </span>
+    {% set prev = p.ebook_number %}
+    {% endfor %}
+    {% endif %}
 </div>
 {% endblock %}

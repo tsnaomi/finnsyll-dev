@@ -421,6 +421,11 @@ class Poem(db.Model):
         '''The poem/book of poems' Gutenberg identifier.'''
         return 'EBook #%s' % self.ebook_number
 
+    @property
+    def poet_surname(self):
+        '''Return the poet's surname.'''
+        return self.poet.split()[-1]
+
     def query_poem(self):
         '''Return a list of Variations and words as they appear in the poem.'''
         variations = {v.id: v for v in self.variations}
@@ -795,7 +800,7 @@ def serve_docs():
     return dict(docs=docs)
 
 
-@app.context_processor
+# @app.context_processor
 def serve_peoms():
     # Serve poems to navbar
     poems = Poem.query.filter_by(reviewed=False).limit(10)
@@ -969,6 +974,19 @@ def notes_view(page):
         tokens=tokens,
         kw='notes',
         )
+
+
+@app.route('/poems', methods=['GET', ])
+@login_required
+def poems_view():
+    '''Present an index of poems.'''
+    poems = Poem.query.order_by(
+        Poem.poet,
+        Poem.ebook_number,
+        Poem.portion,
+        ).all()
+
+    return render_template('main.html', poems=poems, kw='poems')
 
 
 @app.route('/poem/<id>', methods=['GET', 'POST'])
