@@ -24,7 +24,7 @@
 
 {% macro _populate(v) -%}
     {% set sequences = v.get_sequences() %}
-    populatemodal({{ sequences.0.id }}, '{{ sequences.0.html|safe }}', '{{ sequences.0.split }}', '{{ sequences.0.scansion }}', '{{ sequences.0.note|js_safe }}', {% if sequences|length > 1 %}'{{ sequences.1.id }}', '{{ sequences.1.html|safe }}', '{{ sequences.1.split }}', '{{ sequences.1.scansion }}', '{{ sequences.1.note|js_safe }}',{% else %}'', '', '', ''{% endif %});
+    populatemodal({{ sequences.0.id }}, '{{ sequences.0.html|safe }}', '{{ sequences.0.split }}', '{{ sequences.0.scansion }}', '{{ sequences.0.note|js_safe }}', {% if sequences|length > 1 %}'{{ sequences.1.id }}', '{{ sequences.1.html|safe }}', '{{ sequences.1.split }}', '{{ sequences.1.scansion }}', '{{ sequences.1.note|js_safe }}'{% else %}'', '', '', ''{% endif %});
 {%- endmacro %}
 
 {% block body %}
