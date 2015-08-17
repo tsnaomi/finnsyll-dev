@@ -14,6 +14,10 @@
             type: 'GET',
             url: "{{ url_for('poem_update_view') }}",
         });
+        var verified = {% if poem.verified %}'True'{% else %}'False'{% endif %};
+        if (verified == 'False') {
+            location.reload();
+        }
     }
 </script>
 {% endblock %}
