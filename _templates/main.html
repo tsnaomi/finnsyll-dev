@@ -2,8 +2,8 @@
 
 {% block body %}
 <div class='description container'>
-    <br class='hidden-xs hidden-sm'>
     {% if kw == 'main' %}
+    <br class='hidden-xs hidden-sm'>
     <br><b>{{ stats.gold }}</b> / <b>{{ stats.verified }}</b> word forms correctly syllabified
     <br><b>{{ stats.accuracy }}</b>% accuracy (<b>{{ stats.simplex_accuracy }}</b>% excluding compounds)
     <br>
@@ -18,6 +18,7 @@
     <br><b>{{ stats.reviewed }}</b> / <b>{{ stats.doc_count }}</b> documents reviewed
     <div>
     {% elif kw == 'poems' %}
+    <br>
     {% set prev = '' %}
     {% for p in poems %}
     {% if prev != p.ebook_number %}
