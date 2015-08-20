@@ -94,8 +94,8 @@ def curate_poem(poem, body):
         for word in line:
             word = word.decode('utf-8', errors='replace')
 
-            # if the word is a series of space, insert HTML non-breaking spaces
-            # of an equivalent length
+            # if the word is a series of spaces, insert HTML non-breaking
+            # spaces of an equivalent length
             if len(word) > 1 and word == len(word) * ' ':
                 text += '&nbsp;' * len(word)
                 continue
@@ -165,7 +165,7 @@ def duplicate_poem(poem, tokenized_poem, portion):
 def u_y_final_diphthongs(word):
     # this pattern searchs for VV sequenceS that ends in /u/ or /y/
     return list(re.finditer(
-        r'(?=(?:^|[^ieAyOauo]+)(au|eu|ou|iu|iy|ey|äy|öy)(?:[^ieäyöauo]+))',
+        r'(?=(?:^|[^ieAyOauo]+)(au|eu|ou|iu|iy|ey|äy|öy)(?:[^ieäyöauo]+)|$)',
         word,
         ))
 
