@@ -998,7 +998,7 @@ def poems_view():
     return render_template('main.html', poems=poems, kw='poems')
 
 
-@app.route('/poem/<id>', methods=['GET', 'POST'])
+@app.route('/poems/<id>', methods=['GET', 'POST'])
 @login_required
 def poem_view(id):
     '''Present detail view of specified doc, composed of editable Tokens.'''
@@ -1011,7 +1011,7 @@ def poem_view(id):
     return render_template('poem.html', poem=poem, POEM=POEM, kw='poem')
 
 
-@app.route('/poem/update', methods=['GET', ])
+@app.route('/poems/update', methods=['GET', ])
 @login_required
 def poem_update_view():
     '''Call update_poems().'''
