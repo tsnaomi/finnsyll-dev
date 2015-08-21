@@ -222,7 +222,7 @@
     }
 
     .seq-note {
-        /*margin-top: 10px;*/
+        margin-top: 10px;
         border: none;
         resize: none;
     }
@@ -423,22 +423,6 @@
             }
 
         .tokens input.gray:-ms-input-placeholder {  
-            color: #F5F5F5;  
-            }
-
-        .seq-note::-webkit-input-placeholder {
-            color: #F5F5F5;
-            }
-
-        .seq-note:-moz-placeholder {
-            color: #F5F5F5;  
-            }
-
-        .seq-note::-moz-placeholder {
-            color: #F5F5F5;  
-            }
-
-        .seq-note:-ms-input-placeholder {  
             color: #F5F5F5;  
             }
 
