@@ -918,7 +918,6 @@ def main_view():
     GOLD = VERIFIED.filter_by(is_gold=True)
 
     token_count = 991730  # Token.query.filter_by(is_aamulehti=True).count()
-    doc_count = 61529  # Document.query.count()
 
     # calculate accuracy excluding compounds
     simplex_gold = GOLD.filter_by(is_compound=False).count()
@@ -930,9 +929,6 @@ def main_view():
     verified = VERIFIED.count()
     accuracy = (float(gold) / verified) * 100
 
-    # calculate aamulehti numbers
-    reviewed = 823  # Document.query.filter_by(reviewed=True).count()
-
     # calculate compound numbers
     COMPOUNDS = VERIFIED.filter_by(is_compound=True)
     compound_test = COMPOUNDS.filter_by(is_test_compound=True).count()
@@ -943,9 +939,13 @@ def main_view():
     with open('_precision_and_recall.txt', 'r') as f:
         precision, recall = f.read().split()
 
+    # # calculate aamulehti numbers
+    # doc_count = 61529  # Document.query.count()
+    # reviewed = 823  # Document.query.filter_by(reviewed=True).count()
+
     stats = {
         'token_count': format(token_count, ',d'),
-        'doc_count': format(doc_count, ',d'),
+        # 'doc_count': format(doc_count, ',d'),
         'verified': format(verified, ',d'),
         'gold': format(gold, ',d'),
         'simplex_accuracy': round(simplex_accuracy, 2),
@@ -953,7 +953,7 @@ def main_view():
         'compound_gold': format(compound_gold, ',d'),
         'compound_test': format(compound_test, ',d'),
         'compound_accuracy': round(compound_accuracy, 2),
-        'reviewed': format(reviewed, ',d'),
+        # 'reviewed': format(reviewed, ',d'),
         'precision': precision,
         'recall': recall,
         }
