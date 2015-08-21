@@ -507,6 +507,9 @@ class Sequence(db.Model):
         name='scansion',
         ))
 
+    # a boolean indicating if the sequence begins in an odd syllable
+    is_odd = db.Column(db.Boolean, default=None)
+
     # a note field to jot down notes about this sequence
     note = db.Column(db.Text, default='')
 
@@ -539,6 +542,15 @@ class Sequence(db.Model):
         self.split = split
         self.scansion = scansion
         self.note = note
+
+    def update_is_odd(self):
+        '''Populate Sequence.is_odd.'''
+        test_syll = self.v_sequence.t_variation.test_syll1
+        start = self.html.find('<')
+        dots = [1 for i, j in enumerate(test_syll) if i <= start and j == '.']
+        is_odd = sum(dots) % 2 == 0
+
+        self.is_odd = is_odd
 
 
 class Document(db.Model):
@@ -898,7 +910,6 @@ def apply_sequence_form(http_form):
 
 # Views -----------------------------------------------------------------------
 
-
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def main_view():
@@ -920,7 +931,6 @@ def main_view():
     accuracy = (float(gold) / verified) * 100
 
     # calculate aamulehti numbers
-    remaining = token_count - verified
     reviewed = 823  # Document.query.filter_by(reviewed=True).count()
 
     # calculate compound numbers
@@ -940,7 +950,6 @@ def main_view():
         'gold': format(gold, ',d'),
         'simplex_accuracy': round(simplex_accuracy, 2),
         'accuracy': round(accuracy, 2),
-        'remaining': format(remaining, ',d'),
         'compound_gold': format(compound_gold, ',d'),
         'compound_test': format(compound_test, ',d'),
         'compound_accuracy': round(compound_accuracy, 2),

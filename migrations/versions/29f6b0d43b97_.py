@@ -8,7 +8,8 @@ Create Date: 2015-08-10 09:20:56.945436
 
 # revision identifiers, used by Alembic.
 # revision = '134b459dd021'
-revision = '35775c59d61b'
+# revision = '35775c59d61b'
+revision = '29f6b0d43b97'
 # down_revision = '29f6b0d43b97'
 down_revision = '134b459dd021'
 

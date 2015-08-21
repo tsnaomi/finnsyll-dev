@@ -29,7 +29,6 @@ def upgrade():
     sa.Column('last_updated', sa.DateTime(), nullable=True),
     sa.Column('tokenized_poem', sa.PickleType(), nullable=True),
     sa.Column('reviewed', sa.Boolean(), nullable=True),
-    sa.Column('portion', sa.Integer(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('Sequence',
