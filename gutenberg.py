@@ -108,7 +108,8 @@ def curate_poem(poem, body):
             word = word.lower()
 
             # find all u- and y-final diphthongs in word
-            sequences = u_y_final_diphthongs(word)
+            sequences = u_y_final_diphthongs(word.encode('utf-8'))
+            sequences = filter(lambda seq: seq.group(1) is not None, sequences)
 
             # if the word contains any u- and y-final diphthongs and is only
             # composed of acceptable characters...
@@ -191,12 +192,13 @@ def curate_sequences(word, sequences, variation):
 
         # eliminate duplicate matches
         if i not in previous:
-            html = word[:i] + '<strong>%s</strong>' % seq.group(1) + word[j:]
+            vv = seq.group(1).decode('utf-8')
+            html = '%s<strong>%s</strong>%s' % (word[:i], vv, word[j:])
 
             # create Sequence object
             sequence = finn.Sequence(
                 variation=variation.id,
-                sequence=seq.group(1),
+                sequence=vv,
                 html=html,
                 )
             finn.db.session.add(sequence)
