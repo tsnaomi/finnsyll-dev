@@ -188,7 +188,8 @@ def curate_sequences(word, sequences, variation):
     previous = []
 
     for seq in sequences:
-        i, j = seq.start(1), seq.end(1)
+        i = seq.start(1)
+        j = i + 2
 
         # eliminate duplicate matches
         if i not in previous:
