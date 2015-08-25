@@ -77,9 +77,10 @@ def _syllabify(word, T1E=True):
         if re.search(r'[ieAyOauo]{3}', word):
             word, T6 = apply_T6(word)
             word, T5 = apply_T5(word)
+            word, T10 = apply_T10(word)
             word, T7 = apply_T7(word)
             word, T2 = apply_T2(word)
-            RULES += T5 + T6 + T7 + T2
+            RULES += T5 + T6 + T10 + T7 + T2
 
         RULES = RULES or ' T0'  # T0 means no rules have applied
 
@@ -236,6 +237,9 @@ def apply_T5(word):
         s = max(vi.start(1), vi.start(2))
         i = 2 if s + 2 < len(word) and is_vowel(word[s + 2]) else 0
 
+        # if '.' not in word[:s]:
+        #     continue
+
         if not (s == i == 0):
             i += s + offset
             WORD = WORD[:i] + '.' + WORD[i:]
@@ -336,6 +340,24 @@ def apply_T9(word):
     return WORD, RULE
 
 
+# T10 -------------------------------------------------------------------------
+
+def apply_T10(word):
+    '''Any /iou/ sequence contains a syllable boundary between the first and
+    second vowel.'''
+    WORD = word
+    offset = 0
+
+    for iou in iou_sequences(WORD):
+        i = iou.start(1) + 1 + offset
+        WORD = WORD[:i] + '.' + WORD[i:]
+        offset += 1
+
+    RULE = ' T10' if word != WORD else ''
+
+    return WORD, RULE
+
+
 # Sequences -------------------------------------------------------------------
 
 def vv_sequences(word):
@@ -349,6 +371,13 @@ def vvv_sequences(word):
     # this pattern searches for any VVV sequence that is not directly preceded
     # or followed by a vowel
     pattern = r'(?=(^|\.)[^ieAyOauo]*([ieAyOauo]{3})[^ieAyOauo]*($|\.))'
+    return re.finditer(pattern, word)
+
+
+def iou_sequences(word):
+    # this patterns searches for any /iou/ sequence that is not directly
+    # preceded or followed by a vowel
+    pattern = r'[^ieAyOauo]*(iou)[^ieAyOauo]*'
     return re.finditer(pattern, word)
 
 
@@ -410,7 +439,12 @@ if __name__ == '__main__':
         # u'battaglia',               # bat.tag.li.a (?)
         # u'sibelius',                # si.be.li.us
         # u'helenius',                # he.le.ni.us
-        # u'kotitalouksien'        # ko.ti.ta.lo.uk.si.en ~ ko.ti.ta.louk.si.en
+        # u'kotitalouksien',      # ko.ti.ta.lo.uk.si.en ~ ko.ti.ta.louk.si.en
+        # u'kauimmin',                # kau.im.min
+        # u'serious',                 # se.ri.ous
+        # u'hioutuneen',              # hi.ou.tu.neen
+        u'york',                    # york
+        u'young',                   # young
         ]
 
     for word in words:

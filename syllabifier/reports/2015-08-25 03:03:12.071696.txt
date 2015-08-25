@@ -1,0 +1,57 @@
+syllabifier.v8
+
+Test changing T5 to not apply to the first syllable.
+
+
+FROM BAD TO GOOD (16)
+test 1          rules 1    p / r          test 1          rules 1    p / r
+--------------  ---------  ---------  --  --------------  ---------  ---------
+lo.uis          T5         0.0 / 0.0  >   lou.is          T7         1.0 / 1.0
+lo.ui.se        T1 T5      0.0 / 0.0  >   lou.i.se        T1 T7      1.0 / 1.0
+ha.uis          T5         0.0 / 0.0  >   hau.is          T7         1.0 / 1.0
+ka.uim.min      T1 T5      0.0 / 0.0  >   kau.im.min      T1 T7      1.0 / 1.0
+ha.uik.si.a     T1 T2 T5   0.0 / 0.0  >   hau.ik.si.a     T1 T2 T7   1.0 / 1.0
+ha.uik.set      T1 T5      0.0 / 0.0  >   hau.ik.set      T1 T7      1.0 / 1.0
+ha.uik.sel.la   T1 T5      0.0 / 0.0  >   hau.ik.sel.la   T1 T7      1.0 / 1.0
+vu.ois.sa       T1 T5      0.0 / 0.0  >   vuo.is.sa       T1 T7      1.0 / 1.0
+ha.uis.ta       T1 T5      0.0 / 0.0  >   hau.is.ta       T1 T7      1.0 / 1.0
+ka.uim.mai.sin  T1 T5      0.0 / 0.0  >   kau.im.mai.sin  T1 T7      1.0 / 1.0
+ka.uim.paa      T1 T5      0.0 / 0.0  >   kau.im.paa      T1 T7      1.0 / 1.0
+ha.uik.ses.sa   T1 T5      0.0 / 0.0  >   hau.ik.ses.sa   T1 T7      1.0 / 1.0
+ha.uis.taan     T1 T5      0.0 / 0.0  >   hau.is.taan     T1 T7      1.0 / 1.0
+ka.uim.mak.si   T1 T5      0.0 / 0.0  >   kau.im.mak.si   T1 T7      1.0 / 1.0
+ha.uik.ses.ta   T1 T5      0.0 / 0.0  >   hau.ik.ses.ta   T1 T7      1.0 / 1.0
+ka.uim.mai.nen  T1 T5      0.0 / 0.0  >   kau.im.mai.nen  T1 T7      1.0 / 1.0
+
+FROM GOOD TO BAD (27)
+test 1          rules 1    test 2       rules 2    p / r          test 1         rules 1    test 2      rules 2    p / r      compound
+--------------  ---------  -----------  ---------  ---------  --  -------------  ---------  ----------  ---------  ---------  ----------
+ti.ai.nen       T1 T5                              1.0 / 1.0  >   ti.a.i.nen     T1 T7 T2                          0.0 / 0.0
+lii.oin         T5                                 1.0 / 1.0  >   liioin         T0                                0.0 / 0.0
+ti.ai.nen       T1 T5                              1.0 / 1.0  >   ti.a.i.nen     T1 T7 T2                          0.0 / 0.0
+ru.ois.sa       T1 T5                              1.0 / 1.0  >   ruo.is.sa      T1 T7                             0.0 / 0.0
+raa.ois.ta      T1 T5                              1.0 / 1.0  >   raaois.ta      T1                                0.0 / 0.0
+ai.oin          T5                                 1.0 / 1.0  >   aioin          T0                                0.0 / 0.0
+ha.uis.sa       T1 T5                              1.0 / 1.0  >   hau.is.sa      T1 T7                             0.0 / 0.0
+ha.uis.ta       T1 T5                              1.0 / 1.0  >   hau.is.ta      T1 T7                             0.0 / 0.0
+ha.uil.ta       T1 T5                              1.0 / 1.0  >   hau.il.ta      T1 T7                             0.0 / 0.0
+la.eis.sa       T1 T5                              1.0 / 1.0  >   la.e.is.sa     T1 T7 T2                          0.0 / 0.0
+nä.yis.sä       T1 T5                              1.0 / 1.0  >   näy.is.sä      T1 T7                             0.0 / 0.0
+ma.uis.ta       T1 T5                              1.0 / 1.0  >   mau.is.ta      T1 T7                             0.0 / 0.0
+lau.oin         T5                                 1.0 / 1.0  >   lauoin         T0                                0.0 / 0.0
+raa.ois.ta.kin  T1 T5                              1.0 / 1.0  >   raaois.ta.kin  T1                                0.0 / 0.0
+raa.oil.la      T1 T5                              1.0 / 1.0  >   raaoil.la      T1                                0.0 / 0.0
+ma.uis.taan     T1 T5                              1.0 / 1.0  >   mau.is.taan    T1 T7                             0.0 / 0.0
+tau.ois.sa      T1 T5                              1.0 / 1.0  >   tauois.sa      T1                                0.0 / 0.0
+va.ois.sa       T1 T5                              1.0 / 1.0  >   va.o.is.sa     T1 T7 T2                          0.0 / 0.0
+ha.uis.taan     T1 T5                              1.0 / 1.0  >   hau.is.taan    T1 T7                             0.0 / 0.0
+du.ois.ta       T1 T5                              1.0 / 1.0  >   duo.is.ta      T1 T7                             0.0 / 0.0
+tau.oil.le      T1 T5                              1.0 / 1.0  >   tauoil.le      T1                                0.0 / 0.0
+ha.uil.le       T1 T5                              1.0 / 1.0  >   hau.il.le      T1 T7                             0.0 / 0.0
+pii.ois.ta      T1 T5                              1.0 / 1.0  >   piiois.ta      T1                                0.0 / 0.0
+la.eil.le       T1 T5                              1.0 / 1.0  >   la.e.il.le     T1 T7 T2                          0.0 / 0.0
+maa.oi.ke.us    T1 T4 T5   maa.oi.keus  T1 T5      1.0 / 1.0  >   maaoi.ke.us    T1 T4      maaoi.keus  T1         0.0 / 0.0  C
+maa.oi.keu.den  T1 T5                              1.0 / 1.0  >   maaoi.keu.den  T1                                0.0 / 0.0  C
+puu.ai.nek.sen  T1 T5                              1.0 / 1.0  >   puuai.nek.sen  T1                                0.0 / 0.0  C
+
+670 BAD TOKENS

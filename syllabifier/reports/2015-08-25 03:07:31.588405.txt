@@ -1,0 +1,18 @@
+syllabifier.v8
+
+Remove the second iteration of T2.
+
+
+FROM BAD TO GOOD (0)
+
+
+
+FROM GOOD TO BAD (4)
+test 1                         rules 1           p / r          test 1                        rules 1        p / r      compound
+-----------------------------  ----------------  ---------  --  ----------------------------  -------------  ---------  ----------
+a.vi.o.e.ron                   T1 T7 T2          1.0 / 1.0  >   a.vio.e.ron                   T1 T7          0.0 / 0.0  C
+sin.fo.ni.a.or.kes.te.rei.den  T1 T7 T2          1.0 / 1.0  >   sin.fo.nia.or.kes.te.rei.den  T1 T7          0.0 / 0.0  C
+a.vi.o.e.ro-on.ne.a            T1 T7 T2 | T1 T2  1.0 / 1.0  >   a.vio.e.ro-on.ne.a            T1 T7 | T1 T2  0.0 / 0.0  C
+inf.laa.ti.o.u.hat             T1 T7 T2          1.0 / 1.0  >   inf.laa.tio.u.hat             T1 T7          0.0 / 0.0  C
+
+663 BAD TOKENS
