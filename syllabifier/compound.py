@@ -28,7 +28,8 @@ def detect(word):
     '''Detect if a word is a non-delimited compound.'''
     return bool(re.search(r'(-| |=)', word)) or bool(
         # any word that possesses both front and back vowels is a compound
-        re.search(r'[AyO]+', word) and re.search(r'[auo]+', word))
+        re.search(r'[AyO]+', word) and re.search(r'[auo]+', word)) and \
+        not re.search(r'^yo')
 
 
 def split(word):
@@ -44,7 +45,7 @@ def split(word):
 
         # any vowel sequence consisting of both front and back vowels denotes a
         # syllable boundary (cf. vowel harmony)
-        (1, r'(Aa|Au|Ao|ya|yu|yo|Oa|Ou|Oo|aA|uA|oA|uy|aO|uO|oO)'),
+        (1, r'[^^](Aa|Au|Ao|ya|yu|yo|Oa|Ou|Oo|aA|uA|oA|uy|aO|uO|oO)'),
         ]
 
     for i, pattern in litmus:
