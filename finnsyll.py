@@ -1,5 +1,7 @@
 # coding=utf-8
 
+import sys
+
 from datetime import datetime
 from flask import (
     abort,
@@ -1398,4 +1400,14 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    manager.run()
+
+    if '--d' in sys.argv or '--s' in sys.argv:
+
+        if '--d' in sys.argv:
+            detect_compounds()
+
+        if '--s' in sys.argv:
+            syllabify_tokens()
+
+    else:
+        manager.run()
