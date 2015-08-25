@@ -5,7 +5,6 @@ import os
 import xml.etree.ElementTree as ET
 
 from collections import Counter, namedtuple
-from tabulate import tabulate as tabulate
 
 # word forms: 991730 (exluding unseen lemmas)
 # xml files: 61,529
@@ -198,63 +197,10 @@ def syllabify_unseen_lemmas():
         finn.db.session.commit()
 
 
-# Queries ---------------------------------------------------------------------
-
-def tabulate_to_file(tokens, filename):
-    parse = lambda t: [
-        t.freq,
-        # 'good' if t.is_gold else 'bad' if t.is_gold is False else '',
-        'C' if t.is_compound else '',  # C for compound
-        t.orth,
-        # t.rules1,
-        # t.test_syll1,
-        # t.rules2,
-        # t.test_syll2,
-        # t.rules3,
-        # t.test_syll3,
-        # t.rules4,
-        # t.test_syll4,
-        # t.syll1,
-        # t.syll2,
-        # t.syll3,
-        # t.syll4,
-        ]
-
-    headers = [
-        'freq',
-        # 'status',
-        'compound',
-        'orth',
-        # 'rules 1',
-        # 'test 1',
-        # 'rules 2',
-        # 'test 2',
-        # 'rules 3',
-        # 'test 3',
-        # 'rules 4',
-        # 'test 4',
-        # 'gold 1',
-        # 'gold 2',
-        # 'gold 3',
-        # 'gold 4',
-        ]
-
-    table = tabulate([parse(t) for t in tokens], headers=headers)
-
-    filename = 'syllabifier/queries/%s.txt' % filename
-
-    with open(filename, 'w') as f:
-        f.write(table.encode('utf-8'))
-
-
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
     # populate_db_tokens_from_aamulehti_1999()  # 13114.48 seconds
     # populate_db_docs_from_aamulehti_1999()  # 4221.7 seconds
     # syllabify_unseen_lemmas()
-    # tabulate_to_file(finn.get_test_compounds(), 'test_compounds')
-    # tabulate_to_file(finn.get_delimited_compounds(), 'delimited_compounds')
-    # finn.detect_compounds()
-    finn.syllabify_tokens()
     pass
