@@ -1,0 +1,152 @@
+  freq  orth                         test 1                                  rules 1        test 2                                 rules 2         gold 1                                 gold 2                             gold 3            
+------  ---------------------------  --------------------------------------  -------------  -------------------------------------  ----------  --  -------------------------------------  ---------------------------------  ------------------
+
+#### Monosyllabic ####
+
+  2653  pian                         pi.an                                   T2                                                                >   pi.an                                  pian                                                 
+  1173  lain                         lain                                    T0                                                                >   la.in
+   173  luin                         luin                                    T0                                                                >   luin                                   lu.in
+   124  maun                         maun                                    T0                                                                >   maun                                   ma.un 
+    21  näyt                         näyt                                    T0                                                                >   nä.yt
+    10  hain                         hain                                    T0                                                                >   ha.in                                  hain
+     6  Yäk                          y.äk                                    T2                                                                >   yäk
+
+#### /y/ Ambiguity ####  
+
+   775  York                         y.ork                                   T0 | T0                                                           >   york                                                                                        
+   771  Yorkin                       y.or.kin                                T0 | T1                                                           >   y.or.kin                               yor.kin                                              
+   493  Yorkissa                     y.or.kis.sa                             T0 | T1                                                           >   y.or.kis.sa                            yor.kis.sa                                           
+   356  yo                           y.o                                     T0 | T0                                                           >   yo  
+   129  Yorkiin                      y.or.kiin                               T0 | T1                                                           >   y.or.kiin                              yor.kiin      
+   114  Young                        y.oung                                  T0 | T0                                                           >   young
+
+#### Consonant Clustering ####
+
+  2231  Jugoslavian                  ju.gos.la.vi.an                         T1 T2                                                             >   ju.gos.la.vi.an                        ju.go.sla.vi.an                                      
+   294  Manchester                   manc.hes.ter                            T1                                                                >   manc.hes.ter                           man.ches.ter                                         
+   287  Tshetsheniassa               tshets.he.ni.as.sa                      T1 T2                                                             >   tshets.he.ni.as.sa                     tshet.she.ni.as.sa                 tshe.tshe.ni.as.sa
+   254  Belgradin                    belg.ra.din                             T1                                                                >   belg.ra.din                            bel.gra.din                                          
+   245  Armstrong                    armst.rong                              T1                                                                >   armst.rong                             arms.trong                         arm.strong        
+   234  Belgradissa                  belg.ra.dis.sa                          T1                                                                >   belg.ra.dis.sa                         bel.gra.dis.sa                                       
+   215  Belgrad                      belg.rad                                T1                                                                >   belg.rad                               bel.grad                                             
+   184  katastrofi                   ka.tast.ro.fi                           T1                                                                >   ka.tast.ro.fi                          ka.tas.tro.fi                      ka.ta.stro.fi    
+   176  Albright                     alb.right                               T1                                                                >   al.bright
+   171  Tshetshenia                  tshets.he.ni.a                          T1 T2                                                             >   tshets.he.ni.a                         tshet.she.ni.a                     tshe.tshe.ni.a
+   170  inflaatio                    inf.laa.ti.o                            T1 T2                                                             >   inf.laa.ti.o                           in.flaa.ti.o       
+   160  Andrew                       and.rew                                 T1                                                                >   and.rew                                an.drew  
+   155  Fischer                      fisc.her                                T1                                                                >   fisc.her                               fis.cher                           fi.scher     
+   153  Pinochetin                   pi.noc.he.tin                           T1                                                                >   pi.no.che.tin      
+   152  Belgradiin                   belg.ra.diin                            T1                                                                >   belg.ra.diin                           bel.gra.diin                                         
+   145  Deutsche                     deutsc.he                               T1                                                                >   deutsc.he                              deuts.che                          deut.sche   
+   135  Tshetsheniaan                tshets.he.ni.aan                        T1 T6                                                             >   tshets.he.ni.aan                       tshet.she.ni.aan                   tshe.tshe.ni.aan  
+   131  Shakespeare                  sha.kes.pe.a.re                         T1 T2                                                             >   sha.kes.pe.a.re                        sha.ke.spe.a.re    
+   120  Mitsubishi                   mit.su.bis.hi                           T1                                                                >   mit.su.bis.hi                          mit.su.bi.shi      
+   117  Detroit                      det.roit                                T1                                                                >   det.roit                               de.troit  
+   109  Tshetsheniasta               tshets.he.ni.as.ta                      T1 T2                                                             >   tshets.he.ni.as.ta                     tshet.she.ni.as.ta                 tshe.tshe.ni.as.ta
+   108  Eritrean                     e.rit.re.an                             T1 T2                                                             >   e.rit.re.an                            e.ri.tre.an   
+   108  Wimbledonin                  wimb.le.do.nin                          T1                                                                >   wimb.le.do.nin                         wim.ble.do.nin 
+   107  kongressi                    kong.res.si                             T1                                                                >   kong.res.si                            kon.gres.si                                          
+   104  Pinochet                     pi.noc.het                              T1                                                                >   pi.noc.het                             pi.no.chet                                           
+   103  tshetsheenien                tshets.hee.ni.en                        T1 T8                                                             >   tshets.hee.ni.en                       tshet.shee.ni.en                   tshe.tshee.ni.en  
+   101  Stepashinin                  ste.pas.hi.nin                          T1                                                                >   ste.pas.hi.nin                         ste.pa.shi.nin 
+     1  jugoslavialaissatiirissa     ju.gos.la.vi.a.lais.sa.tii.ris.sa       T1 T2                                                             >   ju.gos.la.vi.a.lais.sa.tii.ris.sa      ju.go.sla.vi.a.lais.sa.tii.ris.sa
+
+#### SonSeq Violations ####
+
+   240  McLaren                      mcla.ren                                T1                                                                >   mc.la.ren                                                                                   
+   218  McLarenin                    mcla.re.nin                             T1                                                                >   mc.la.re.nin                                                                                
+
+#### Pseudo Vowel Clustering ####
+
+   230  Louis                        lo.uis                                  T5                                                                >   lou.is                                                                                      
+   225  Blues                        blu.es                                  T2                                                                >   blu.es                                 blues   
+   220  piano                        pi.a.no                                 T1 T2                                                             >   pi.a.no                                pia.no                                                
+   191  blues                        blu.es                                  T2                                                                >   blu.es                                 blues  
+   186  Blue                         blu.e                                   T2                                                                >   blu.e                                  blue
+   169  Phoenix                      pho.e.nix                               T1 T2                                                             >   phoe.nix
+   158  Bluesin                      blu.e.sin                               T1 T2                                                             >   blu.e.sin                              blue.sin    
+   133  Beat                         be.at                                   T2                                                                >   be.at                                  beat
+   126  Guy                          gu.y                                    T0 | T0                                                           >   guy      
+   111  Louise                       lo.ui.se                                T1 T5                                                             >   lou.i.se        
+   110  Team                         te.am                                   T2                                                                >   te.am                                  team
+   101  Phoenixin                    pho.e.ni.xin                            T1 T2                                                             >   phoe.ni.xin                                                                                
+   101  Beatles                      be.at.les                               T1 T2                                                             >   be.at.les                              beat.les
+    58  Dean                         de.an                                   T2                                                                >   de.an                                  dean
+    36  Jamie                        ja.mi.e                                 T1 T8                                                             >   ja.mi.e                                ja.mie     
+    22  Jeremies                     je.re.mi.es                             T1 T8                                                             >   je.re.mi.es                            je.re.mies   
+    21  Bordeaux                     bor.de.a.ux                             T1 T7 T2                                                          >   bor.de.aux
+    18  Barkleyn                     bark.le.yn                              T1 T4          bark.leyn                              T1          >   bark.leyn 
+    16  Review                       re.vi.ew                                T1 T8                                                             >   re.view 
+
+#### Second T2 ####
+
+     9  hioutuneen                   hi.o.u.tu.neen                          T1 T7 T2                                                          >   hi.ou.tu.neen
+     4  hioutuneet                   hi.o.u.tu.neet                          T1 T7 T2                                                          >   hi.ou.tu.neet
+     2  Serious                      se.ri.o.us                              T1 T7 T2                                                          >   se.ri.ous
+     2  bordeaux                     bor.de.a.ux                             T1 T7 T2                                                          >   bor.de.aux
+     1  hiouduimme                   hi.o.u.duim.me                          T1 T7 T2                                                          >   hi.ou.duim.me
+     1  hioutuneelta                 hi.o.u.tu.neel.ta                       T1 T7 T2                                                          >   hi.ou.tu.neel.ta
+     1  hioutuvan                    hi.o.u.tu.van                           T1 T7 T2                                                          >   hi.ou.tu.van 
+
+#### T5 ####
+
+     5  kauimmin                     ka.uim.min                              T1 T5                                                             >   kau.im.min
+     7  hauis                        ha.uis                                  T5                                                                >   hau.is
+     4  hauiksia                     ha.uik.si.a                             T1 T2 T5                                                          >   hau.ik.si.a
+     4  hauikset                     ha.uik.set                              T1 T5                                                             >   hau.ik.set                                                                                  
+     3  hauiksella                   ha.uik.sel.la                           T1 T5                                                             >   hau.ik.sel.la
+     2  vuoissa                      vu.ois.sa                               T1 T5                                                             >   vuo.is.sa
+     2  hauista                      ha.uis.ta                               T1 T5                                                             >   hau.is.ta                                                                                   
+     1  hauistaan                    ha.uis.taan                             T1 T5                                                             >   hau.is.taan                                                                                 
+     1  kauimpaa                     ka.uim.paa                              T1 T5                                                             >   kau.im.paa                                                                                  
+     1  kauimmaksi                   ka.uim.mak.si                           T1 T5                                                             >   kau.im.mak.si
+     1  kauimmaisin                  ka.uim.mai.sin                          T1 T5                                                             >   kau.im.mai.sin
+     1  hauiksessa                   ha.uik.ses.sa                           T1 T5                                                             >   hau.ik.ses.sa
+     1  kauimmainen                  ka.uim.mai.nen                          T1 T5                                                             >   kau.im.mai.nen
+     1  hauiksesta                   ha.uik.ses.ta                           T1 T5                                                             >   hau.ik.ses.ta  
+
+#### False Positive Variation ####
+
+   587  Sydneyn                      syd.ne.yn                               T1 T4          syd.neyn                               T1          >   syd.neyn
+   139  Stenius                      ste.ni.us                               T1 T4          ste.nius                               T1          >   ste.ni.us
+   124  Sydneyssä                    syd.ne.ys.sä                            T1 T4          syd.neys.sä                            T1          >   syd.neys.sä
+   118  Ramsaun                      ram.sa.un                               T1 T4          ram.saun                               T1          >   ram.saun                                                                                    
+    97  Volleyn                      vol.le.yn                               T1 T4          vol.leyn                               T1          >   vol.leyn                                                                                    
+    91  Ramsaun MM                   ram.sa.un mm                            T1 T4 | T0     ram.saun mm                            T1 | T0     >   ram.saun mm
+     2  olympiakarsintaturnauksessa  o.lym.pi.a.kar.sin.ta.tur.na.uk.ses.sa  T0 | T1 T2 T4  o.lym.pi.a.kar.sin.ta.tur.nauk.ses.sa  T0 | T1 T2  >   o.lym.pi.a.kar.sin.ta.tur.nauk.ses.sa
+     1  Arnoud                       ar.no.ud                                T1 T4          ar.noud                                T1          >   ar.noud
+     1  Belgium                      bel.gi.um                               T1 T4          bel.gium                               T1          >   bel.gi.um
+     1  moratorium                   mo.ra.to.ri.um                          T1 T4          mo.ra.to.rium                          T1          >   mo.ra.to.ri.um
+
+#### Other ####
+                                                                                       
+  1054  taustalla                    taus.tal.la                             T1                                                                >   ta.us.tal.la             
+   622  Finlaysonin                  fin.la.y.so.nin                         T1 | T0 | T1                                                      >   fin.lay.so.nin                
+   187  Kvaerner                     kva.er.ner                              T1 T2                                                             >   kvaer.ner                                                                                   
+   177  piakkoin                     pi.ak.koin                              T1 T2                                                             >   pi.ak.koin                             piak.koin                     
+   171  selviytyä                    sel.viy.ty.ä                            T1 T2                                                             >   sel.viy.ty.ä                           sel.vi.y.ty.ä                                        
+   170  tausta                       taus.ta                                 T1                                                                >   taus.ta                                ta.us.ta                                             
+   161  laissa                       lais.sa                                 T1                                                                >   lais.sa                                la.is.sa                         
+   134  taustaa                      taus.taa                                T1                                                                >   ta.us.taa           
+   128  Kvaernerin                   kva.er.ne.rin                           T1 T2                                                             >   kva.er.ne.rin                          kvaer.ne.rin  
+   124  haussa                       haus.sa                                 T1                                                                >   haus.sa                                ha.us.sa     
+    88  saneeraus                    sa.nee.raus                             T1                                                                >   sa.nee.raus                            sa.nee.ra.us                                         
+    42  taustana                     taus.ta.na                              T1                                                                >   ta.us.ta.na                         
+    40  aggressiivisesti             ag.gres.sii.vi.ses.ti                   T1                                                                >   agg.res.sii.vi.ses.ti  
+    16  esseisti                     es.seis.ti                              T1                                                                >   es.se.is.ti              
+    10  maskeeraus                   mas.kee.raus                            T1                                                                >   mas.kee.raus                           mas.kee.ra.us       
+     8  joissakin                    jois.sa.kin                             T1                                                                >   jo.is.sa.kin                                                              
+     6  Battaglia                    bat.ta.gli.a                            T1 T2                                                             >   bat.tag.li.a                                                                                
+     4  elektronisesta               e.lekt.ro.ni.ses.ta                     T1                                                                >   e.lekt.ro.ni.ses.ta                    e.lek.tro.ni.ses.ta
+     4  Battaglian                   bat.ta.gli.an                           T1 T2                                                             >   bat.tag.li.an                                                                        
+     2  Esplanadi                    es.pla.na.di                            T1                                                                >   esp.la.na.di                                                          
+     2  Niäminen                     ni.ä.mi.nen                             T1 T2                                                             >   niä.mi.nen                                                            
+     1  establishment                es.ta.blish.ment                        T1                                                                >   es.tab.lish.ment                         
+     1  virtuositeetti               vir.tuo.si.teet.ti                      T0 | T1                                                           >   vir.tu.o.si.teet.ti                   
+     1  lainkaan                     lain.kaan                               T1                                                                >   la.in.kaan          
+     1  Tiäräks                      ti.ä.räks                               T1 T2                                                             >   tiä.räks
+     1  taistelukuvausta             tais.te.lu.ku.vaus.ta                   T1                                                                >   tais.te.lu.ku.va.us.ta                 tais.te.lu.ku.vaus.ta
+     1  Elektroninen                 e.lekt.ro.ni.nen                        T1                                                                >   e.lekt.ro.ni.nen                       e.lek.tro.ni.nen
+     1  Katedraali                   ka.te.draa.li                           T1                                                                >   ka.ted.raa.li                          ka.te.draa.li
+     1  esseistisesti                es.seis.ti.ses.ti                       T1                                                                >   es.se.is.ti.ses.ti 
+
