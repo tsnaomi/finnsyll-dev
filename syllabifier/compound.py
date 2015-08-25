@@ -29,7 +29,7 @@ def detect(word):
     return bool(re.search(r'(-| |=)', word)) or bool(
         # any word that possesses both front and back vowels is a compound
         re.search(r'[AyO]+', word) and re.search(r'[auo]+', word)) and \
-        not re.search(r'^yo')
+        not re.search(r'^yo', word)
 
 
 def split(word):
