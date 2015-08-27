@@ -1,7 +1,5 @@
 # coding=utf-8
 
-import sys
-
 from datetime import datetime
 from flask import (
     abort,
@@ -366,16 +364,16 @@ class Poem(db.Model):
 
     # the name of the poet
     poet = db.Column(db.Enum(
-        u'J. H. Erkko',
-        u'Aaro Hellaakoski',
-        u'Kössi Kaatra',
-        u'Uuno Kailas',
-        u'V. A. Koskenniemi',
-        u'Kaarlo Kramsu',
-        u'Eino Leino',
-        u'Elias Lönnrot',
-        u'Juhani Siljo',
-        name='poet',
+        u'Erkko',        # J. H. Erkko
+        u'Hellaakoski',  # Aaro Hellaakoski
+        u'Kaatra',       # Kössi Kaatra
+        u'Kailas',       # Uuno Kailas
+        u'Koskenniemi',  # V. A. Koskenniemi
+        u'Kramsu',       # Kaarlo Kramsu
+        u'Leino',        # Eino Leino
+        u'Lönnrot',      # Elias Lönnrot
+        u'Siljo',        # Juhani Siljo
+        name='POET',
         convert_unicode=True,
         ))
 
@@ -406,6 +404,9 @@ class Poem(db.Model):
         backref='p_variation',
         lazy='dynamic',
         )
+
+    # the number of variations associated with this poetry ebook
+    variation_count = db.Column(db.Integer)
 
     def __init__(self, **kwargs):
         for attr, value in kwargs.iteritems():
@@ -439,6 +440,10 @@ class Poem(db.Model):
         '''Set reviewed to True if all of the variations have been verified.'''
         reviewed = all(variation.verified for variation in self.variations)
         self.reviewed = reviewed
+
+    def get_variation_count(self):
+        '''Return a formatted variation count.'''
+        return format(self.variation_count, ',d')
 
 
 class Variation(db.Model):
@@ -500,13 +505,13 @@ class Sequence(db.Model):
     html = db.Column(db.String(80, convert_unicode=True), default='')
 
     # an enum indicating if this sequence splits or joins
-    split = db.Column(db.Enum('split', 'join', 'unknown', name='split'))
+    split = db.Column(db.Enum('split', 'join', 'unknown', name='SPLIT'))
 
     # the scansion or metric precision of this sequence:
     # S - strong, W - weak, UNK - unknown
     scansion = db.Column(db.Enum(
         'S', 'W', 'SW', 'WS', 'SS', 'WW', 'UNK',
-        name='scansion',
+        name='SCANSION',
         ))
 
     # a boolean indicating if the sequence begins in an odd syllable
@@ -1400,14 +1405,4 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-
-    if '--d' in sys.argv or '--s' in sys.argv:
-
-        if '--d' in sys.argv:
-            detect_compounds()
-
-        if '--s' in sys.argv:
-            syllabify_tokens()
-
-    else:
-        manager.run()
+    manager.run()

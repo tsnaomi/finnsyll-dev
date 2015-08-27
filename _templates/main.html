@@ -15,8 +15,8 @@
     <br>
     <br><b>15,712</b> vowel sequences have been pulled from Project Gutenberg.
     <br class='hidden-xs'>These vowel sequences appear across <b>15,470</b> word instances.
-    <br class='hidden-xs'>These 15,470 word instances reduce to <b>4,796</b> unique word forms,
-    <br class='hidden-xs'><b>2,077</b> of which also appear in the Aamulehti corpus.
+    <br class='hidden-xs'>These 15,470 word instances reduce to <b>4,797</b> unique word forms,
+    <br class='hidden-xs'><b>2,078</b> of which also appear in the Aamulehti corpus.
     {% elif kw == 'poems' %}
     <br>
     {% set prev = '' %}
@@ -24,7 +24,7 @@
     {% if prev != p.ebook_number %}
     {% if prev %}</div></div>{% endif %}
     <span style='text-transform: lowercase;'>
-        <strong>{{ p.title }}</strong> by <strong>{{ p.poet_surname }}</strong>
+        <strong>{{ p.title }}</strong> by <strong>{{ p.poet_surname }}</strong>&nbsp;&nbsp;<span class='freq'>{{ p.get_variation_count() }}</span>
     </span>
     <br>
     <div class='row' style='margin-bottom: 10px;'>
