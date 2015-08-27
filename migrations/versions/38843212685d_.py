@@ -1,14 +1,13 @@
 """empty message
 
 Revision ID: 38843212685d
-Revises: 12ae2ff3c096
+Revises: 4ebb214a8884
 Create Date: 2015-08-08 18:07:10.998532
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '38843212685d'
-# down_revision = '12ae2ff3c096'
 down_revision = '4ebb214a8884'
 
 from alembic import op
