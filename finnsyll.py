@@ -636,6 +636,7 @@ class Document(db.Model):
 
 # Database functions ----------------------------------------------------------
 
+@manager.command
 def detect_compounds():
     '''Detect compounds.'''
     print 'Detecting compounds... ' + datetime.utcnow().strftime('%I:%M')
@@ -662,6 +663,7 @@ def detect_compounds():
     print 'Detection complete. ' + datetime.utcnow().strftime('%I:%M')
 
 
+@manager.command
 def syllabify_tokens():
     '''Syllabify all tokens.'''
     print 'Syllabifying... ' + datetime.utcnow().strftime('%I:%M')
