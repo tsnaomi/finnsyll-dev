@@ -544,10 +544,7 @@ Nurmell' äänen saada koitti,
 Puut ne huokui, linnut soitti,
 Juhla tyyn' ol' luonnossa,
 Melske öinen tauonna.
-
-
-
-
+<NEW PAGE>
 MAALLENI.
 
 Nuotti: Ur svenska hjärtans djup en gång.
@@ -1003,10 +1000,7 @@ Etsin. Kuulin äänen vienon,
 Löysin kukan kultapäisen,
 Punaposket, hiuksen hienon--
 Löysin silmän säihkyväisen.
-
-
-
-
+<NEW PAGE>
 LÖYSIN TOISEN.
 
 
@@ -1345,7 +1339,10 @@ Ja orjan käski pyörittää, vihasta vapisten.
 
 Kaks sitte valkokyyhkyä lens alas taivaasta,
 Takaisin taivahasen ne lennähti kolmena.
-<NEW PAGE>
+
+
+
+
 PAIMENELTA.
 
 
@@ -1497,8 +1494,7 @@ Vaan kun on taivas pilvinen,
 Se läsnä maata lentää.
 Niin toivot, riennot ihmisen
 Ne nousee, laskee jällehen.
-
-
+<NEW PAGE>
 8.
 
 Kah, punapilvet mustain alle tunkee!
@@ -1671,7 +1667,11 @@ Hunajaa ja mettä!
   Paimenelle.
   Kelle mesi?--
   Sulhaselle.
-<NEW PAGE>
+
+
+
+
+
 VUODET 1870-1872.
 
 
@@ -1993,8 +1993,7 @@ Syliini itse hiipi:--
 Näin kerrassaan mun voitti.
 Ei, totta, neito viekas
 Näin valvoissan' ois tehnyt.
-
-
+<NEW PAGE>
 38.
 
 Kukka rinnoillani on
@@ -2520,10 +2519,7 @@ Nips, naps,
 Kaksi lempivää
 Taivas yhdistää
 Yks, kaks.
-
-
-
-
+<NEW PAGE>
 SOINTU JA LEMPI.
 
 
@@ -3021,10 +3017,7 @@ Vaan minister' saa surmansa
 Ja kansakin kuninkaansa,
 Saa kuningatar loistonsa,
 Jalo poikanen kunniansa.
-
-
-
-
+<NEW PAGE>
 POJARI.
 
 
@@ -3559,10 +3552,7 @@ Kunnes ilta yöhön vie:
 Tanssi taukoo, pois on tie,
 Viulun kielet sorahtaa--
 Kamppiaiset lopun saa.
-
-
-
-
+<NEW PAGE>
 OLVILAULU.
 
 
@@ -3664,7 +3654,11 @@ Työ kunniallinen!
 Jos nostetaan tai poljetaan,
 On onni synnyinmaan
 Työmm' alku, loppu sen.
-<NEW PAGE>
+
+
+
+
+
 VUODET 1872-1878.
 
 
@@ -4096,10 +4090,7 @@ Yö kirkastui ja kahleet helskähti,
 Sä sankar-arvon ostit vankina!
 Vapaina urhot maan
 Nyt puoltakaan!"
-
-
-
-
+<NEW PAGE>
 NEITI IISA ASP'IN HAUDALLA.
 
 k. 12/11 1872.
@@ -4506,10 +4497,7 @@ Mik' onpi silloin iltarusko tuo?
 Ikuisen lemmen aamukoi se on,
 On juhla-aamu, joka lepohon
 Tomusta kutsuu meidät Luojan luo.
-
-
-
-
+<NEW PAGE>
 POJAN LAULU.
 
 
@@ -5022,10 +5010,7 @@ Taivas, ellös viekö maasta
 Tuota viatonta pois!
 Tääll' ois monta autuasta,
 Monta puhdasta jos ois.
-
-
-
-
+<NEW PAGE>
 LAPSEN OSA.
 
 
@@ -5554,10 +5539,7 @@ On murhe, tuska, vaiva poiss',
 Autuutta täynn' on mieli.
 Auringost' auringoihin päin
 Me matkustamme näin.
-
-
-
-
+<NEW PAGE>
 LAULAJAN LAPSET.
 
 
@@ -5827,7 +5809,10 @@ Taas elon luo,
 Taas kevät ruusujen
 Tuoksua tuo,
 Vallaten maailman.
-<NEW PAGE>
+
+
+
+
 PAIMENET.
 
 ENSIMAINEN JAKSO.
@@ -6030,10 +6015,7 @@ Syys kuink' on runsas lahjoistaan,
 Syys-illat rauhaisia,
 Ja talven jäillä leikitkin
 Kuink' ovat raittihia.
-
-
-
-
+<NEW PAGE>
 KUN VOISIN.
 
 
@@ -6535,10 +6517,7 @@ Vaikk' on yö ja myrskysää,
 Kunnes kultaotsa aamu
 Koittaa--poistuu yö kuin haamu,
 Rauha maille leviää.
-
-
-
-
+<NEW PAGE>
 KARHUN SAARTO.
 
 
@@ -6886,7 +6865,11 @@ Vaan varro! Herran päivän tullen
 Saat kuulla kelloin kaikuvan,
 Saat kuulla täältä kutsutullen
 Ikuisen kevään koittavan.
-<NEW PAGE>
+
+
+
+
+
 VUODET 1878-1881.
 
 
@@ -7010,10 +6993,7 @@ Pois sovun maihin sointuisiin,
 Ikuisen rauhan temppeliin.
 
 29/8 1878.
-
-
-
-
+<NEW PAGE>
 VIIPURIN VAPAAEHTOISEN PALOSAMMUTUSKUNNAN MARSSI.
 
 Säveleen näille sanoille on sepittänyt R. Kajanus.
@@ -7538,10 +7518,7 @@ Kaikki luodut
 Tunnustaa.
 
 22/9 1879.
-
-
-
-
+<NEW PAGE>
 NUORI LUISTAJA.
 
 
@@ -8040,10 +8017,7 @@ Ja isäntä ja emäntä on hyvä niin ett' oikein--
 Vaan rintani yhtä yhä kaipailee.
 
 21/7 1880.
-
-
-
-
+<NEW PAGE>
 HÄPEISSÄNI.
 
 
@@ -8554,10 +8528,7 @@ Suomen lasten suusta, sydämestä--
 Silloin saapunut on Väinämöinen,
 Silloin valloittanut valtikkansa
 Kansallisen hengen kanta-urho.
-
-
-
-
+<NEW PAGE>
 ENSIMÄINEN RUNO.
 
 
@@ -9061,10 +9032,7 @@ Kuin olis isäntäni oikeassa.
 Täm' oire, pelkään, muutost' ennustaapi.
 
 Pain. 15/4 1881.
-
-
-
-
+<NEW PAGE>
 KIELESTÄ.
 
 (Th. Körner.)
@@ -9562,10 +9530,7 @@ Maan, mustan multapallon, päältä,
 Vaan silkin, kultakuoren alta
 En löydä vertaa maailmalta,
 Sydämen vertaa kotoisen.
-
-
-
-
+<NEW PAGE>
 KYYHKYN POJAT.
 
 
@@ -10042,10 +10007,7 @@ Mit' ihanaa ja suloista maa kantaa
 Ja jaloa mink' ihmisrinnass' on,
 Työn hedelmät ja voitot taistelon--
 Ne nöyrästi hän synnyinmaalle antaa.
-
-
-
-
+<NEW PAGE>
 RAKKAUS.
 
 
@@ -10140,7 +10102,10 @@ Kaikk' elo ei oma tuonen:
 Taas valo voittaa,
 Uus kevät koittaa,
 Nousevi uus elonhuomen!
-<NEW PAGE>
+
+
+
+
 KESÄPOIMINTOJA.
 
 I. SAIMAAN RANNALTA KARJALAN RUUSULLE.
@@ -10533,10 +10498,7 @@ Korjaat näin elomailtasi viljaa,
 "Luonnon herrana", kunneka hiljaa
 Lyö sinut vuorollaan terä tuonen--
 Huomenna kenties.
-
-
-
-
+<NEW PAGE>
 NYT JA SILLOIN.
 
 
@@ -11030,10 +10992,7 @@ Ylpeät leimoistaan ovat valtion puntarit aina,
 Heidän huulilta vaan viisaudet putoaa.
 
 27/2
-
-
-
-
+<NEW PAGE>
 IHME.
 
 
@@ -11554,10 +11513,7 @@ Herran voima, auta meitä,
 Nosta korkealle!
 Ja kun nostat, anna meidän
 Paistaa maailmalle!
-
-
-
-
+<NEW PAGE>
 JOULUAATTO.
 
 
@@ -11580,7 +11536,11 @@ Ja hyvä, lämmin, hellä
 On mieli jokaisen:
 Oi, jospa ihmisellä
 Ois joulu ainainen!
-<NEW PAGE>
+
+
+
+
+
 VUOSI 1884.
 
 
@@ -12043,10 +12003,7 @@ Ja suvustansa ylvästelevällä
 On nenä aivan tavallinen vaan.
 
 Dresden 20/7
-
-
-
-
+<NEW PAGE>
 HUOLETI.
 
 
@@ -12535,10 +12492,7 @@ Ei veltost' aina "jaa, jaa" laulaneet,
 Kuin kurja tapa vaatii meillä.
 
 Wien 11/10
-
-
-
-
+<NEW PAGE>
 SYYS KEVÄÄLLÄ.
 
 
@@ -12875,7 +12829,11 @@ Niin ruokavirsihin varpu jäi
 Ja pääskynen pesähuoleen,
 Mut leivo pyrkivi yhtenään
 Valohon, taivahan puoleen.
-<NEW PAGE>
+
+
+
+
+
 VUOSI 1885.
 
 
@@ -13042,10 +13000,7 @@ Pois ihanteilta yön verho heitä
 Ja luonto kirkasta taiteesen!
 
 30/7
-
-
-
-
+<NEW PAGE>
 ENSIN JA NYT.
 
 

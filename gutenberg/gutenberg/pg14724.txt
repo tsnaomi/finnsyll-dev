@@ -495,9 +495,7 @@ Vait on impi ylpeä. »Vai vihainenko olet?»
 
 Immen kättä puristaa, ehättää, löytää purren.
 Neiti kalvas katsomaan jää jälkeen säälein, surren.
-
-
-
+<NEW PAGE>
 11.
 
 KANSAN KÄRÄJÄT.
@@ -1041,9 +1039,7 @@ Aseitani muutin, mutta
 aatteitain en milloinkaan.
 Jos ma kaadun, kaatunutta
 veikot silloin suojelkaa!
-
-
-
+<NEW PAGE>
 TAHTOISIN NÄHDÄ MA KARTAGON
  NAISEN.
 
@@ -1516,9 +1512,7 @@ maassa hallan harmajassa.
 
 Tuuman jos sulatit täällä,
 vaaksan pakkanen pakasti.
-
-
-
+<NEW PAGE>
 3.
 
 TUULIEN EREHDYS.
@@ -1805,7 +1799,12 @@ ihmisen, aattehen, hengen ankara laulu.
 Kansat katoo,
 ei katoa mahti,
 jonka on laulanut mahtaja kansansa sielun.
-<NEW PAGE>
+
+
+
+
+
+
 TALVI-YÖ.
 
 (1905)
@@ -1999,7 +1998,7 @@ että on se voimakkaampi,
 joll' on aatteet voimakkaammat,
 jonka mieliss' aatteen miesten
 tuorehemmat tunteet asuu.
-
+<NEW PAGE>
 1903.
 
 
@@ -2490,9 +2489,7 @@ Sa sylkytät mun sydäntäin
 kuin veren kiertokulku,
 ja jos sa vaadit elämäin,
 niin särkekäämme sulku!
-
-
-
+<NEW PAGE>
 PUNAINEN NEILIKKA.
 
 
@@ -3012,9 +3009,7 @@ muu muran peittoon muotoni jää.
 Jos tuskan tunnet
 jumal-kirottu joku,
 mun kanssani jumalia kiroo!
-
-
-
+<NEW PAGE>
 URAN-UURTAJAT.
 
 Ne ei ole verot. Ne on nerojen eellä-käyjät
@@ -3216,7 +3211,12 @@ oma taival toiveheni,
 oma itse ihmiseni,
 kuolo yksin kumppanini,
 hanki hautani sininen.
-<NEW PAGE>
+
+
+
+
+
+
 HALLA
 
 (1908)
@@ -3548,8 +3548,7 @@ koska löivät omantunnon tuskat,
 koska mielessä muistot nousi
 rikoksesta nuoruutensa päiväin,
 helmasynnistä rakkauden.
-
-
+<NEW PAGE>
 II.
 
 Kerran kukka Suomen aateliston,
@@ -4010,8 +4009,7 @@ hopeasta haavehesi,
 kuparista kuolon uhman,
 kullasta sydänkuvien,
 piistä synkän itsepinnan.
-
-
+<NEW PAGE>
 4.
 
 Laki ollos itsellesi.
@@ -4469,7 +4467,10 @@ Suomi vaatii valkeutta,
 tehkää pirtit päivän tulla,
 kansakunnan kulmapaadet
 synnyinmaahan painakaa!
-<NEW PAGE>
+
+
+
+
 HÄRMÄÄ.
 
 
@@ -4504,9 +4505,7 @@ Ruma uhkaa yltä, alta,
 pois on kauniin kaukotie,
 vaan on pieni perhon valta,
 lentimes vain lemmen lie.
-
-
-
+<NEW PAGE>
 NUORI NAINEN.
 
 Liukas niinkuin lumella suksi,
@@ -5001,8 +5000,7 @@ Mikä tarkoitus elämän?
 Kummeksitko? Kauhistutko?
 Luonto kanssasi kysyvi,
 Mana mahdin antanevi.
-
-
+<NEW PAGE>
 2.
 
 Miksi empisin enempi?
@@ -5543,9 +5541,7 @@ myrskytä myrskyn kanssa,
 kulkea tohussa tuulen,
 heittyä helmenä pilvihin saakka,
 syöksyä syöveriin.
-
-
-
+<NEW PAGE>
 3. ILMAN VIRSI.
 
 Tääll' on templi korkea,
@@ -5704,7 +5700,12 @@ Kauneus on kaapuni elävitten eessä,
 kirjokaari merkkini pilvissä, veessä.
 Tuon jos tunnet, suurtuu sun sydämesi pieni,
 käy sen kautta huikaisten sädekirkas tieni.
-<NEW PAGE>
+
+
+
+
+
+
 TÄHTITARHA
 
 (1912)
@@ -6014,10 +6015,7 @@ koonnet maata, mammonata,
 elät maassa, mammonassa,
 jättänet jälelle muiston,
 kera muistosi murenet.»
-
-
-
-
+<NEW PAGE>
 YÖVARTIOLTA.
 
 
@@ -6557,10 +6555,7 @@ Laulu lapset yhdistävi,
 sillan kultaisen kutovi,
 rajat kussa kulkeneekin,
 vallat kuinka vallinneekin.
-
-
-
-
+<NEW PAGE>
 MARJATAN TÄHDET.
 
 
@@ -6995,10 +6990,7 @@ Helmiä hälle,
   helmelle ihmisyys-uskon!
 Huntuja hälle,
   hunnulle huomisen ruskon!
-
-
-
-
+<NEW PAGE>
 KOHTALON KIRJA.
 
 
@@ -8010,9 +8002,7 @@ itseäs en enää anna.
 Jääös, hyvä, Hurtan luoksi,
 Hurtan huolet, riemut kanna!»--
        *       *       *       *       *
-
-
-
+<NEW PAGE>
 NIIN SINUA KATSOIN, NEITI--
 
 Niin sinua katsoin, neiti,

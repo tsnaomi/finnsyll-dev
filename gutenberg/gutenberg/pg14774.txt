@@ -501,9 +501,7 @@ kuin jouluvirsi sana: isänmaa.
 Mut kunnia, kunnia heille!
 
 20/12 1913.
-
-
-
+<NEW PAGE>
 HAUTAUS.
 
 Eellä ensin risti puinen,
@@ -1020,9 +1018,7 @@ Menneet on iltani
   itkun ja huolen.
 Leikkiä lyöden
   sun eteesi kuolen.
-
-
-
+<NEW PAGE>
 RINTASOLKI.
 
 Mi sulo, kun taloustoimissa liikut,
@@ -2021,8 +2017,7 @@ Niinpä hunnun alle jään,
 sillä peitän pääni,
 uskon yhteen ystävään,
 yhteen elämääni.
-
-
+<NEW PAGE>
 3.
 
 KUUDAN-YÖ.
@@ -2517,9 +2512,7 @@ Sua suutelen, itken ja iloitsen
 ja tuumin: hän kaikki kantoi;
 hän voi mua sietää tuokion,
 siks ijäisyyden hän antoi.
-
-
-
+<NEW PAGE>
 SUVI-ILLAN VIENO TUULI--
 
 Suvi-illan vieno tuuli
@@ -3005,8 +2998,7 @@ Veitte meiltä immet, vaimot
 viemme vielä teiltä,
 hiihtää koston urhot aimot
 kohta teille meiltä!
-
-
+<NEW PAGE>
 5.
 
 LASTEN LAULU.
@@ -3103,7 +3095,12 @@ viljelys vanhempien!
 Haihtuvi haavekin orjain.
 Maailma on oma sorjain,
 valpasten, vapaiden!
-<NEW PAGE>
+
+
+
+
+
+
 LEIRIVALKEAT
 
 (1917)
@@ -3617,9 +3614,7 @@ sekä illan himmenevän!»
 Teki työnsä, tiesi tiensä,
 jätti kansojen merehen
 Väinämön venehen jäljen.
-
-
-
+<NEW PAGE>
 VAPAUDEN VIRSI.
 
 Murheen, tuskan, uhman virsi
@@ -3997,9 +3992,7 @@ Soi kuolemattomien kuoro, niissä
 yö, päivä yhtä pitkän määrän sai,
 elämä kaartui värein välkkehissä:
 Halosen päivä! Taiteen sunnuntai!
-
-
-
+<NEW PAGE>
 JEAN SIBELIUS.
 
 8/7 1917.
@@ -4352,7 +4345,10 @@ iloisna kyntäessäs taiteen sarkaa--
 jälkeenkinpäin, kun elon päivät karkaa.
 
 (Tuntemattoman ruotsinkielisen tekijän käsikirjoituksesta muodostettu.)
-<NEW PAGE>
+
+
+
+
 ILOISTA TIEDETTÄ.
 
 
@@ -4531,9 +4527,7 @@ annan tiukujen helistä,
 joulukulkusten kulista,
 käyn kera ilohon, ajan
 taloihin Tapanin kanssa.
-
-
-
+<NEW PAGE>
 SYYSKYLVÄJÄ.
 
 »Syys tullut on. Miks yhä kylvät, mies?
@@ -5000,9 +4994,7 @@ taas onnesta orvoksi yöhön jäin
 Pois tummunut multa
 on maan-elon kulta--
 taru rakkauden, jonka nyt rauniot näin.
-
-
-
+<NEW PAGE>
 NIIN KAUKAA JA SENTÄÄN
  LÄHELTÄ NIIN--
 
@@ -5524,8 +5516,7 @@ huoletonna huojukaamme,
 harvoin joutohetken jaamme,
 harvoin köyhä lemmen saapi,
 köyhän lapsi laulahtaapi.
-
-
+<NEW PAGE>
 5.
 
 KEVÄTMYRSKY.
@@ -5556,7 +5547,10 @@ Mik' on madonsyömää, sen mato syököön,
 mi kestä ei myrskyä, myrsky sen lyököön!--
 
 4/6 1916.
-<NEW PAGE>
+
+
+
+
 KÄÄNNÖKSIÄ JA MUKAELMIA.
 
 
@@ -6026,9 +6020,7 @@ ja tuskan ja yön
 vuoks sankarityön,
 kaikk' kamppailevat lukinlangoissa nuo,
 ja kaikilta hurmeen hän juo.
-
-
-
+<NEW PAGE>
 ILTA RANNALLA.
 
 (Arvid Mörne.)
@@ -7041,9 +7033,7 @@ jää oudoks onni, rakkaus,
 työn jalon kumma kutsumus,
 ja ihmisyyden, isänmaan
 myös korkein kukoistus.
-
-
-
+<NEW PAGE>
 PYHÄ SYNNYINMAA.
 
 Suomen Tasavallan itsenäisyyspäivänä 6/12 1919.
@@ -7559,9 +7549,7 @@ vain virkamme: kansain on Oikeus ja Laki
 pyhät kuin ovat pyhyys ja--Hollannin Laki!
 
 8/3 1920.
-
-
-
+<NEW PAGE>
 SUOMI JA PUOLA.
 
 Samat meille on soinehet Salliman kellot,
@@ -8033,9 +8021,7 @@ vaan näyttää ne nielut,
 pedon ihmisen sielut,
 joka on kuni huuhkain ja huutava hukka,
 mut kuitenkin kruunu ja luomisen kukka.
-
-
-
+<NEW PAGE>
 MAAILMANPALO.
 
 Se on maailmanpalo, hyvät herrat. Se talo
@@ -8213,7 +8199,12 @@ kun Europa säilyy
 ja Puolan päivä päilyy.
 
 7/9 1920.
-<NEW PAGE>
+
+
+
+
+
+
 SYREENIEN KUKKIESSA
 
 (1920)
@@ -8509,9 +8500,7 @@ nousee Vöyrin kaarti silloin,
 taasen meitä tarvitaan.
 
 1918.
-
-
-
+<NEW PAGE>
 SAKSAN KUMPU.
 
 (Sankarihautaa Helsingin Vanhankirkon puistossa katsellessa.)
@@ -9052,9 +9041,7 @@ rakkaudella rakennamme,
 minkä sota, nälkä kaas.
 
 1918.
-
-
-
+<NEW PAGE>
 RAUHAN HERRA.
 
 Hän kulkee diadeemi otsallansa
@@ -9525,9 +9512,7 @@ jumalat vanhat syntyy uudestaan--
 vain silloin, silloin on onni.
 
 1896-1919.
-
-
-
+<NEW PAGE>
 AURINGONSÄTEIDEN LAULU.
 
 Koti meill' ikikirkas ja korkea lie,
@@ -9576,7 +9561,10 @@ mitä maan elo kylvävi kuolevan vaivaan,
 hän valmis on tarhoihin auringon taivaan.
 
 4/6 1919.
-<NEW PAGE>
+
+
+
+
 VAELTAVA KUUSI.
 
 
@@ -10079,9 +10067,7 @@ vast' aamulla huomas he huolissaan,
 heit' ett' oli elossa--kaksi vaan.
 
 11/9 1918.
-
-
-
+<NEW PAGE>
 KALEVAN POIKA.
 
 Tuop' oli Armi antimuori,
@@ -10526,9 +10512,7 @@ Saa en olla saita, annan,
 kannan korkoa Jumalan,
 kuin tähti pimeän taivon,
 aurinkoa ammentava.
-
-
-
+<NEW PAGE>
 VIRVALIEKKI.
 
 Lienet ollut virvaliekki,

@@ -351,9 +351,7 @@ Last Updated: February 25, 2005
   rotu rohkean runojan
   kapehesta kantajasta,
   Ilmattaresta emosta.
-
-
-
+<NEW PAGE>
     Toinen runo
 
 
@@ -735,9 +733,7 @@ Last Updated: February 25, 2005
   mieluisiksi metsiäni,
   rahaisiksi rantojani,
   viljaisiksi vieriäni!"
-
-
-
+<NEW PAGE>
     Kolmas runo
 
 
@@ -1322,9 +1318,7 @@ Last Updated: February 25, 2005
   ilmassa etempänäki,
   ei aina ison ahoilla,
   veikon viertokankahilla."
-
-
-
+<NEW PAGE>
     Neljäs runo
 
 
@@ -2332,9 +2326,7 @@ Last Updated: February 25, 2005
   kaotit kalevalaisen,
   Suvantolan suuren miehen,
   Kalevalan kaunihimman!"
-
-
-
+<NEW PAGE>
     Seitsemäs runo
 
 
@@ -2706,9 +2698,7 @@ Last Updated: February 25, 2005
   Ajoa karittelevi
   pimeästä Pohjolasta,
   summasta Sariolasta.
-
-
-
+<NEW PAGE>
     Kahdeksas runo
 
 
@@ -2994,9 +2984,7 @@ Last Updated: February 25, 2005
   virrat niskalta vihaiset,
   lahet niemien nenistä,
   kannakset kape'immilta."
-
-
-
+<NEW PAGE>
     Yhdeksäs runo
 
 
@@ -4100,9 +4088,7 @@ Last Updated: February 25, 2005
   yhen purnun syötäviä,
   toisen jauhoi myötäviä,
   kolmannen pi'eltäviä."
-
-
-
+<NEW PAGE>
     Yhdestoista runo
 
 
@@ -4508,9 +4494,7 @@ Last Updated: February 25, 2005
   kaunihin katsottuasi,
   paremmaisen itseäsi,
   sukuasi suuremmaisen!"
-
-
-
+<NEW PAGE>
     Kahdestoista runo
 
 
@@ -5018,9 +5002,7 @@ Last Updated: February 25, 2005
   vuottelevi Lemminkäistä
   Pohjasta paloavaksi,
   kotihinsa kulkevaksi.
-
-
-
+<NEW PAGE>
     Kolmastoista runo
 
 
@@ -5758,9 +5740,7 @@ Last Updated: February 25, 2005
   kuolo ankaran kosijan
   Tuonen mustassa joessa,
   Manalan alantehessa.
-
-
-
+<NEW PAGE>
     Viidestoista runo
 
 
@@ -6414,9 +6394,7 @@ Last Updated: February 25, 2005
   Väännän virteni välehen,
   lasken laulun toisa'alle,
   työnnän uuelle uralle.
-
-
-
+<NEW PAGE>
     Kuudestoista runo
 
 
@@ -7464,9 +7442,7 @@ Last Updated: February 25, 2005
   kokkapuut kohotetuksi:
   veno syntyi veistämättä,
   laiva lastun ottamatta.
-
-
-
+<NEW PAGE>
     Kahdeksastoista runo
 
 
@@ -8176,9 +8152,7 @@ Last Updated: February 25, 2005
   kainaloiseksi kanaksi,
   sun sijan levittäjäksi,
   päänalaisen laskijaksi."
-
-
-
+<NEW PAGE>
     Yhdeksästoista runo
 
 
@@ -9318,9 +9292,7 @@ Last Updated: February 25, 2005
   kaitakauhtanat kasakat.
   Yks' on aino Ahti poika,
   - senp' on heitti kutsumatta.
-
-
-
+<NEW PAGE>
     Yhdeskolmatta runo
 
 
@@ -9762,9 +9734,7 @@ Last Updated: February 25, 2005
   vuonna toisna voikahtaisi
   näitä pitkiä pitoja,
   suuren joukon juominkia!"
-
-
-
+<NEW PAGE>
     Kahdeskolmatta runo
 
 
@@ -11144,9 +11114,7 @@ Last Updated: February 25, 2005
   näille päivin pääseväni,
   jotk' on päivät päälle pääsnyt,
   juonet joutunna kätehen."
-
-
-
+<NEW PAGE>
     Neljäskolmatta runo
 
 
@@ -12420,9 +12388,7 @@ Last Updated: February 25, 2005
   laulajan iän-ikuisen,
   oman uksen aukomille,
   oman kynnyksen etehen.
-
-
-
+<NEW PAGE>
     Kuudeskolmatta runo
 
 
@@ -13626,9 +13592,7 @@ Last Updated: February 25, 2005
   Lemminkäisen leyhytellä
   noissa Pohjolan pioissa,
   salajoukon juomingissa.
-
-
-
+<NEW PAGE>
     Kahdeksaskolmatta runo
 
 
@@ -13926,9 +13890,7 @@ Last Updated: February 25, 2005
   käy kotihin kolmannella
   tutuille ison tuville,
   vanhempasi valkamoille!"
-
-
-
+<NEW PAGE>
     Yhdeksäskolmatta runo
 
 
@@ -14534,9 +14496,7 @@ Last Updated: February 25, 2005
   varoin vaimon tyttäriä,
   kuin susi sikoja piili,
   havukat kylän kanoja."
-
-
-
+<NEW PAGE>
     Kolmaskymmenes runo
 
 
@@ -15418,9 +15378,7 @@ Last Updated: February 25, 2005
   kuusi kuokan kuolioa
   miehestä mitättömästä,
   orjasta epäpäöstä.
-
-
-
+<NEW PAGE>
     Kahdesneljättä runo
 
 
@@ -15972,9 +15930,7 @@ Last Updated: February 25, 2005
   laski karjan laitumelle,
   pani paimenen perähän,
   orjan lehmien ajohon.
-
-
-
+<NEW PAGE>
     Kolmasneljättä runo
 
 
@@ -16274,9 +16230,7 @@ Last Updated: February 25, 2005
   vuosin kuusin kuulusteltu
   Ilmarin iki-iloksi,
   sepon kuulun kunniaksi.
-
-
-
+<NEW PAGE>
     Neljäsneljättä runo
 
 
@@ -16902,9 +16856,7 @@ Last Updated: February 25, 2005
   maammon mahlat maksamatta,
   muistamatta muutki vaivat,
   itseni hyvin-piännät."
-
-
-
+<NEW PAGE>
     Kuudesneljättä runo
 
 
@@ -17269,9 +17221,7 @@ Last Updated: February 25, 2005
   miehen mieltä ottamahan,
   vaikka vanhaksi eläisi,
   varreltansa vahvistuisi."
-
-
-
+<NEW PAGE>
     Seitsemäsneljättä runo
 
 
@@ -17525,9 +17475,7 @@ Last Updated: February 25, 2005
   hope'ista huolitelko!
   Kylmän kulta kuumottavi,
   vilun huohtavi hopea."
-
-
-
+<NEW PAGE>
     Kahdeksasneljättä runo
 
 
@@ -17859,9 +17807,7 @@ Last Updated: February 25, 2005
   kajavana kaakahtavi,
   kiljuvi vesikivillä,
   kariloilla kaljahuvi."
-
-
-
+<NEW PAGE>
     Yhdeksäsneljättä runo
 
 
@@ -18637,9 +18583,7 @@ Last Updated: February 25, 2005
   kannettihin kaunihisti
   miehen laatijan kätehen,
   pyytänehen polvuksille.
-
-
-
+<NEW PAGE>
     Yhdesviidettä runo
 
 
@@ -18909,9 +18853,7 @@ Last Updated: February 25, 2005
   simpsukoiksi siintynehet,
   kuningasten kunnioiksi,
   valtojen iki-iloiksi.
-
-
-
+<NEW PAGE>
     Kahdesviidettä runo
 
 
@@ -19477,9 +19419,7 @@ Last Updated: February 25, 2005
   aallon ankaran lykätä,
   kuohuja kulettaessa,
   mäkipäitä mentäessä.
-
-
-
+<NEW PAGE>
     Kolmasviidettä runo
 
 
@@ -20255,7 +20195,7 @@ Last Updated: February 25, 2005
   ahot ainoista iloa,
   kukat kulkivat kutuhun,
   vesat nuoret notkahteli.
-
+<NEW PAGE>
     Viidesviidettä runo
 
 
@@ -20621,9 +20561,7 @@ Last Updated: February 25, 2005
   paranti pahat panoset,
   päästi kansan kuolemasta,
   Kalevan katoamasta.
-
-
-
+<NEW PAGE>
     Kuudesviidettä runo
 
 
@@ -21271,9 +21209,7 @@ Last Updated: February 25, 2005
   Suomen suurilla tiloilla,
   nuorisossa nousevassa,
   kansassa kasuavassa."
-
-
-
+<NEW PAGE>
     Seitsemäsviidettä runo
 
 
@@ -22017,9 +21953,7 @@ Last Updated: February 25, 2005
   Sai seppo paranneheksi,
   entisellehen ehoksi
   tuimista tulen vioista.
-
-
-
+<NEW PAGE>
     Yhdeksäsviidettä runo
 
 
@@ -22445,9 +22379,7 @@ Last Updated: February 25, 2005
   matkasi imantehena,
   päätä kaari kaunihisti,
   pääse illalla ilohon!"
-
-
-
+<NEW PAGE>
     Viideskymmenes runo
 
 

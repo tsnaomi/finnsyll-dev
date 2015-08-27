@@ -33,8 +33,9 @@ def create_poem(filename, filepath):
         re.sub(r'[^A-Z]\r\n\r\n\r\n', '\r\n\r\n', ''.join(body)),
         )
     ebook_num = filename[2:-4]  # pg7000.txt > 7000
-    header = [line.split(': ')[1].strip('\r\n') for line in header]
+    header = [line.split(': ', 1)[1].strip('\r\n') for line in header]
     title, poet, released, updated = header
+    poet = poet.split(' ')[-1]
 
     # create and save Poem object
     try:
