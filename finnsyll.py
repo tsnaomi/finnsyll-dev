@@ -196,6 +196,9 @@ class Token(db.Model):
     # the word's frequency in the Aamulehti-1999 corpus
     freq = db.Column(db.Integer, default=0)
 
+    # a boolean indicating if the word is a simplex word
+    is_simplex = db.Column(db.Boolean, default=None)
+
     # a boolean indicating if the word is a compound
     is_compound = db.Column(db.Boolean, default=False)
 
@@ -702,6 +705,7 @@ def find_token(orth):
         return None
 
 
+@manager.command
 def update_poems():
     '''Update the reviewed status of each Poem object.'''
     for poem in Poem.query.all():
@@ -776,20 +780,25 @@ def get_test_compounds():
 
 
 def get_unverified_test_compounds():
-    '''Return predicted compounds that are not hand-verified compounds.'''
+    '''Return predicted compounds that have not been hand-verified.'''
     tokens = get_test_compounds().filter(Token.is_gold.isnot(None))
-    tokens = tokens.filter_by(is_compound=False)
+    tokens = tokens.filter_by(is_compound=False).filter_by(is_simplex=None)
 
     return tokens
 
 
-def get_uncaptured_gold_compounds():
+def get_false_negative_compounds():
     '''Return hand-verified compounds that are not predicted compounds.'''
     tokens = Token.query.filter(Token.is_gold.isnot(None))
     tokens = tokens.filter_by(is_compound=True)
     tokens = tokens.filter_by(is_test_compound=False)
 
     return tokens
+
+
+def get_false_positive_compounds():
+    '''Return predicted compounds that are not true compounds.'''
+    return get_test_compounds().filter_by(is_simplex=True)
 
 
 # View helpers ----------------------------------------------------------------
@@ -1136,7 +1145,19 @@ def find_view():
 def unverified_compounds_view(page):
     '''List all unverified compounds and process corrections.'''
     if request.method == 'POST':
-        apply_form(request.form)
+        if request.form.get('syll1'):
+            apply_form(request.form)
+
+        else:
+            for k, v in request.form.iteritems():
+                if k.startswith('id'):
+                    id = k.split('_')[1]
+                    token = Token.query.get(int(id))
+                    is_compound = bool(request.form.get('compound_%s' % id))
+                    token.is_simplex = not is_compound
+                    token.is_compound = is_compound
+
+            db.session.commit()
 
     tokens = get_unverified_test_compounds()
     count = format(tokens.count(), ',d')
@@ -1145,7 +1166,7 @@ def unverified_compounds_view(page):
     return render_template(
         'tokens.html',
         tokens=tokens,
-        kw='unverified_compounds',
+        kw='unverified-compounds',
         pagination=pagination,
         count=count,
         description=True,
@@ -1153,25 +1174,57 @@ def unverified_compounds_view(page):
 
 
 @app.route(
-    '/compounds/uncaptured',
+    '/compounds/false-negative',
     defaults={'page': 1},
     methods=['GET', 'POST'],
     )
-@app.route('/compounds/uncaptured/page/<int:page>', methods=['GET', 'POST'])
+@app.route(
+    '/compounds/false-negative/page/<int:page>',
+    methods=['GET', 'POST'],
+    )
 @login_required
-def uncaptured_compounds_view(page):
-    '''List all uncaptured compounds and process corrections.'''
+def false_negative_compounds_view(page):
+    '''List all false negative compounds and process corrections.'''
     if request.method == 'POST':
         apply_form(request.form)
 
-    tokens = get_uncaptured_gold_compounds()
+    tokens = get_false_negative_compounds()
     count = format(tokens.count(), ',d')
     tokens, pagination = paginate(page, tokens)
 
     return render_template(
         'tokens.html',
         tokens=tokens,
-        kw='uncaptured_compounds',
+        kw='false-negative-compounds',
+        pagination=pagination,
+        count=count,
+        description=True,
+        )
+
+
+@app.route(
+    '/compounds/false-positive',
+    defaults={'page': 1},
+    methods=['GET', 'POST'],
+    )
+@app.route(
+    '/compounds/false-positive/page/<int:page>',
+    methods=['GET', 'POST'],
+    )
+@login_required
+def false_positive_compounds_view(page):
+    '''List all false positive compounds and process corrections.'''
+    if request.method == 'POST':
+        apply_form(request.form)
+
+    tokens = get_false_positive_compounds()
+    count = format(tokens.count(), ',d')
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        kw='false-positive-compounds',
         pagination=pagination,
         count=count,
         description=True,
