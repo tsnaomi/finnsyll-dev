@@ -73,14 +73,17 @@ class Token(db.Model):
     # a boolean indicating if this word appears in the Gutenberg poetry
     is_gutenberg = db.Column(db.Boolean, default=False)
 
-    # the word's orthography
+    # the word's orthography -- if pulled from the Aamulehti-1999 coprus, it
+    # preserves how the word was capitalized when we first encountered it;
+    # if pulled from the Gutenberg poetry, it is necessarily lowercase
     orth = db.Column(db.String(80, convert_unicode=True), nullable=False)
 
     # the word's orthography in lowercase, with umlauts replaced and compound
     # boundaries delimited; the syllabifier takes in Token.base
     base = db.Column(db.String(80, convert_unicode=True), nullable=True)
 
-    # the word's lemma/citation form
+    # the word's lemma/citation form -- nominative singular for nouns and first
+    # infinitive for verbs
     lemma = db.Column(db.String(80, convert_unicode=True), default='')
 
     # rules applied in test syllabifications ----------------------------------
@@ -209,7 +212,8 @@ class Token(db.Model):
     is_test_compound = db.Column(db.Boolean, default=False)
 
     # a boolean indicating if the word is a stopword -- only if the word's
-    # syllabification is lexically marked
+    # syllabification is lexically marked or too "borrowed" to be captured by
+    # the syllabifier
     is_stopword = db.Column(db.Boolean, default=False)
 
     # a boolean indicating if the algorithm has estimated correctly
