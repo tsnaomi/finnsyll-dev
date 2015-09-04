@@ -824,10 +824,14 @@ def login_required(x):
     @wraps(x)
     def decorator(*args, **kwargs):
         if session.get('current_user'):
+
             if session.get('is_admin'):
                 return x(*args, **kwargs)
 
-            return redirect(url_for('annotation_view'))
+            if x.func_name == 'main_view':
+                return redirect(url_for('annotation_view'))
+
+            abort(404)
 
         return redirect(url_for('login_view'))
 
