@@ -13,7 +13,7 @@
         {% elif kw == 'bad' %}
         This page lists all of the words that fail to have perfect <i>precision</i> and <i>recall</i>.
         {% elif kw == 'unverified-compounds' %}
-        This page lists all of the verified <i>syllabifier-predicted compounds</i> that have not been marked as compounds.
+        This page lists <i>syllabifier-predicted compounds</i> that have not been verified as compounds.
         {% elif kw == 'false-negative-compounds' %}
         This page lists all of the <i>hand-verified compounds</i> that the syllabifier fails to predict are compounds (i.e., <i>false negatives</i>).
         {% elif kw == 'false-positive-compounds' %}
@@ -82,74 +82,6 @@
                 <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');" value='OK!'>
             </div>
         </form>
-        {% elif kw == 'unverified-compounds' %} <!-- unverified-compounds -->
-             <div class='row hidden-xs hidden-sm'>
-                    <span class='attr-label col-md-3'>orth</span>
-                    <span class='col-md-5'>
-                        <div class='row'>
-                            <span class='attr-label col-md-5'>rules</span>
-                            <span class='attr-label col-md-7'>test</span>
-                        </div>
-                    </span>
-                    <span class='attr-label col-md-3'>gold</span>
-                    <span class='attr-label col-md-1'>compound</span>
-                </div>
-                <br class='hidden-xs hidden-sm'>
-                <form method='POST'>
-                    <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-                    {% for t in tokens %}
-                    <div class='row'>
-                        <span class='col-xs-12 col-md-3'>
-                            <a class='{{ t|goldclass }}' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" title='{{ title(t) }}'>{{ t.orth }}</a>
-                        </span>
-                        <div class='visible-xs visible-sm col-xs-12 height'>
-                        </div>
-                        <span class='visible-xs visible-sm col-xs-12 attr-label'>
-                            <div class='row'>
-                                <span class='col-xs-4'>rules</span><span class='col-xs-8'>test</span>
-                            </div>
-                        </span>
-                        <span class='col-xs-12 col-md-5'>
-                            <div class='row'>
-                                <span class='col-xs-4 col-md-5'>{{ t.rules1 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll1 }}</span>
-                                {% if t.rules2 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules2 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll2 }}</span></div>
-                                {% if t.rules3 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules3 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll3 }}</span></div>
-                                {% if t.rules4 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules4 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll4 }}</span></div>
-                                {% if t.rules5 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules5 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll5 }}</span></div>
-                                {% if t.rules6 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules6 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll6 }}</span></div>
-                                {% if t.rules7 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules7 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll7 }}</span></div>
-                                {% if t.rules8 %}<div><span class='col-xs-4 col-md-5'>{{ t.rules8 }}</span><span class='col-xs-8 col-md-7'>{{ t.test_syll8 }}</span></div>
-                                {% endif %}{% endif %}{% endif %}{% endif %}{% endif %}{% endif %}{% endif %}
-                            </div>
-                        </span>
-                        {% if t.is_gold is not none %}<span class='visible-xs visible-sm col-xs-12 attr-label'>gold</span>{% endif %}
-                        <span class='col-xs-12 col-md-3'>
-                            {{ t.syll1 }}
-                            {% if t.syll2 %}<div>{{ t.syll2 }}</div>
-                            {% if t.syll3 %}<div>{{ t.syll3 }}</div>
-                            {% if t.syll4 %}<div>{{ t.syll4 }}</div>
-                            {% if t.syll5 %}<div>{{ t.syll5 }}</div>
-                            {% if t.syll6 %}<div>{{ t.syll6 }}</div>
-                            {% if t.syll7 %}<div>{{ t.syll7 }}</div>
-                            {% if t.syll8 %}<div>{{ t.syll8 }}</div>
-                            {% endif %}{% endif %}{% endif %}{% endif %}{% endif %}{% endif %}{% endif %}
-                        </span>
-                        <span class='col-xs-12 col-md-1'>
-                            <span class='visible-xs visible-sm attr-label'>compound</span>
-                            <input type='hidden' name='id_{{ t.id }}' value='{{ t.id }}'>
-                            <input type='checkbox' name='compound_{{ t.id }}'checked>
-                        </span>
-                    </div>
-                    <br>
-                    <div class='divide'></div>
-                    <br>
-                    {% endfor %}
-                    <br>
-                    <br>
-                    <div class='center'>
-                        <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these compounds?');" value='OK!'>
-                    </div>
-                </form>
         {% else %}
         {% if kw == 'notes' %} <!-- notes -->
         <div class='row hidden-xs hidden-sm'>

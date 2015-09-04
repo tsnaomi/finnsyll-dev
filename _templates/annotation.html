@@ -1,0 +1,86 @@
+<html lang='en'>
+    <title>FinnSyll</title>
+    <head>
+        <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='bootstrap.min.css') }}">
+        <link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='style.css') }}">
+        {% if session.is_admin %}
+        <script src="//code.jquery.com/jquery-1.11.2.min.js"></script>
+        <script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+        <script src='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js'></script>
+        {% endif %}
+        {% if config.TESTING %}
+        <link rel="icon" type="image/png" href="{{ url_for('static', filename='finnsyll-testing.png') }}">
+        {% else %}
+        <link rel="icon" type="image/png" href="{{ url_for('static', filename='finnsyll.png') }}">
+        <link rel="apple-touch-icon-precomposed" href="{{ url_for('static', filename='finnsyll.png') }}">
+        {% endif %}
+        <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1'>
+    </head>
+    <body class='container'>
+        {% if session.is_admin %}
+        <br>
+        {% include 'navbar.html' %}
+        {% endif %}
+        <br>
+        <br>
+        <br>
+        <div class='description' style='font-size: 19px;'>Which of the following <strong>{{ count }}</strong> words are compounds?</div>
+        <br>
+        <div class='row'>
+            <span class='hidden-xs hidden-sm col-md-2'></span>
+            <span class='attr-label col-xs-8 col-md-4'>word</span>
+            <span class='attr-label col-xs-4'>compound</span>
+            <span class='hidden-xs hidden-sm col-md-2'></span>
+        </div>
+        <br>
+        <div class='divide'></div>
+        <br>
+        <form method='POST'>
+            <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+            {% for t in tokens %}
+            <div class='row'>
+                <span class='hidden-xs hidden-sm col-md-2'></span>
+                <span class='col-xs-8 col-md-4' style='text-transform: capitalize;' title='Part of speech: {{ t.pos }}&#10;Morpho-syntactic description: {{ t.msd }}'>{{ t.orth }}</span>
+                <span class='col-xs-4'>
+                    <input type='hidden' name='id_{{ t.id }}' value='{{ t.id }}'>
+                    <input type='checkbox' name='compound_{{ t.id }}'>
+                </span>
+                <span class='hidden-xs hidden-sm col-md-2'></span>
+            </div>
+            <br>
+            <div class='divide'></div>
+            <br>
+            {% endfor %}
+            <br>
+            <br>
+            <div class='center'>
+                <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these compounds?');" value='OK!'>
+            </div>
+        </form>
+        {% if pagination %}
+            <div class='pagination center'>
+                {% if pagination.has_prev %}
+                <a href="{{ url_for_other_page(pagination.page - 1) }}">&laquo; Previous</a>
+                {% endif %}
+                {% for page in pagination.iter_pages() %}
+                {% if page %}
+                {% if page != pagination.page %}
+                <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+                {% else %}
+                <strong>{{ page }}</strong>
+                {% endif %}
+                {% else %}
+                <span class='ellipsis'>…</span>
+                {% endif %}
+                {% endfor %}
+                {% if pagination.has_next %}
+                <a href="{{ url_for_other_page(pagination.page + 1) }}">Next &raquo;</a>
+                {% endif %}
+            </div>
+        {% endif %}
+        <br>
+        <br>
+        <br>
+        <br>
+    </body>
+</html>

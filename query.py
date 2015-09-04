@@ -94,10 +94,12 @@ def tabulate_to_file(query, filename, prune=False):
 if __name__ == '__main__':
     prune = '--p' in sys.argv
 
-    # tabulate_to_file(
-    #     finn.get_test_compounds(),
-    #     'test_compounds',
-    #     prune=prune,
-    #     )
+    tokens = finn.Token.query.filter(finn.Token.is_gold.isnot(None))
+    # APPLY FILTERS HERE
 
-    pass
+    # -------------------------------------------------------------------------
+
+    # GIVE A FILENAME
+    filename = None
+
+    tabulate_to_file(tokens, filename, prune=prune)

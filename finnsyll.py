@@ -50,6 +50,7 @@ class Linguist(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(40), unique=True, nullable=False)
     password = db.Column(db.String(80), nullable=False)
+    is_admin = db.Column(db.Boolean, default=False)
 
     def __init__(self, username, password):
         self.username = username
@@ -60,6 +61,11 @@ class Linguist(db.Model):
 
     def __unicode__(self):
         return self.__repr__()
+
+    def update_password(self, password):
+        '''Update the linguist's password.'''
+        self.password = flask_bcrypt.generate_password_hash(password)
+        db.session.commit()
 
 
 class Token(db.Model):
@@ -786,7 +792,7 @@ def get_test_compounds():
 def get_unverified_test_compounds():
     '''Return predicted compounds that have not been hand-verified.'''
     tokens = get_test_compounds().filter(Token.is_gold.isnot(None))
-    tokens = tokens.filter_by(is_compound=False).filter_by(is_simplex=None)
+    tokens = tokens.filter_by(is_compound=False)
 
     return tokens
 
@@ -818,7 +824,10 @@ def login_required(x):
     @wraps(x)
     def decorator(*args, **kwargs):
         if session.get('current_user'):
-            return x(*args, **kwargs)
+            if session.get('is_admin'):
+                return x(*args, **kwargs)
+
+            return redirect(url_for('annotation_view'))
 
         return redirect(url_for('login_view'))
 
@@ -1149,19 +1158,7 @@ def find_view():
 def unverified_compounds_view(page):
     '''List all unverified compounds and process corrections.'''
     if request.method == 'POST':
-        if request.form.get('syll1'):
-            apply_form(request.form)
-
-        else:
-            for k, v in request.form.iteritems():
-                if k.startswith('id'):
-                    id = k.split('_')[1]
-                    token = Token.query.get(int(id))
-                    is_compound = bool(request.form.get('compound_%s' % id))
-                    token.is_simplex = not is_compound
-                    token.is_compound = is_compound
-
-            db.session.commit()
+        apply_form(request.form)
 
     tokens = get_unverified_test_compounds()
     count = format(tokens.count(), ',d')
@@ -1353,6 +1350,7 @@ def login_view():
 
         else:
             session['current_user'] = linguist.username
+            session['is_admin'] = linguist.is_admin
             return redirect(url_for('main_view'))
 
     return render_template('enter.html')
@@ -1362,8 +1360,41 @@ def login_view():
 def logout_view():
     '''Sign out current user.'''
     session.pop('current_user', None)
+    session.pop('is_admin', None)
 
     return redirect(url_for('main_view'))
+
+
+@app.route('/annotation/', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/annotation/page/<int:page>', methods=['GET', 'POST'])
+def annotation_view(page):
+    '''Facilitate compound annotations.'''
+    if not session.get('current_user'):
+        return redirect(url_for('login_view'))
+
+    if request.method == 'POST':
+        for k, v in request.form.iteritems():
+            if k.startswith('id'):
+                id = k.split('_')[1]
+                token = Token.query.get(int(id))
+                is_compound = bool(request.form.get('compound_%s' % id))
+                token.is_simplex = not is_compound
+
+        db.session.commit()
+
+    tokens = Token.query.filter(Token.is_gold.isnot(None))
+    tokens = tokens.filter_by(is_compound=False).filter_by(is_simplex=None)
+
+    count = format(tokens.count(), ',d')
+    tokens = tokens.slice(0, 400)
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'annotation.html',
+        tokens=tokens,
+        pagination=pagination,
+        count=count,
+        )
 
 
 # Jinja2 ----------------------------------------------------------------------
