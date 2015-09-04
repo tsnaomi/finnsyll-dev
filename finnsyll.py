@@ -1296,7 +1296,7 @@ def lemma_view(page):
         )
 
 
-@app.route('/variation/', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/variation', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/variation/page/<int:page>', methods=['GET', 'POST'])
 @login_required
 def variation_view(page):
@@ -1318,7 +1318,7 @@ def variation_view(page):
         )
 
 
-@app.route('/hidden/', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/hidden', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/hidden/page/<int:page>', methods=['GET', 'POST'])
 @login_required
 def hidden_view(page):
@@ -1369,7 +1369,7 @@ def logout_view():
     return redirect(url_for('main_view'))
 
 
-@app.route('/annotation/', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/annotation', defaults={'page': 1}, methods=['GET', 'POST'])
 @app.route('/annotation/page/<int:page>', methods=['GET', 'POST'])
 def annotation_view(page):
     '''Facilitate compound annotations.'''
