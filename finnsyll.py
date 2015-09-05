@@ -1398,6 +1398,7 @@ def annotation_view(page):
         tokens=tokens,
         pagination=pagination,
         count=count,
+        kw='annotation'
         )
 
 

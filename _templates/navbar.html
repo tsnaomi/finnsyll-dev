@@ -28,12 +28,12 @@
                     </ul>
                 </li>
                 <li class='dropdown'>
-                    <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw == 'unverified-compounds' or kw == 'false-negative-compounds' or kw == 'false-positive-compounds' %}highlight{% endif %}">Compounds</span> &#8623;</a>
+                    <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw == 'unverified-compounds' or kw == 'false-negative-compounds' or kw == 'false-positive-compounds' or kw == 'annotation' %}highlight{% endif %}">Compounds</span> &#8623;</a>
                     <ul class='dropdown-menu'>
                         <li><a href="{{ url_for('unverified_compounds_view') }}"><span class="{% if kw == 'unverified-compounds' %}highlight{% endif %}">Unverified</span></a></li>
                         <li><a href="{{ url_for('false_negative_compounds_view') }}"><span class="{% if kw == 'false-negative-compounds' %}highlight{% endif %}">False Negative</span></a></li>
                         <li><a href="{{ url_for('false_positive_compounds_view') }}"><span class="{% if kw == 'false-positive-compounds' %}highlight{% endif %}">False Positive</span></a></li>
-                        <li><a href="{{ url_for('annotation_view') }}"><span>Annotation</span></a></li>
+                        <li><a href="{{ url_for('annotation_view') }}"><span class="{% if kw == 'annotation' %}highlight{% endif %}">Annotation</span></a></li>
                     </ul>
                 </li>
                 <li class='dropdown'>
