@@ -1166,12 +1166,16 @@ def compound_view(page):
         apply_form(request.form)
 
     tokens = get_gold_compounds()
+    count = format(tokens.count(), ',d')
     tokens, pagination = paginate(page, tokens)
 
     return render_template(
         'tokens.html',
         tokens=tokens,
         pagination=pagination,
+        count=count,
+        description=True,
+        kw='compounds'
         )
 
 
