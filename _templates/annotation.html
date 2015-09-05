@@ -17,15 +17,17 @@
         <meta name='viewport' content='width=device-width, initial-scale=1, maximum-scale=1'>
     </head>
     <body class='container'>
-        {% if session.is_admin %}
         <br>
+        {% if session.is_admin %}
         {% include 'navbar.html' %}
+        {% else %}
+        <a href="{{ url_for('logout_view') }}" class='annotation-link' style='float: right; font-size: 19px'>SIGN OUT</a>
         {% endif %}
         <br>
         <br>
         <br>
         <div class='description' style='font-size: 19px;'>Which of the following <strong>{{ count }}</strong> words are compounds?</div>
-        <div style='margin-top: -20px; margin-bottom: 20px;'>A compound is a word that is composed of multiple distinct words. For instance, the English compound <i>bookworm</i> is composed of the words <i>book</i> and <i>worm</i>.</div>
+        <div style='margin-top: -20px; margin-bottom: 30px;'>A compound is a word that is composed of multiple distinct words. For instance, the English compound <i>bookworm</i> is composed of the words <i>book</i> and <i>worm</i>.</div>
         <br>
         <div class='row'>
             <span class='hidden-xs hidden-sm col-md-2'></span>
