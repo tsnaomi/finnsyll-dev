@@ -784,6 +784,11 @@ def get_variation():
 
 # Compound queries ------------------------------------------------------------
 
+def get_gold_compounds():
+    '''Return known compounds.'''
+    return Token.query.filter_by(is_compound=True)
+
+
 def get_test_compounds():
     '''Return tokens predicted to be compounds.'''
     return Token.query.filter_by(is_test_compound=True)
@@ -1152,6 +1157,24 @@ def find_view():
         )
 
 
+@app.route('/compounds', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/compounds/page/<int:page>', methods=['GET', 'POST'])
+@login_required
+def compound_view(page):
+    '''List all known compounds.'''
+    if request.method == 'POST':
+        apply_form(request.form)
+
+    tokens = get_gold_compounds()
+    tokens, pagination = paginate(page, tokens)
+
+    return render_template(
+        'tokens.html',
+        tokens=tokens,
+        pagination=pagination,
+        )
+
+
 @app.route(
     '/compounds/unverified',
     defaults={'page': 1},
@@ -1315,24 +1338,6 @@ def variation_view(page):
         pagination=pagination,
         count=count,
         description=True,
-        )
-
-
-@app.route('/hidden', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/hidden/page/<int:page>', methods=['GET', 'POST'])
-@login_required
-def hidden_view(page):
-    '''List all ambiguous tokens and process corrections.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
-    tokens = Token.query.filter(Token.rules1.contains('T4'))
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        pagination=pagination,
         )
 
 
