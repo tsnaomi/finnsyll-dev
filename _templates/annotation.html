@@ -28,13 +28,11 @@
         <br>
         <div class='description' style='font-size: 19px;'>Which of the following <strong>{{ count }}</strong> words are compounds?</div>
         <div style='margin-top: -20px; margin-bottom: 30px;'>A compound is a word that is composed of multiple distinct words. For instance, the English compound <i>bookworm</i> is composed of the words <i>book</i> and <i>worm</i>.</div>
+        {% if errors %}
+        <div class='alert alert-info' role='alert' style='padding-left: 10%;'><strong>ERRORS</strong>:&nbsp;&nbsp;<i>{{ errors }}</i></div>
+        {% else %}
         <br>
-        <div class='row'>
-            <span class='hidden-xs hidden-sm col-md-2'></span>
-            <span class='attr-label col-xs-8 col-md-4'>word</span>
-            <span class='attr-label col-xs-4'>compound</span>
-            <span class='hidden-xs hidden-sm col-md-2'></span>
-        </div>
+        {% endif %}
         <br>
         <div class='divide'></div>
         <br>
@@ -42,11 +40,15 @@
             <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
             {% for t in tokens %}
             <div class='row'>
-                <span class='hidden-xs hidden-sm col-md-2'></span>
-                <span class='col-xs-8 col-md-4' style='text-transform: capitalize;' title='Part of speech: {{ t.pos }}&#10;Morpho-syntactic description: {{ t.msd }}'>{{ t.orth }}</span>
-                <span class='col-xs-4'>
+                <span class='hidden-xs hidden-sm col-md-1'></span>
+                <span class='col-xs-12 col-md-4'>
+                    <input style='text-transform: lowercase; border: none; width: 100%; height: initial; padding-left: 8px;' title='Part of speech: {{ t.pos }}&#10;Morpho-syntactic description: {{ t.msd }}' value='{{ t.orth }}'>
+                </span>
+                <br class='visible-xs visible-sm'>
+                <br class='visible-xs visible-sm'>
+                <span class='col-xs-12 col-md-5'>
+                    <input type='text' name='base_{{ t.id }}' value='{{ t.gold_base }}' style='border: none; width: 100%; height: initial; padding: 8px; margin: -8px 0; background: #F5F5F5;'>
                     <input type='hidden' name='id_{{ t.id }}' value='{{ t.id }}'>
-                    <input type='checkbox' name='compound_{{ t.id }}'>
                 </span>
                 <span class='hidden-xs hidden-sm col-md-2'></span>
             </div>
@@ -57,30 +59,9 @@
             <br>
             <br>
             <div class='center'>
-                <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these compounds?');" value='OK!'>
+                <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to submit these words?');" value='OK!'>
             </div>
         </form>
-        {% if pagination %}
-            <div class='pagination center'>
-                {% if pagination.has_prev %}
-                <a href="{{ url_for_other_page(pagination.page - 1) }}">&laquo; Previous</a>
-                {% endif %}
-                {% for page in pagination.iter_pages() %}
-                {% if page %}
-                {% if page != pagination.page %}
-                <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
-                {% else %}
-                <strong>{{ page }}</strong>
-                {% endif %}
-                {% else %}
-                <span class='ellipsis'>…</span>
-                {% endif %}
-                {% endfor %}
-                {% if pagination.has_next %}
-                <a href="{{ url_for_other_page(pagination.page + 1) }}">Next &raquo;</a>
-                {% endif %}
-            </div>
-        {% endif %}
         <br>
         <br>
         <br>
