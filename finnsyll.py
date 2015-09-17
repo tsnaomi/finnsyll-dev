@@ -987,6 +987,10 @@ def main_view():
     with open('_precision_and_recall.txt', 'r') as f:
         precision, recall = f.read().split()
 
+    # grab sequence numbers
+    sequences = Sequence.query.count()
+    sequences_verified = Sequence.query.filter_by(verified=True).count()
+
     # # calculate aamulehti numbers
     # doc_count = 61529  # Document.query.count()
     # reviewed = 823  # Document.query.filter_by(reviewed=True).count()
@@ -1004,6 +1008,8 @@ def main_view():
         # 'reviewed': format(reviewed, ',d'),
         'precision': precision,
         'recall': recall,
+        'sequences': format(sequences, ',d'),
+        'sequences_verified': format(sequences_verified, ',d'),
         }
 
     return render_template('main.html', kw='main', stats=stats)
