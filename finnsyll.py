@@ -23,7 +23,7 @@ from functools import wraps
 from math import ceil
 from sqlalchemy import or_, and_  # func
 from sqlalchemy.ext.hybrid import hybrid_property
-from syllabifier.compound import detect, split
+from syllabifier.compound import delimit
 from syllabifier.phonology import replace_umlauts
 from syllabifier.v8 import syllabify
 from werkzeug.exceptions import BadRequestKeyError
@@ -88,7 +88,7 @@ class Token(db.Model):
 
     # the word's orthography in lowercase, with umlauts replaced and compound
     # boundaries delimited; the syllabifier takes in Token.base, generated
-    # algorithmically
+    # algorithmically by FinnSyll (versus third-party software)
     base = db.Column(db.String(80, convert_unicode=True), nullable=True)
 
     # the word's orthography in lowercase, with umlauts replaced and compound
@@ -213,10 +213,10 @@ class Token(db.Model):
     # the word's frequency in the Aamulehti-1999 corpus
     freq = db.Column(db.Integer, default=0)
 
-    # a boolean indicating if the word is a simplex word
-    is_simplex = db.Column(db.Boolean, default=None)
+    # a boolean indicating if the word is marked as a compound by an annotator
+    is_complex = db.Column(db.Boolean, default=None)
 
-    # a boolean indicating if the word is a compound
+    # a boolean indicating if the word is marked as a compound by Arto
     is_compound = db.Column(db.Boolean, default=False)
 
     # a boolean indicating if the word is a non-delimited compound
@@ -283,16 +283,17 @@ class Token(db.Model):
     def inform_base(self):
         '''Populate Token.base with a syllabifier-friendly form of the orth.'''
         # syllabifcations do not preserve capitalization or umlauts
-        self.base = split(replace_umlauts(self.orth.lower()))
+        self.base = delimit(replace_umlauts(self.orth.lower()))
 
     def detect_is_compound(self):
         '''Populate Token.is_test_compound.'''
         # super fancy programmatic detection
-        self.is_test_compound = detect(self.base)
+        # self.is_test_compound = bool(re.search(r'(-| |=)', self.base))
+        self.is_test_compound = '=' in self.base
 
     def syllabify(self):
         '''Programmatically syllabify the Token based on its base form.'''
-        syllabifications = list(syllabify(self.base, self.is_test_compound))
+        syllabifications = list(syllabify(self.base))
 
         for i, (test_syll, rules) in enumerate(syllabifications, start=1):
             test_syll = replace_umlauts(test_syll, put_back=True)
@@ -734,7 +735,7 @@ def update_poems():
 
 def update_precision_and_recall():
     with open('_precision_and_recall.txt', 'w') as f:
-        VERIFIED = Token.query.filter(Token.is_gold.isnot(None))
+        VERIFIED = get_gold_tokens()
         verified = VERIFIED.count()
 
         # calculate average precision and recall
@@ -746,7 +747,12 @@ def update_precision_and_recall():
         print '%s / %s' % (P, R)
 
 
-# Baisc queries ---------------------------------------------------------------
+# Basic queries ---------------------------------------------------------------
+
+def get_gold_tokens(tokens=Token.query):
+    '''Return all verified tokens -- good or bad.'''
+    return tokens.filter(Token.is_gold.isnot(None))
+
 
 def get_bad_tokens():
     '''Return all of the tokens that are incorrectly syllabified.'''
@@ -771,19 +777,10 @@ def get_unseen_lemmas():
     return tokens
 
 
-def get_stopwords():
-    '''Return all unverified stopwords.'''
-    tokens = Token.query.filter_by(is_stopword=True)
-
-    return tokens
-
-
 def get_notes():
     '''Return all of the tokens that contain notes.'''
     return Token.query.filter(Token.note != '').order_by(Token.freq.desc())
 
-
-# Variation queries -----------------------------------------------------------
 
 def get_variation():
     '''Return tokens with alternative test or gold syllabifications.'''
@@ -792,28 +789,19 @@ def get_variation():
 
 # Compound queries ------------------------------------------------------------
 
-def get_gold_compounds():
-    '''Return known compounds.'''
-    return Token.query.filter_by(is_compound=True)
-
-
 def get_test_compounds():
     '''Return tokens predicted to be compounds.'''
     return Token.query.filter_by(is_test_compound=True)
 
 
-def get_unverified_test_compounds():
-    '''Return predicted compounds that have not been hand-verified.'''
-    tokens = get_test_compounds().filter(Token.is_gold.isnot(None))
-    tokens = tokens.filter_by(is_compound=False)
-
-    return tokens
+def get_gold_compounds():
+    '''Return known compounds.'''
+    return Token.query.filter_by(is_complex=True)
 
 
 def get_false_negative_compounds():
     '''Return hand-verified compounds that are not predicted compounds.'''
-    tokens = Token.query.filter(Token.is_gold.isnot(None))
-    tokens = tokens.filter_by(is_compound=True)
+    tokens = get_gold_tokens().filter_by(is_complex=True)
     tokens = tokens.filter_by(is_test_compound=False)
 
     return tokens
@@ -821,7 +809,7 @@ def get_false_negative_compounds():
 
 def get_false_positive_compounds():
     '''Return predicted compounds that are not true compounds.'''
-    return get_test_compounds().filter_by(is_simplex=True)
+    return get_test_compounds().filter_by(is_complex=False)
 
 
 # View helpers ----------------------------------------------------------------
@@ -853,19 +841,11 @@ def login_required(x):
 
 # @app.context_processor
 def serve_docs():
-    # Serve documents to navbar
+    # Serve Aamulehti documents to all views
     docs = Document.query.filter_by(reviewed=False)
     docs = docs.order_by(Document.unique_count).limit(10)
 
     return dict(docs=docs)
-
-
-# @app.context_processor
-def serve_peoms():
-    # Serve poems to navbar
-    poems = Poem.query.filter_by(reviewed=False).limit(10)
-
-    return dict(poems=poems)
 
 
 def apply_form(http_form, commit=True):
@@ -955,6 +935,14 @@ def apply_sequence_form(http_form):
 
     db.session.commit()
 
+kw_to_query = {
+    'bad': get_bad_tokens(),
+    'variation': get_variation(),
+    'compounds': get_gold_compounds(),
+    'false-positive-compounds': get_false_positive_compounds(),
+    'false-negative-compounds': get_false_negative_compounds(),
+    }
+
 
 # Views -----------------------------------------------------------------------
 
@@ -962,7 +950,7 @@ def apply_sequence_form(http_form):
 @login_required
 def main_view():
     '''List statistics on the syllabifier's performance.'''
-    VERIFIED = db.session.query(Token.id).filter(Token.is_gold.isnot(None))
+    VERIFIED = get_gold_tokens(tokens=db.session.query(Token.id))
     GOLD = VERIFIED.filter_by(is_gold=True)
 
     token_count = 991730  # Token.query.filter_by(is_aamulehti=True).count()
@@ -977,11 +965,11 @@ def main_view():
     verified = VERIFIED.count()
     accuracy = (float(gold) / verified) * 100
 
-    # calculate compound numbers
-    COMPOUNDS = VERIFIED.filter_by(is_compound=True)
-    compound_test = COMPOUNDS.filter_by(is_test_compound=True).count()
-    compound_gold = COMPOUNDS.count()
-    compound_accuracy = (float(compound_test) / compound_gold) * 100
+    # # calculate compound numbers
+    # COMPOUNDS = get_gold_compounds()
+    # compound_test = COMPOUNDS.filter_by(is_test_compound=True).count()
+    # compound_gold = COMPOUNDS.count()
+    # compound_accuracy = (float(compound_test) / compound_gold) * 100
 
     # read average precision and recall
     with open('_precision_and_recall.txt', 'r') as f:
@@ -998,14 +986,14 @@ def main_view():
     stats = {
         'token_count': format(token_count, ',d'),
         # 'doc_count': format(doc_count, ',d'),
+        # 'reviewed': format(reviewed, ',d'),
         'verified': format(verified, ',d'),
         'gold': format(gold, ',d'),
         'simplex_accuracy': round(simplex_accuracy, 2),
         'accuracy': round(accuracy, 2),
-        'compound_gold': format(compound_gold, ',d'),
-        'compound_test': format(compound_test, ',d'),
-        'compound_accuracy': round(compound_accuracy, 2),
-        # 'reviewed': format(reviewed, ',d'),
+        # 'compound_gold': format(compound_gold, ',d'),
+        # 'compound_test': format(compound_test, ',d'),
+        # 'compound_accuracy': round(compound_accuracy, 2),
         'precision': precision,
         'recall': recall,
         'sequences': format(sequences, ',d'),
@@ -1037,41 +1025,6 @@ def notes_view(page):
         tokens=tokens,
         kw='notes',
         )
-
-
-@app.route('/poems', methods=['GET', ])
-@login_required
-def poems_view():
-    '''Present an index of poems.'''
-    poems = Poem.query.order_by(
-        Poem.poet,
-        Poem.ebook_number,
-        Poem.portion,
-        ).all()
-
-    return render_template('main.html', poems=poems, kw='poems')
-
-
-@app.route('/poems/<id>', methods=['GET', 'POST'])
-@login_required
-def poem_view(id):
-    '''Present detail view of specified doc, composed of editable Tokens.'''
-    if request.method == 'POST':
-        apply_sequence_form(request.form)
-
-    poem = Poem.query.get_or_404(id)
-    POEM = poem.query_poem()
-
-    return render_template('poem.html', poem=poem, POEM=POEM, kw='poem')
-
-
-@app.route('/poems/update', methods=['GET', ])
-@login_required
-def poem_update_view():
-    '''Call update_poems().'''
-    update_poems()
-
-    return redirect(url_for('poem_view', id=1))
 
 
 @app.route('/doc/<id>', methods=['GET', 'POST'])
@@ -1171,106 +1124,27 @@ def find_view():
         )
 
 
-@app.route('/compounds', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/compounds/page/<int:page>', methods=['GET', 'POST'])
+@app.route('/<kw>', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/<kw>/page/<int:page>', methods=['GET', 'POST'])
 @login_required
-def compound_view(page):
-    '''List all known compounds.'''
+def token_view(kw, page):
+    '''List all keyword-relevant Tokens and process corrections.'''
     if request.method == 'POST':
         apply_form(request.form)
 
-    tokens = get_gold_compounds()
+    try:
+        tokens = kw_to_query[kw]
+
+    except KeyError:
+        abort(404)
+
     count = format(tokens.count(), ',d')
     tokens, pagination = paginate(page, tokens)
 
     return render_template(
         'tokens.html',
         tokens=tokens,
-        pagination=pagination,
-        count=count,
-        description=True,
-        kw='compounds'
-        )
-
-
-@app.route(
-    '/compounds/unverified',
-    defaults={'page': 1},
-    methods=['GET', 'POST'],
-    )
-@app.route('/compounds/unverified/page/<int:page>', methods=['GET', 'POST'])
-@login_required
-def unverified_compounds_view(page):
-    '''List all unverified compounds and process corrections.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
-    tokens = get_unverified_test_compounds()
-    count = format(tokens.count(), ',d')
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='unverified-compounds',
-        pagination=pagination,
-        count=count,
-        description=True,
-        )
-
-
-@app.route(
-    '/compounds/false-negative',
-    defaults={'page': 1},
-    methods=['GET', 'POST'],
-    )
-@app.route(
-    '/compounds/false-negative/page/<int:page>',
-    methods=['GET', 'POST'],
-    )
-@login_required
-def false_negative_compounds_view(page):
-    '''List all false negative compounds and process corrections.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
-    tokens = get_false_negative_compounds()
-    count = format(tokens.count(), ',d')
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='false-negative-compounds',
-        pagination=pagination,
-        count=count,
-        description=True,
-        )
-
-
-@app.route(
-    '/compounds/false-positive',
-    defaults={'page': 1},
-    methods=['GET', 'POST'],
-    )
-@app.route(
-    '/compounds/false-positive/page/<int:page>',
-    methods=['GET', 'POST'],
-    )
-@login_required
-def false_positive_compounds_view(page):
-    '''List all false positive compounds and process corrections.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
-    tokens = get_false_positive_compounds()
-    count = format(tokens.count(), ',d')
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='false-positive-compounds',
+        kw=kw,
         pagination=pagination,
         count=count,
         description=True,
@@ -1296,30 +1170,8 @@ def unverified_view(page):
         )
 
 
-@app.route('/bad', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/bad/page/<int:page>', methods=['GET', 'POST'])
-@login_required
-def bad_view(page):
-    '''List all incorrectly syllabified Tokens and process corrections.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
-    tokens = get_bad_tokens()
-    count = format(tokens.count(), ',d')
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='bad',
-        pagination=pagination,
-        count=count,
-        description=True,
-        )
-
-
-@app.route('/lemma', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/lemma/page/<int:page>', methods=['GET', 'POST'])
+@app.route('/lemmas', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/lemmas/page/<int:page>', methods=['GET', 'POST'])
 @login_required
 def lemma_view(page):
     '''List all unverified unseen lemmas and process corrections.'''
@@ -1334,28 +1186,6 @@ def lemma_view(page):
         tokens=tokens,
         kw='lemmas',
         pagination=pagination,
-        )
-
-
-@app.route('/variation', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/variation/page/<int:page>', methods=['GET', 'POST'])
-@login_required
-def variation_view(page):
-    '''List all ambiguous tokens and process corrections.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
-    tokens = get_variation()
-    count = format(tokens.count(), ',d')
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='variation',
-        pagination=pagination,
-        count=count,
-        description=True,
         )
 
 
@@ -1396,10 +1226,7 @@ def logout_view():
 
 def get_needs_annotation():
     '''Return tokens that require annotating.'''
-    tokens = Token.query.filter(Token.is_gold.isnot(None))
-    tokens = tokens.filter_by(is_simplex=None)
-
-    return tokens
+    return get_gold_tokens().filter_by(is_complex=None)
 
 
 @app.route('/annotation', defaults={'page': 1}, methods=['GET', 'POST'])
@@ -1421,7 +1248,7 @@ def annotation_view(page):
                 base = request.form.get('base_%s' % v).lower()
 
                 if validate_annotation(orth, base):
-                    token.is_simplex = orth == base
+                    token.is_complex = orth != base
                     token.gold_base = replace_umlauts(base)
 
                 else:
@@ -1443,18 +1270,55 @@ def annotation_view(page):
 
 
 def validate_annotation(orth, base):
-        '''Validate an annotated base.'''
-        if orth == base:
-            return True
+    '''Validate an annotated base.'''
+    if orth == base:
+        return True
 
-        if orth == base.translate({ord('='): None, }):
-            for part in re.split(r'(-| )', base):
-                if part.startswith('=') or part.endswith('='):
-                    return False
+    if orth == base.translate({ord('='): None, }):
+        for part in re.split(r'(-| )', base):
+            if part.startswith('=') or part.endswith('='):
+                return False
 
-            return True
+        return True
 
-        return False
+    return False
+
+
+# Poems -----------------------------------------------------------------------
+
+@app.route('/poems', methods=['GET', ])
+@login_required
+def poems_view():
+    '''Present an index of poems.'''
+    poems = Poem.query.order_by(
+        Poem.poet,
+        Poem.ebook_number,
+        Poem.portion,
+        ).all()
+
+    return render_template('main.html', poems=poems, kw='poems')
+
+
+@app.route('/poems/<id>', methods=['GET', 'POST'])
+@login_required
+def poem_view(id):
+    '''Present detail view of specified doc, composed of editable Tokens.'''
+    if request.method == 'POST':
+        apply_sequence_form(request.form)
+
+    poem = Poem.query.get_or_404(id)
+    POEM = poem.query_poem()
+
+    return render_template('poem.html', poem=poem, POEM=POEM, kw='poem')
+
+
+@app.route('/poems/update', methods=['GET', ])
+@login_required
+def poem_update_view():
+    '''Call update_poems().'''
+    update_poems()
+
+    return redirect(url_for('poem_view', id=1))
 
 
 # Jinja2 ----------------------------------------------------------------------

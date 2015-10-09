@@ -30,23 +30,21 @@
                 <li class='dropdown'>
                     <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw == 'compounds' or kw == 'unverified-compounds' or kw == 'false-negative-compounds' or kw == 'false-positive-compounds' or kw == 'annotation' %}highlight{% endif %}">Compounds</span> &#8623;</a>
                     <ul class='dropdown-menu'>
-                        <li><a href="{{ url_for('compound_view') }}"><span class="{% if kw == 'compounds' %}highlight{% endif %}">Verified</span></a></li>
-                        <!-- <li><a href="{{ url_for('unverified_compounds_view') }}"><span class="{% if kw == 'unverified-compounds' %}highlight{% endif %}">Unverified</span></a></li> -->
-                        <li><a href="{{ url_for('false_negative_compounds_view') }}"><span class="{% if kw == 'false-negative-compounds' %}highlight{% endif %}">False Negative</span></a></li>
-                        <li><a href="{{ url_for('false_positive_compounds_view') }}"><span class="{% if kw == 'false-positive-compounds' %}highlight{% endif %}">False Positive</span></a></li>
+                        <li><a href="{{ url_for('token_view', kw='compounds') }}"><span class="{% if kw == 'compounds' %}highlight{% endif %}">Compounds</span></a></li>
+                        <li><a href="{{ url_for('token_view', kw='false-negative-compounds') }}"><span class="{% if kw == 'false-negative-compounds' %}highlight{% endif %}">False Negative</span></a></li>
+                        <li><a href="{{ url_for('token_view', kw='false-positive-compounds') }}"><span class="{% if kw == 'false-positive-compounds' %}highlight{% endif %}">False Positive</span></a></li>
                         <li><a href="{{ url_for('annotation_view') }}"><span class="{% if kw == 'annotation' %}highlight{% endif %}">Annotation</span></a></li>
                     </ul>
                 </li>
                 <li class='dropdown'>
                     <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw == 'bad' or kw == 'unverified' or kw =='variation' %}highlight{% endif %}">Tokens</span> &#8623;</a>
                     <ul class='dropdown-menu'>
-                        <li><a href="{{ url_for('bad_view') }}"><span class="{% if kw == 'bad' %}highlight{% endif %}">Bad</span></a></li>
-                        <li><a href="{{ url_for('variation_view') }}"><span class="{% if kw == 'variation' %}highlight{% endif %}">Variation</span></a></li>
+                        <li><a href="{{ url_for('token_view', kw='bad') }}"><span class="{% if kw == 'bad' %}highlight{% endif %}">Bad</span></a></li>
+                        <li><a href="{{ url_for('token_view', kw='variation') }}"><span class="{% if kw == 'variation' %}highlight{% endif %}">Variation</span></a></li>
                         <li><a href="{{ url_for('unverified_view') }}"><span class="{% if kw == 'unverified' %}highlight{% endif %}">Unverified</span></a></li>
                         <!-- <li><a href="{{ url_for('lemma_view') }}"><span class="{% if kw == 'lemma' %}highlight{% endif %}">Lemmas</span></a></li> -->
                     </ul>
                 </li>
-                <!-- <li><a href='http://tsnaomi.github.io/finnsyll/'><span>Github</span></a></li> -->
                 <li><a href="{{ url_for('logout_view') }}"><span>Sign Out</span></a></li>
             </ul>
         </div>

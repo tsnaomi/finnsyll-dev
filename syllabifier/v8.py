@@ -15,17 +15,11 @@ from phonology import (
 
 # Syllabifier -----------------------------------------------------------------
 
-def syllabify(word, compound=None):
+def syllabify(word):
     '''Syllabify the given word, whether simplex or complex.'''
-    if compound is None:
-        compound = bool(re.search(r'(-| |=)', word))
-
+    compound = bool(re.search(r'(-| |=)', word))
     syllabify = _syllabify_compound if compound else _syllabify
     syllabifications = list(syllabify(word))
-
-    # # consonant clustering variation
-    # if 'e' in syllabifications[0][1]:  # rules for the first syllablification
-    #     syllabifications.extend(syllabify(word, T1E=False))
 
     for syll, rules in syllabifications:
         yield syll, rules
@@ -425,7 +419,7 @@ def u_y_final_diphthongs(word):
 
 if __name__ == '__main__':
 
-    # DO TESTS
+    # WRITE TESTS
 
     words = [
         # u'belgradin',               # belg.ra.din ~ bel.gra.din
@@ -443,8 +437,9 @@ if __name__ == '__main__':
         # u'kauimmin',                # kau.im.min
         # u'serious',                 # se.ri.ous
         # u'hioutuneen',              # hi.ou.tu.neen
-        u'york',                    # york
-        u'young',                   # young
+        # u'york',                    # york
+        # u'young',                   # young
+        u'lukuun=ottamatta',        # lu.kuun.ot.ta.mat.ta
         ]
 
     for word in words:

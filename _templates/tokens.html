@@ -13,11 +13,9 @@
         {% elif kw == 'bad' %}
         This page lists all of the words that fail to have perfect <i>precision</i> and <i>recall</i>.
         {% elif kw == 'compounds' %}
-        This page lists all of the <i>hand-verified</i> compounds.
-        {% elif kw == 'unverified-compounds' %}
-        This page lists <i>syllabifier-predicted compounds</i> that have not been verified as compounds.
+        This page lists all of the <i>hand-annotated</i> compounds.
         {% elif kw == 'false-negative-compounds' %}
-        This page lists all of the <i>hand-verified compounds</i> that the syllabifier fails to predict are compounds (i.e., <i>false negatives</i>).
+        This page lists all of the <i>hand-annotated compounds</i> that the syllabifier fails to predict are compounds (i.e., <i>false negatives</i>).
         {% elif kw == 'false-positive-compounds' %}
         This page lists all <i>syllabifier-predicted compounds</i> that are not true compounds (i.e., <i>false positives</i>).
         {% endif %}
