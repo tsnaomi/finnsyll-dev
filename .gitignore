@@ -1,4 +1,5 @@
 *.pyc
 
+syllabifier/decompounder/
 aamulehti-1999/
 nohup.out
