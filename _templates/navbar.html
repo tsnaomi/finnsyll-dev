@@ -34,6 +34,7 @@
                         <li><a href="{{ url_for('token_view', kw='false-negative-compounds') }}"><span class="{% if kw == 'false-negative-compounds' %}highlight{% endif %}">False Negative</span></a></li>
                         <li><a href="{{ url_for('token_view', kw='false-positive-compounds') }}"><span class="{% if kw == 'false-positive-compounds' %}highlight{% endif %}">False Positive</span></a></li>
                         <li><a href="{{ url_for('annotation_view') }}"><span class="{% if kw == 'annotation' %}highlight{% endif %}">Annotation</span></a></li>
+                        <li><a href="{{ url_for('needs_context_view') }}"><span class="{% if kw == 'needs-context' %}highlight{% endif %}">Uncertain</span></a></li>
                     </ul>
                 </li>
                 <li class='dropdown'>

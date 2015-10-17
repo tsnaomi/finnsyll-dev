@@ -249,6 +249,16 @@ class Token(db.Model):
         lazy='dynamic',
         )
 
+    # annotation helper attributes --------------------------------------------
+
+    # a boolean indicating if the annotator requires context for the word
+    needs_context = db.Column(db.Boolean, default=False)
+
+    # an excerpt from the Aamulehti corpus containing the word
+    context = db.Column(db.Text, default='')
+
+    # -------------------------------------------------------------------------
+
     __mapper_args__ = {
         'order_by': [is_gold, is_compound, freq.desc()],
         }
@@ -1224,9 +1234,17 @@ def logout_view():
 
 # Annotation ------------------------------------------------------------------
 
+def get_needs_context():
+    '''Return tokens that require context.'''
+    return Token.query.filter(Token.context != '')
+
+
 def get_needs_annotation():
     '''Return tokens that require annotating.'''
-    return get_gold_tokens().filter_by(is_complex=None)
+    tokens = get_gold_tokens().filter_by(is_complex=None)
+    tokens = tokens.filter_by(needs_context=False)
+
+    return tokens
 
 
 @app.route('/annotation', defaults={'page': 1}, methods=['GET', 'POST'])
@@ -1246,8 +1264,13 @@ def annotation_view(page):
                 token = Token.query.get(int(v))
                 orth = token.orth.lower()
                 base = request.form.get('base_%s' % v).lower()
+                unsure = bool(request.form.getlist('unsure_%s' % v))
 
-                if validate_annotation(orth, base):
+                if unsure:
+                    token.needs_context = unsure
+                    token.gold_base = base
+
+                elif validate_annotation(orth, base):
                     token.is_complex = orth != base
                     token.gold_base = replace_umlauts(base)
 
@@ -1265,7 +1288,44 @@ def annotation_view(page):
         tokens=tokens.slice(0, 25),
         count=count,
         kw='annotation',
-        errors=',  '.join(errors)
+        errors=',  '.join(errors),
+        )
+
+
+@app.route('/needs-context', defaults={'page': 1}, methods=['GET', 'POST'])
+@app.route('/needs-context/page/<int:page>', methods=['GET', 'POST'])
+def needs_context_view(page):
+    '''Facilitate compound annotations for words that need context.'''
+    if not session.get('current_user'):
+        return redirect(url_for('login_view'))
+
+    errors = None
+
+    if request.method == 'POST':
+        token = Token.query.get(int(request.form.get('id')))
+        orth = token.orth.lower()
+        base = request.form.get('base').lower()
+
+        if validate_annotation(orth, base):
+            token.is_complex = orth != base
+            token.gold_base = replace_umlauts(base)
+            token.needs_context = False
+
+        else:
+            errors = base
+            token.gold_base = base
+
+        db.session.commit()
+
+    tokens = Token.query.filter_by(needs_context=True)
+    count = format(tokens.count(), ',d')
+
+    return render_template(
+        'annotation.html',
+        tokens=tokens,
+        count=count,
+        kw='needs-context',
+        errors=errors,
         )
 
 

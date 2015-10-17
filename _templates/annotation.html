@@ -21,21 +21,31 @@
         {% if session.is_admin %}
         {% include 'navbar.html' %}
         {% else %}
-        <a href="{{ url_for('logout_view') }}" class='annotation-link' style='float: right; font-size: 19px'>SIGN OUT</a>
+        <span style='float: right; font-size: 19px'>
+            <a href="{{ url_for('annotation_view') }}" class='annotation-link' {% if kw == 'annotation' %}style='font-weight: bold;'{% endif %}>annotation</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+            <a href="{{ url_for('needs_context_view') }}" class='annotation-link' {% if kw == 'needs-context' %}style='font-weight: bold;'{% endif %}>unsure</a>&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
+            <a href="{{ url_for('logout_view') }}" class='annotation-link'>sign out</a>
+        </span>
         {% endif %}
         <br>
         <br>
         <br>
         <div class='description' style='font-size: 19px;'>Which of the following <strong>{{ count }}</strong> words are compounds?</div>
-        <!-- <div style='margin-top: -20px; margin-bottom: 30px;'>A compound is a word that is composed of multiple distinct words. For instance, the English compound <i>bookworm</i> is composed of the words <i>book</i> and <i>worm</i>.</div> -->
         {% if errors %}
         <div class='alert alert-info' role='alert' style='padding-left: 10%;'><strong>ERRORS</strong>:&nbsp;&nbsp;<i>{{ errors }}</i></div>
         {% else %}
         <br>
         {% endif %}
+        {% if kw == 'annotation' %}
+        <div class='hidden-xs hidden-sm row'>
+            <span class='col-md-10'></span>
+            <span class='col-md-1' style='margin-left: 25px; font-weight: 200;'><i>unsure</i></span>
+        </div>
+        {% endif %}
         <br>
         <div class='divide'></div>
         <br>
+        {% if kw == 'annotation' %}  <!-- annotation -->
         <form method='POST'>
             <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
             {% for t in tokens %}
@@ -50,7 +60,11 @@
                     <input type='text' name='base_{{ t.id }}' value='{{ t.gold_base }}' style='border: none; width: 100%; height: initial; padding: 8px; margin: -8px 0; background: #F5F5F5;'>
                     <input type='hidden' name='id_{{ t.id }}' value='{{ t.id }}'>
                 </span>
-                <span class='hidden-xs hidden-sm col-md-2'></span>
+                <span class='col-xs-3 col-sm-3 col-md-1' style='margin-left: 40px; vertical-align: middle'>
+                    <br class='visible-xs visible-sm'>
+                    <span class='visible-xs visible-sm' style='font-weight: 200;'><i>unsure</i></span>
+                    <input type='checkbox' name='unsure_{{ t.id }}' value='1'>
+                </span>
             </div>
             <br>
             <div class='divide'></div>
@@ -62,6 +76,43 @@
                 <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to submit these words?');" value='OK!'>
             </div>
         </form>
+        {% else %}  <!-- needs context -->
+        {% for t in tokens %}
+        <form method='POST'>
+            <div class='row'>
+                <span class='hidden-xs hidden-sm col-md-1'></span>
+                <span class='col-xs-12 col-md-4'>
+                    <input style='text-transform: lowercase; border: none; width: 100%; height: initial; padding-left: 8px;' title='Part of speech: {{ t.pos }}&#10;Morpho-syntactic description: {{ t.msd }}' value='{{ t.orth }}'>
+                </span>
+                <br class='visible-xs visible-sm'>
+                <br class='visible-xs visible-sm'>
+                <span class='col-xs-12 col-md-5'>
+                    <input type='text' name='base' value='{{ t.gold_base }}' style='border: none; width: 100%; height: initial; padding: 8px; margin: -8px 0; background: #F5F5F5;'>
+                    <input type='hidden' name='id' value='{{ t.id }}'>
+                </span>
+                <span class='hidden-xs hidden-sm col-md-2'>
+                    <input type='submit' class='OK' value='OK!' style='margin-top: -8px; height: 38px;'>
+                </span>
+            </div>
+            {% if t.context %}
+            <br>
+            <div class='row'>
+                <span class='hidden-xs hidden-sm col-md-1'></span>
+                <span class='col-xs-9' style='text-align: justify;'>{{ t.context|safe }}</span>
+                <span class='hidden-xs hidden-sm col-md-2'></span>
+            </div>
+            <br class='hidden-xs hidden-sm'>
+            {% endif %}
+            <span class='visible-xs visible-sm'>
+                <br>
+                <br>
+                <input type='submit' class='OK' value='OK!' style='margin-top: -8px; height: 38px;'>
+            </span>
+        </form>
+        <div class='divide'></div>
+        <br>
+        {% endfor %}
+        {% endif %}
         <br>
         <br>
         <br>
