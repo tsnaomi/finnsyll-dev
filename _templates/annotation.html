@@ -36,12 +36,6 @@
         {% else %}
         <br>
         {% endif %}
-        {% if kw == 'annotation' %}
-        <div class='hidden-xs hidden-sm row'>
-            <span class='col-md-10'></span>
-            <span class='col-md-1' style='margin-left: 25px; font-weight: 200;'><i>unsure</i></span>
-        </div>
-        {% endif %}
         <br>
         <div class='divide'></div>
         <br>
@@ -62,7 +56,6 @@
                 </span>
                 <span class='col-xs-3 col-sm-3 col-md-1' style='margin-left: 40px; vertical-align: middle'>
                     <br class='visible-xs visible-sm'>
-                    <span class='visible-xs visible-sm' style='font-weight: 200;'><i>unsure</i></span>
                     <input type='checkbox' name='unsure_{{ t.id }}' value='1'>
                 </span>
             </div>
