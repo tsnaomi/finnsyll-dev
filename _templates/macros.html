@@ -123,7 +123,7 @@
     <div class='row'>
         <span class='col-xs-12 col-md-3'>
             <a class='{{ t|goldclass }}' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" title='{{ title(t) }}'>{{ t.orth }}</a>
-            {% if t.is_complex %}<br><i>&nbsp;{{t.gold_base}}&nbsp;<i>{% endif %}
+            {% if t.is_complex %}<div><i>&nbsp;{{t.gold_base}}&nbsp;</i></div>{% endif %}
         </span>
         <div class='visible-xs visible-sm col-xs-12 height'>
         </div>
