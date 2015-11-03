@@ -31,6 +31,9 @@
         <div class='row'>
             <span class='col-xs-12'>
                 <a data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='attr-orth {{ t|goldclass }}'>{{ t.orth }}</a>
+                {% if t.gold_base %}
+                <div style='padding: 10px 0 0 10px; font-style: italic;'>{{ t.gold_base }}</div>
+                {% endif %}
             </span>
         </div>
         <div class='height'></div>
