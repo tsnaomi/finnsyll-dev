@@ -7,12 +7,8 @@ from datetime import datetime
 from tabulate import tabulate
 
 
-# TODO:  precision / recall numbers for compound identification to Transition
-
-
-# This is purely a base class to give the Transition and Query objects the
-# _prune() method
-class Evaluation(object):
+# supply Transition and Query objects with a _prune() method
+class Base(object):
 
     @staticmethod
     def _prune(table):
@@ -27,10 +23,11 @@ class Evaluation(object):
         return remove(transpose(remove(transpose(table)))) if table else table
 
 
-# This class is for testing out changes to the syllabifier or compounder
-class Transition(Evaluation):
+# test changes to the syllabifier or compounder
+class Transition(Base):
 
-    def __init__(self, pdf=False, compounding_eval=False):
+    def __init__(self, pdf=False, compounding_eval=False, gold_base=False):
+        self.gold_base = gold_base
         self.report = self.transition()
 
         if pdf:
@@ -42,7 +39,11 @@ class Transition(Evaluation):
 
     def transition(self):
         '''Temporarily re-syllabify gold tokens and generate error report.'''
-        tokens = finn.get_gold_tokens()
+        if self.gold_base:
+            tokens = finn.Token.query.filter(finn.Token.is_complex.isnot(None))
+
+        else:
+            tokens = finn.get_gold_tokens()
 
         # calculate the overall accuracy prior to the transition
         verified = tokens.count()
@@ -77,7 +78,7 @@ class Transition(Evaluation):
             t._p_r = t.p_r
             t.inform_base()
             t.detect_is_compound()
-            t.syllabify()
+            t.syllabify(gold_base=self.gold_base)
 
         # calculate the overall accuracy after the transition
         gold = tokens.filter_by(is_gold=True).count()
@@ -121,6 +122,7 @@ class Transition(Evaluation):
         # compose the report
         report = (
             '\n'
+            '%s'
             '---- EVALUATION -------------------------------------------------'
             '\nBEFORE\nOverall accuracy: %s'
             '\nCompound identification accuracy: %s (%s/%s)'
@@ -133,6 +135,7 @@ class Transition(Evaluation):
             '\n\n%s BAD TOKENS'
             '\n'
             ) % (
+                'GOLD BASE SYLLABIFICATIONS\n\n' if self.gold_base else '',
                 round(pre_accuracy, 4),
                 pre_compound_accuracy,
                 pre_test_compounds_count,
@@ -215,8 +218,8 @@ class Transition(Evaluation):
             ]
 
 
-# This class is simply for tabulating queries
-class Query(Evaluation):
+# create tabulated queries
+class Query(Base):
 
     def __init__(self, tokens, filename=None, pdf=None):
         self.tokens = tokens
@@ -302,8 +305,13 @@ class Query(Evaluation):
             'C' if token.is_compound else '',
             ]
 
+
 if __name__ == '__main__':
-    Transition(pdf='--pdf' in sys.argv, compounding_eval='-c' in sys.argv)
+    Transition(
+        pdf='--pdf' in sys.argv,
+        compounding_eval='-c' in sys.argv,
+        gold_base='-g' in sys.argv,
+        )
 
     # # SUPPLY TOKENS AND FILENAME HERE
     # tokens = finn.get_gold_tokens()

@@ -301,9 +301,13 @@ class Token(db.Model):
         # self.is_test_compound = bool(re.search(r'(-| |=)', self.base))
         self.is_test_compound = '=' in self.base
 
-    def syllabify(self):
+    def syllabify(self, gold_base=False):
         '''Programmatically syllabify the Token based on its base form.'''
-        syllabifications = list(syllabify(self.base))
+        if gold_base:
+            syllabifications = list(syllabify(self.gold_base))
+
+        else:
+            syllabifications = list(syllabify(self.base))
 
         for i, (test_syll, rules) in enumerate(syllabifications, start=1):
             test_syll = replace_umlauts(test_syll, put_back=True)
@@ -945,14 +949,6 @@ def apply_sequence_form(http_form):
 
     db.session.commit()
 
-kw_to_query = {
-    'bad': get_bad_tokens(),
-    'variation': get_variation(),
-    'compounds': get_gold_compounds(),
-    'false-positive-compounds': get_false_positive_compounds(),
-    'false-negative-compounds': get_false_negative_compounds(),
-    }
-
 
 # Views -----------------------------------------------------------------------
 
@@ -975,6 +971,11 @@ def main_view():
     verified = VERIFIED.count()
     accuracy = (float(gold) / verified) * 100
 
+    # calculate compound rate
+    annotated = Token.query.filter(Token.is_complex.isnot(None)).count()
+    compounds = Token.query.filter_by(is_complex=True).count()
+    compound_rate = (float(compounds) / annotated) * 100
+
     # # calculate compound numbers
     # COMPOUNDS = get_gold_compounds()
     # compound_test = COMPOUNDS.filter_by(is_test_compound=True).count()
@@ -989,18 +990,14 @@ def main_view():
     sequences = Sequence.query.count()
     sequences_verified = Sequence.query.filter_by(verified=True).count()
 
-    # # calculate aamulehti numbers
-    # doc_count = 61529  # Document.query.count()
-    # reviewed = 823  # Document.query.filter_by(reviewed=True).count()
-
     stats = {
         'token_count': format(token_count, ',d'),
-        # 'doc_count': format(doc_count, ',d'),
-        # 'reviewed': format(reviewed, ',d'),
         'verified': format(verified, ',d'),
         'gold': format(gold, ',d'),
         'simplex_accuracy': round(simplex_accuracy, 2),
         'accuracy': round(accuracy, 2),
+        'annotated': format(annotated, ',d'),
+        'compound_rate': round(compound_rate, 2),
         # 'compound_gold': format(compound_gold, ',d'),
         # 'compound_test': format(compound_test, ',d'),
         # 'compound_accuracy': round(compound_accuracy, 2),
@@ -1143,7 +1140,13 @@ def token_view(kw, page):
         apply_form(request.form)
 
     try:
-        tokens = kw_to_query[kw]
+        tokens = {
+            'bad': get_bad_tokens(),
+            'variation': get_variation(),
+            'compounds': get_gold_compounds(),
+            'false-positive-compounds': get_false_positive_compounds(),
+            'false-negative-compounds': get_false_negative_compounds(),
+            }[kw]
 
     except KeyError:
         abort(404)

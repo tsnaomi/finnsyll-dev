@@ -1,5 +1,6 @@
 *.pyc
 
+_latex/
 syllabifier/decompounder/
 aamulehti-1999/
 nohup.out
