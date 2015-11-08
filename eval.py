@@ -155,6 +155,15 @@ class Transition(Base):
                 tokens.filter_by(is_gold=False).count()
             )
 
+        # if evaluating the gold_base, show which words are still bad
+        if self.gold_base:
+            still_bad = self._prune(map(
+                lambda t: self._parse(t),
+                tokens.filter_by(is_gold=False),
+                ))
+            still_bad_headers = self._get_headers(still_bad)
+            report += tabulate(still_bad, headers=still_bad_headers)
+
         print report
 
         return report
