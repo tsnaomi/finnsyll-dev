@@ -826,6 +826,11 @@ def get_false_positive_compounds():
     return get_test_compounds().filter_by(is_complex=False)
 
 
+def get_disagreement():
+    '''Return annotator disagreement on compound status.'''
+    return Token.query.filter(Token.is_compound != Token.is_complex)
+
+
 # View helpers ----------------------------------------------------------------
 
 @app.before_request
@@ -1146,6 +1151,8 @@ def token_view(kw, page):
             'compounds': get_gold_compounds(),
             'false-positive-compounds': get_false_positive_compounds(),
             'false-negative-compounds': get_false_negative_compounds(),
+            'simplex': Token.query.filter_by(is_complex=False),
+            'disagreement': get_disagreement(),
             }[kw]
 
     except KeyError:

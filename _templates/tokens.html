@@ -18,6 +18,10 @@
         This page lists all of the <i>hand-annotated compounds</i> that the syllabifier fails to predict are compounds (i.e., <i>false negatives</i>).
         {% elif kw == 'false-positive-compounds' %}
         This page lists all <i>syllabifier-predicted compounds</i> that are not true compounds (i.e., <i>false positives</i>).
+        {% elif kw == 'simplex' %}
+        This page lists all of the <i>hand-annotated</i> simplex words.
+        {% elif kw == 'disagreement' %}
+        This page lists all of the words that display annotator disagreement.
         {% endif %}
         <br>
         <i>{{ count }} matches</i>

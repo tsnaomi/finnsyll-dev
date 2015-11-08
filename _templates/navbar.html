@@ -30,11 +30,13 @@
                 <li class='dropdown'>
                     <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw == 'compounds' or kw == 'unverified-compounds' or kw == 'false-negative-compounds' or kw == 'false-positive-compounds' or kw == 'annotation' %}highlight{% endif %}">Compounds</span> &#8623;</a>
                     <ul class='dropdown-menu'>
+                        <li><a href="{{ url_for('token_view', kw='simplex') }}"><span class="{% if kw == 'simplex' %}highlight{% endif %}">Simplex</span></a></li>
                         <li><a href="{{ url_for('token_view', kw='compounds') }}"><span class="{% if kw == 'compounds' %}highlight{% endif %}">Compounds</span></a></li>
                         <li><a href="{{ url_for('token_view', kw='false-negative-compounds') }}"><span class="{% if kw == 'false-negative-compounds' %}highlight{% endif %}">False Negative</span></a></li>
                         <li><a href="{{ url_for('token_view', kw='false-positive-compounds') }}"><span class="{% if kw == 'false-positive-compounds' %}highlight{% endif %}">False Positive</span></a></li>
                         <li><a href="{{ url_for('annotation_view') }}"><span class="{% if kw == 'annotation' %}highlight{% endif %}">Annotation</span></a></li>
                         <li><a href="{{ url_for('needs_context_view') }}"><span class="{% if kw == 'needs-context' %}highlight{% endif %}">Unsure</span></a></li>
+                        <li><a href="{{ url_for('token_view', kw='disagreement') }}"><span class="{% if kw == 'disagreement' %}highlight{% endif %}">Disagreement</span></a></li>
                     </ul>
                 </li>
                 <li class='dropdown'>
