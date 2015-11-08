@@ -158,11 +158,10 @@ class Transition(Base):
         # if evaluating the gold_base, show which words are still bad
         if self.gold_base:
             still_bad = self._prune(map(
-                lambda t: self._parse(t),
+                lambda t: self._bad_parse(t),
                 tokens.filter_by(is_gold=False),
                 ))
-            still_bad_headers = self._get_headers(still_bad)
-            report += tabulate(still_bad, headers=still_bad_headers)
+            report += tabulate(still_bad)
 
         print report
 
@@ -210,7 +209,7 @@ class Transition(Base):
 
     @staticmethod
     def _parse(token):
-        '''Extra data from a token and return it as a list.'''
+        '''Extract data from a token and return it as a list.'''
         return [
             token._test_syll1, token._rules1,
             token._test_syll2, token._rules2,
@@ -225,6 +224,24 @@ class Transition(Base):
             token.p_r,
             'C' if token.is_compound else '',
             ]
+
+    @staticmethod
+    def _bad_parse(token):
+        '''Extract data from a token and return it as a list.'''
+        return [
+            token._test_syll1, token._rules1,
+            token._test_syll2, token._rules2,
+            token._test_syll3, token._rules3,
+            token._test_syll4, token._rules4,
+            '>',
+            token.syll1,
+            token.syll2,
+            token.syll3,
+            token.syll4,
+            token.p_r,
+            'C' if token.is_compound else '',
+            ]
+
 
 
 # create tabulated queries
