@@ -759,6 +759,7 @@ def update_poems():
     db.session.commit()
 
 
+@manager.command
 def update_precision_recall_and_f1():
     '''Calculate average precision, recall, and f1 scores.'''
     with open('_precision_and_recall.txt', 'w') as f:
