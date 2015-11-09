@@ -390,6 +390,18 @@ class Token(db.Model):
         except ZeroDivisionError:
             return 0.0
 
+    @property
+    def f1(self):
+        '''See https://en.wikipedia.org/wiki/F1_score.'''
+        p = self.precison
+        r = self.recall
+
+        try:
+            return 2.0 * (p * r) / (p + r)
+
+        except ZeroDivisionError:
+            return 0.0
+
 
 class Poem(db.Model):
     __tablename__ = 'Poem'
@@ -723,8 +735,8 @@ def syllabify_tokens():
 
     print 'Syllabifications complete. ' + datetime.utcnow().strftime('%I:%M')
 
-    # calculate average precision and recall
-    update_precision_and_recall()
+    # calculate average precision, recall, and f1
+    update_precision_recall_and_f1()
 
 
 def find_token(orth):
@@ -747,7 +759,8 @@ def update_poems():
     db.session.commit()
 
 
-def update_precision_and_recall():
+def update_precision_recall_and_f1():
+    '''Calculate average precision, recall, and f1 scores.'''
     with open('_precision_and_recall.txt', 'w') as f:
         VERIFIED = get_gold_tokens()
         verified = VERIFIED.count()
@@ -755,10 +768,11 @@ def update_precision_and_recall():
         # calculate average precision and recall
         P = round(float(sum([t.precision for t in VERIFIED])) / verified, 4)
         R = round(float(sum([t.recall for t in VERIFIED])) / verified, 4)
+        F1 = round(float(sum([t.f1 for t in VERIFIED])) / verified, 4)
 
-        f.write('%s\n%s' % (P, R))
+        f.write('%s\n%s\n%s' % (P, R, F1))
 
-        print '%s / %s' % (P, R)
+        print '%s / %s (%s)' % (P, R, F1)
 
 
 # Basic queries ---------------------------------------------------------------
@@ -989,7 +1003,7 @@ def main_view():
 
     # read average precision and recall
     with open('_precision_and_recall.txt', 'r') as f:
-        precision, recall = f.read().split()
+        precision, recall, f1 = f.read().split()
 
     # grab sequence numbers
     sequences = Sequence.query.count()
@@ -1008,6 +1022,7 @@ def main_view():
         # 'compound_accuracy': round(compound_accuracy, 2),
         'precision': precision,
         'recall': recall,
+        'f1': f1,
         'sequences': format(sequences, ',d'),
         'sequences_verified': format(sequences_verified, ',d'),
         }

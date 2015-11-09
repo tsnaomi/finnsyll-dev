@@ -243,7 +243,6 @@ class Transition(Base):
             ]
 
 
-
 # create tabulated queries
 class Query(Base):
 
