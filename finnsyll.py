@@ -393,7 +393,7 @@ class Token(db.Model):
     @property
     def f1(self):
         '''See https://en.wikipedia.org/wiki/F1_score.'''
-        p = self.precison
+        p = self.precision
         r = self.recall
 
         try:
