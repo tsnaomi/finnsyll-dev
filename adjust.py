@@ -2,9 +2,30 @@
 
 from datetime import datetime
 from finnsyll import db, Token
+from random import sample
 
 # ADJUST() allows you to apply changes to all of the tokens in the database
 # without completely rendering your computer incapable of doing anything else.
+
+
+def create_sets():
+    '''Create training, development, and test sets.'''
+    simplex = set(Token.query.filter_by(is_complex=False))  # 16967
+    compounds = set(Token.query.filter_by(is_complex=True))  # 4033
+
+    for label in ['dev', 'test']:
+        s = sample(simplex, 1696)  # 10% of simplex gold set
+        c = sample(compounds, 404)  # 10% of complex gold set
+        simplex.difference_update(s)
+        compounds.difference_update(c)
+
+        for t in s + c:
+            t.data = label
+
+    for t in simplex.union(compounds):  # remaining 80% of gold set
+        t.data = 'train'
+
+    db.session.commit()
 
 
 def ADJUST():

@@ -100,6 +100,9 @@ class Token(db.Model):
     # infinitive for verbs
     lemma = db.Column(db.String(80, convert_unicode=True), default='')
 
+    #
+    data = db.Column(db.Enum('train', 'dev', 'test', name='DATA'))
+
     # rules applied in test syllabifications ----------------------------------
 
     rules1 = db.Column(db.String(80, convert_unicode=True), default='')
@@ -774,6 +777,23 @@ def update_precision_recall_and_f1():
         f.write('%s\n%s\n%s' % (P, R, F1))
 
         print '%s / %s (%s)' % (P, R, F1)
+
+
+# Data ------------------------------------------------------------------------
+
+def training_set():
+    '''Return training tokens.'''
+    return Token.query.filter_by(data='train')
+
+
+def dev_set():
+    '''Return development/validation tokens.'''
+    return Token.query.filter_by(data='dev')
+
+
+def test_set():
+    '''Return test/evaluation tokens.'''
+    return Token.query.filter_by(data='test')
 
 
 # Basic queries ---------------------------------------------------------------
