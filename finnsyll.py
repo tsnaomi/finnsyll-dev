@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import re
+import syllabifier.compound as compound
 
 from datetime import datetime
 from flask import (
@@ -23,7 +24,6 @@ from functools import wraps
 from math import ceil
 from sqlalchemy import or_, and_  # func
 from sqlalchemy.ext.hybrid import hybrid_property
-from syllabifier.compound import delimit
 from syllabifier.phonology import replace_umlauts
 from syllabifier.v8 import syllabify
 from werkzeug.exceptions import BadRequestKeyError
@@ -100,7 +100,7 @@ class Token(db.Model):
     # infinitive for verbs
     lemma = db.Column(db.String(80, convert_unicode=True), default='')
 
-    #
+    # a enum indicating whether the word is in the training, dev, or test set
     data = db.Column(db.Enum('train', 'dev', 'test', name='DATA'))
 
     # rules applied in test syllabifications ----------------------------------
@@ -296,7 +296,7 @@ class Token(db.Model):
     def inform_base(self):
         '''Populate Token.base with a syllabifier-friendly form of the orth.'''
         # syllabifcations do not preserve capitalization or umlauts
-        self.base = delimit(replace_umlauts(self.orth.lower()))
+        self.base = compound.delimit(replace_umlauts(self.orth.lower()))
 
     def detect_is_compound(self):
         '''Populate Token.is_test_compound.'''

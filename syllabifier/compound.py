@@ -1,24 +1,19 @@
 # coding=utf-8
 
-import pickle
-
 from Levenshtein import distance
 from os import sys, path
 from phonology import replace_umlauts
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-# from finnsyll import *
-
 
 # Clouet2014 ------------------------------------------------------------------
 
-class Clouet2014(object):
+class ClouetDaille2014(object):
 
-    def __init__(self):
-        self.lemmas = pickle.load(open('data/lemmas.pickle', 'rb'))
-        self.corpus = pickle.load(open('data/corpus.pickle', 'rb'))
-        self.database = self.lemmas + self.corpus.keys()
+    def __init__(self,):
+        import finnsyll as finn
+        self.tokens = finn.training_set()
 
     def split(self, word):
         try:
