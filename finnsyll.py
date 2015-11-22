@@ -1002,8 +1002,8 @@ def main_view():
     token_count = 991730  # Token.query.filter_by(is_aamulehti=True).count()
 
     # calculate accuracy excluding compounds
-    simplex_gold = GOLD.filter_by(is_compound=False).count()
-    simplex_verified = VERIFIED.filter_by(is_compound=False).count()
+    simplex_gold = GOLD.filter_by(is_complex=False).count()
+    simplex_verified = VERIFIED.filter_by(is_complex=False).count()
     simplex_accuracy = (float(simplex_gold) / simplex_verified) * 100
 
     # calculate accuracy including compounds

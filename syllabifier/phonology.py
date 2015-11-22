@@ -57,11 +57,19 @@ DEPTH = {
     }
 
 
-def is_harmonic(ch1, ch2):
-    if is_neutral(ch1) or is_neutral(ch2):
-        return True
+def is_harmonic(*chars):
+    vowels = filter(is_vowel, [ch for ch in chars])
+    vowels = filter(lambda x: not is_neutral(x), vowels)
+    depths = map(lambda x: DEPTH[x], vowels)
 
-    return DEPTH[ch1] == DEPTH[ch2]
+    return len(set(depths)) == 1
+
+
+# def is_harmonic(ch1, ch2):
+#     if is_neutral(ch1) or is_neutral(ch2):
+#         return True
+
+#     return DEPTH[ch1] == DEPTH[ch2]
 
 
 # Phonemic functions ----------------------------------------------------------
