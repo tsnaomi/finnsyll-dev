@@ -57,19 +57,14 @@
                                     <div class='visible-xs' style='height: 10px'></div>
                                 </div>
                                 <div class='visible-xs col-xs-1'></div>
-                                <div class='col-xs-3 col-sm-2 seq-attr'>
+                                <div class='col-xs-4 col-sm-3 seq-attr'>
                                     <input type='radio' name='scansion_{{ loop.index }}' id='S_{{ loop.index }}' value='S'> S<br>
                                     <input type='radio' name='scansion_{{ loop.index }}' id='SW_{{ loop.index }}' value='SW'> SW<br>
-                                    <input type='radio' name='scansion_{{ loop.index }}' id='SS_{{ loop.index }}' value='SS'> SS<br>
-                                </div>
-                                <div class='col-xs-3 col-sm-2 seq-attr'>
-                                    <input type='radio' name='scansion_{{ loop.index }}' id='W_{{ loop.index }}' value='W'> W<br>
-                                    <input type='radio' name='scansion_{{ loop.index }}' id='WS_{{ loop.index }}' value='WS'> WS<br>
-                                    <input type='radio' name='scansion_{{ loop.index }}' id='WW_{{ loop.index }}' value='WW'> WW<br>
-                                </div>
-                                <div class='col-xs-3 col-sm-2 seq-attr'>
                                     <input type='radio' name='scansion_{{ loop.index }}' id='UNK_{{ loop.index }}' value='UNK'> unsure<br>
-                                    <div>&nbsp;</div>
+                                </div>
+                                <div class='col-xs-5 col-sm-3 seq-attr'>
+                                    <input type='radio' name='scansion_{{ loop.index }}' id='W_{{ loop.index }}' value='W'> W<br>
+                                    <input type='radio' name='scansion_{{ loop.index }}' id='WS_{{ loop.index }}' value='WS'> WS<br>                                    
                                     <div>&nbsp;</div>
                                 </div>
                                 <div class='visible-xs col-xs-1 seq-attr'>
@@ -138,10 +133,6 @@
             $('#SW_1').prop('checked', true)
         } else if (scansion1 == 'WS') {
             $('#WS_1').prop('checked', true)
-        } else if (scansion1 == 'SS') {
-            $('#SS_1').prop('checked', true)
-        } else if (scansion1 == 'WW') {
-            $('#WW_1').prop('checked', true)
         } else if (scansion1 == 'UNK') {
             $('#UNK_1').prop('checked', true)
         };
@@ -168,10 +159,6 @@
                 $('#SW_2').prop('checked', true)
             } else if (scansion2 == 'WS') {
                 $('#WS_2').prop('checked', true)
-            } else if (scansion2 == 'SS') {
-                $('#SS_2').prop('checked', true)
-            } else if (scansion2 == 'WW') {
-                $('#WW_2').prop('checked', true)
             } else if (scansion2 == 'UNK') {
                 $('#UNK_2').prop('checked', true)
             };
