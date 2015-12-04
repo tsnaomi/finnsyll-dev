@@ -6,7 +6,7 @@ import re
 
 # from datetime import datetime as dt
 from itertools import izip_longest as izip, product
-from os import sys, path
+from os import sys, path  # , getcwd
 from phonology import (
     is_cluster,
     is_consonant,
@@ -26,19 +26,21 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 # morphs, and atoms are characters. In chunking, compounds are sentences,
 # constructions are phrases, and atoms are words.
 
-class StupidMorfessorClassifier(object):
+class StupidBackoffMorfessor(object):
 
-    def __init__(self, filename='data/morfessor-training', test=False, mx='P'):
-        from finnsyll import training_set, dev_set, test_set
+    def __init__(self, filename='data/morfessor-training', test=False,
+                 maximize='P', Eval=True, train_coefficients=True):
+        import finnsyll as finn
 
-        self.training_tokens = training_set()
-        self.validation_tokens = test_set() if test else dev_set()
+        self.training_tokens = finn.training_set()
+        self.validation_tokens = finn.test_set() if test else finn.dev_set()
 
         # Morfessor model
         self.model = None
 
         # filename of Training text and Morfessor model binary file
-        self.filename = filename
+        prefix = 'syllabifier/' if __name__ != '__main__' else ''
+        self.filename = prefix + filename
 
         # ngram containers
         self.unigrams = {'UNK': 0, 'X': 1, '#': 1}
@@ -47,57 +49,64 @@ class StupidMorfessorClassifier(object):
         self.total = 0
 
         # evaluation measure to maximize
-        self.maximize = {'P': 0, 'R': 1, 'F1': 2}[mx]
+        self.maximize = {'P': 0, 'R': 1, 'F1': 2, 'F05': 3}[maximize]
 
         # coefficients
-        self.a = 0.0  # ngram
+        self.a = 1.0  # ngram
         self.b = 0.0  # nuclei
         self.d = 0.0  # coronal
         self.g = 0.0  # harmonic
         self.p = 0.0  # sonseq
 
-        # Evaluation report
+        # evaluation report
         self.report = None
 
-        self.train()
-        self.evaluate()
+        # train segmenter
+        self.train(train_coefficients=train_coefficients)
 
-    def train(self):
+        # evaluate segmenter
+        if Eval:
+            self.evaluate()
+
+    def train(self, train_coefficients=True):
         self._train_morfessor()
         self._train_ngrams()
-        self._train_coefficients()
+
+        if train_coefficients:
+            self._train_coefficients()
 
     def _train_morfessor(self):
         io = morfessor.MorfessorIO()
-
-        # load training data, or create training data if it is nonexistent
-        try:
-            train_data = list(io.read_corpus_file(self.filename + '.txt'))
-
-        except IOError:
-            print 'Creating training data...'
-
-            tokens = [t.gold_base for t in self.training_tokens]
-            tokens = ' '.join(tokens).replace('-', ' ').replace('=', ' ')
-            tokens = replace_umlauts(tokens, put_back=True)
-            tokens = tokens.lower().encode('utf-8')
-
-            with open(self.filename + '.txt', 'w') as f:
-                f.write(tokens)
-
-            train_data = list(io.read_corpus_file(self.filename + '.txt'))
 
         # load model, or train and save model if it is nonexistent
         try:
             self.model = io.read_binary_model_file(self.filename + '.bin')
 
         except IOError:
+
+            # load training data, or create training data if it is nonexistent
+            try:
+                train_data = list(io.read_corpus_file(self.filename + '.txt'))
+
+            except IOError:
+                print 'Creating training data...'
+
+                tokens = [t.gold_base for t in self.training_tokens]
+                tokens = ' '.join(tokens).replace('-', ' ').replace('=', ' ')
+                tokens = replace_umlauts(tokens, put_back=True)
+                tokens = tokens.lower().encode('utf-8')
+
+                with open(self.filename + '.txt', 'w') as f:
+                    f.write(tokens)
+
+                train_data = list(io.read_corpus_file(self.filename + '.txt'))
+
             print 'Training Morfessor model...'
 
-            model = morfessor.BaselineModel()
-            model.load_data(train_data)
-            model.train_batch()
-            io.write_binary_model_file(self.filename + '.bin', model)
+            self.model = morfessor.BaselineModel()
+            self.model.load_data(train_data)
+            self.model.train_batch()
+            io.write_binary_model_file(self.filename + '.bin', self.model)
 
     def _train_ngrams(self):
         print 'Training ngrams...'
@@ -160,34 +169,55 @@ class StupidMorfessorClassifier(object):
                     self.trigrams[trigram] += 1
 
     def _train_coefficients(self):
-        # generate all possible sets of coefficients
-        coefficients = [float(i) / 100 for i in range(0, 101, 5)]
-        coefficients = product(coefficients, repeat=5)
-        coefficients = filter(lambda x: sum(x) == 1.0, coefficients)
+        filename = '%s-%s-coefficients.txt' % (self.filename, self.maximize)
 
-        # further filter coefficients so that ngrams cannot receive a weight
-        # less than 0.5
-        # coefficients = filter(lambda x: x[0] > 0.5, coefficients)
+        # load coefficients, or train coefficients if they are non-existent
+        try:
+            with open(filename, 'r') as f:
+                coefficients = [float(i) for i in f.read().split()]
+                self.a, self.b, self.d, self.g, self.p = coefficients
 
-        scored_coefficients = []
+        except IOError:
+            # generate all possible sets of coefficients
+            coefficients = [float(i) / 100 for i in range(0, 101, 5)]
+            coefficients = product(coefficients, repeat=5)
+            coefficients = filter(lambda x: sum(x) == 1.0, coefficients)
 
-        # evaluate segmenter performance with each set of coefficients
-        for i, co in enumerate(coefficients):
+            # further filter coefficients so that ngram scores cannot receive a
+            # weight less than 0
+            coefficients = filter(lambda x: x[0] > 0, coefficients)
 
-            # # write progress to terminal
-            # message = 'Training coefficients... %s / %s                   \r'
-            # sys.stdout.write(message % (i, len(coefficients)))
-            # sys.stdout.flush()
+            # number of sets of coefficients
+            count = len(coefficients)
 
-            self.a, self.b, self.d, self.g, self.p = co
-            score = self.evaluate(Eval=False)[self.maximize]
-            scored_coefficients.append((score, coefficients))
+            scored_coefficients = []
 
-        # set coefficients that maximizes the f1 score of the training data
-        coefficients = max(scored_coefficients)[1]
-        self.a, self.b, self.d, self.g, self.p = coefficients
+            # evaluate segmenter performance with each set of coefficients
+            for i, co in enumerate(coefficients):
 
-        print 'a=%s\nb=%s\nd=%s\ng=%s\np=%s\n' % coefficients
+                # write progress to terminal
+                message = 'Training coefficients... %s / %s               \r'
+                sys.stdout.write(message % (i, count))
+                sys.stdout.flush()
+
+                self.a, self.b, self.d, self.g, self.p = co
+                score = self.evaluate(Eval=False)[self.maximize]
+                scored_coefficients.append((score, co))
+
+            # write final progress to terminal (e.g., 604/604)
+            print 'Training coefficients... %s / %s' % (count, count)
+
+            # set coefficients that maximizes the f1 score of the training data
+            coefficients = max(scored_coefficients)[1]
+            self.a, self.b, self.d, self.g, self.p = coefficients
+
+            print (
+                '\na=%s\tngram\nb=%s\tnuclei\nd=%s\tcoronal\ng=%s\tharmonic'
+                '\np=%s\tsonseq\n'
+                ) % tuple([format(c, '.2f') for c in coefficients])
+
+            with open(filename, 'w') as f:
+                f.write('%s\n%s\n%s\n%s\n%s' % coefficients)
 
     def evaluate(self, Eval=True):
         if Eval:
@@ -203,7 +233,6 @@ class StupidMorfessorClassifier(object):
         # evaluate tokens
         for t in tokens:
             word = self.segment(t.orth)
-            # print word, '(%s)' % t.gold_base
 
             if replace_umlauts(word) == t.gold_base:
 
@@ -234,34 +263,37 @@ class StupidMorfessorClassifier(object):
         bad = len(results['bad'])  # 27
 
         # calculate precision, recall, and F1
+        # P = ((TP + bad) * 1.0) / ((TP + bad) + FP)
+        # R = ((TP + bad) * 1.0) / ((TP + bad) + FN)
         P = (TP * 1.0) / (TP + FP + bad)  # 0.6503
         R = (TP * 1.0) / (TP + FN)        # 0.9867
         F1 = (2.0 * P * R) / (P + R)      # 0.7840
+        F05 = ((0.5**2 + 1.0) * P * R) / ((0.5**2 * P) + R)  # 0.6979
 
         if not Eval:
-            return P, R, F1
+            return P, R, F1, F05
 
         # generate evaluation report
         self.report = (
             '\n'
-            '---- Evaluation -------------------------------------------------'
+            '---- Evaluation: StupidBackoffMorfessor -------------------------'
             # '\n\nTrue negatives:\n\t%s'
             # '\n\nTrue positives:\n\t%s'
-            '\n\nFalse negatives:\n\t%s'
-            '\n\nFalse positives:\n\t%s'
-            '\n\nBad segmentations:\n\t%s'
-            '\n\nMaximizing: %s (0=P, 1=R, 2=F1)'
-            '\n\nTP: %s\nFP: %s\nTN: %s\nFN: %s\nBad: %s'
-            '\n\nP / R (F1): %s / %s (%s)\n\n'
+            # '\n\nFalse negatives:\n\t%s'
+            # '\n\nFalse positives:\n\t%s'
+            # '\n\nBad segmentations:\n\t%s'
+            '\n\nMaximizing: %s (0=P, 1=R, 2=F1, 3=F0.5)'
+            '\n\nTP:\t%s\nFP:\t%s\nTN:\t%s\nFN:\t%s\nBad:\t%s'
+            '\n\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s\n\n'
             '-----------------------------------------------------------------'
             '\n'
             ) % (
                 # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TN']]),
                 # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TP']]),
-                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FN']]),
-                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FP']]),
-                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['bad']]),
-                self.maximize,
+                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FN']]),
+                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FP']]),
+                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['bad']]),
+                'N/A' if self.a == 1.0 else self.maximize,
                 TP,
                 FP,
                 TN,
@@ -270,11 +302,15 @@ class StupidMorfessorClassifier(object):
                 P,
                 R,
                 F1,
+                F05,
                 )
 
         print self.report
 
-    def segment(self, word):
+    def segment(self, word, inform_base=False):
+        if inform_base:
+            word = replace_umlauts(word, put_back=False)
+
         token = []
 
         for comp in re.split(r'(-| )', word):
@@ -291,6 +327,9 @@ class StupidMorfessorClassifier(object):
 
         token = ''.join(token)
 
+        if inform_base:
+            token = replace_umlauts(token)
+
         return token
 
     def _segment(self, morphemes):
@@ -301,8 +340,6 @@ class StupidMorfessorClassifier(object):
             candidate = [x for y in izip(morphemes, delimiters) for x in y]
             candidate = ['#', ] + filter(None, candidate) + ['#', ]
             scored_candidates.append(self.score(candidate))
-
-        # pprint(scored_candidates)
 
         morphemes = max(scored_candidates)[1]
 
@@ -378,22 +415,24 @@ class StupidMorfessorClassifier(object):
         del candidate[-1]
         candidate = ''.join(candidate).replace('#', '=').replace('X', '')
 
-        # get suggested segmentations as list
-        segments = replace_umlauts(candidate).split('=')
+        if self.a < 1.0:
 
-        if len(segments) > 1:
+            # get suggested segmentations as list
+            segments = replace_umlauts(candidate).split('=')
 
-            # score phonotactic features
-            nuclei = 1.0 if all(_nuclei(seg) for seg in segments) else 0.0
-            coronal = 1.0 if all(_coronal(seg) for seg in segments) else 0.0
-            harmonic = 1.0 if all(_harmonic(seg) for seg in segments) else 0.0
-            sonseq = 1.0 if all(_sonseq(seg) for seg in segments) else 0.0
+            if len(segments) > 1:
 
-            score *= self.a
-            score += nuclei * self.b
-            score += coronal * self.d
-            score += harmonic * self.g
-            score += sonseq * self.p
+                # score phonotactic features
+                nuclei = 1 if all(_nuclei(seg) for seg in segments) else 0
+                coronal = 1 if all(_coronal(seg) for seg in segments) else 0
+                harmonic = 1 if all(_harmonic(seg) for seg in segments) else 0
+                sonseq = 1 if all(_sonseq(seg) for seg in segments) else 0
+
+                score *= self.a
+                score += nuclei * self.b
+                score += coronal * self.d
+                score += harmonic * self.g
+                score += sonseq * self.p
 
         return score, candidate
 
@@ -406,22 +445,8 @@ def delimit(word):
 
 
 if __name__ == '__main__':
-
-    StupidMorfessorClassifier()
-    StupidMorfessorClassifier(mx='R')
-    StupidMorfessorClassifier(mx='F1')
-
-    # words = [
-    #     'pian',             # pian
-    #     'talous',           # talous
-    #     'erinomaisesti',    # erinomaisesti
-    #     'jääkiekkoilu',     # jää=kiekkoilu
-    #     'asianajaja',       # asian=ajaja
-    #     'rahoituserien',    # rahoitus=erien
-    #     'vastikään',        # vast=ikään
-    #     'kansanäänestys',   # kansan=äänestys
-    #     ]
-
-    # for word in words:
-    #     split = model.viterbi_segment(word)
-    #     print '='.join(split[0]), split[1]
+    # StupidBackoffMorfessor(maximize='P')
+    # StupidBackoffMorfessor(maximize='R')
+    # StupidBackoffMorfessor(maximize='F1')
+    StupidBackoffMorfessor(maximize='F05')
+    # StupidBackoffMorfessor(train_coefficients=True)
