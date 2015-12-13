@@ -8,9 +8,6 @@
     <br><b>{{ stats.accuracy }}</b>% accuracy (<b>{{ stats.simplex_accuracy }}</b>% excluding compounds)
     <br><b>{{ stats.precision }}</b> / <b>{{ stats.recall }}</b> mean precision and recall (<b>{{ stats.f1 }}</b> mean F<sub>1</sub>)
     <br>
-    <!-- <br><b>{{ stats.compound_test }}</b> / <b>{{ stats.compound_gold }}</b> compounds correctly identified
-    <br><b>{{ stats.compound_accuracy }}</b>% accuracy
-    <br> -->
     <br><b>{{ stats.compound_rate }}</b>% of the <b>{{ stats.annotated }}</b> annotated tokens are compounds
     <br>
     <br><b>{{ stats.verified }}</b> / <b>{{ stats.token_count }}</b> word forms verified from the Aamulehti corpus
@@ -35,7 +32,7 @@
         <div class='col-xs-11'>
     {% endif %}
     <span>
-        <a href="{{ url_for('poem_view', id=p.id) }}" class='{% if p.reviewed %}good{% endif %}'><u>{{ p.portion }}</u></a>&nbsp;&nbsp;
+        <a href="{{ url_for('poem_view', id=p.id) }}" style='padding: 2px 6px; margin: -2px -6px;' class='{% if p.reviewed %}good{% endif %}'><u>{{ p.portion }}</u></a>&nbsp;&nbsp;
     </span>
     {% set prev = p.ebook_number %}
     {% endfor %}

@@ -2,12 +2,6 @@
 
 {% block head %}
 <script>
-    // scroll to first unverified variation on page load
-    $(document).ready(function () {
-        $('html, body').animate({
-            scrollTop: $('.variation-unverified').offset().top - 400
-        }, 'slow');
-    });
     var unverified = document.getElementsByClassName('.variation-unverified')
     if (unverified == null) {
         $.ajax({
@@ -15,6 +9,12 @@
             url: "{{ url_for('poem_update_view') }}",
         });
     }
+    // scroll to first unverified variation on page load
+    $(document).ready(function () {
+        $('html, body').animate({
+            scrollTop: $('.variation-unverified').offset().top - 400
+        }, 'slow');
+    });
 </script>
 {% endblock %}
 
