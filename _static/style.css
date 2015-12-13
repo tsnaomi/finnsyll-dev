@@ -193,6 +193,23 @@
 
 /* poem -------------------------------------------------------------------- */
 
+    .sequence table {
+        table-layout: fixed;
+        white-space: nowrap;
+    }
+
+    .sequence th,
+    .sequence td {
+        text-align: left !important;
+        min-width: 160px;
+        max-width: 160px;
+    }
+
+    .sequence h2 {
+        letter-spacing: 2px !important;
+        margin: 40px 0 20px !important;
+    }
+
     .poem-title {
         margin-top: 20px;
     }

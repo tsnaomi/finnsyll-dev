@@ -1,9 +1,12 @@
 # coding=utf-8
 
 import re
-import syllabifier.compound as compound
+# import syllabifier.compound as compound
+# import syllabifier.v8.syllabify as syllabify
 
+from collections import namedtuple
 from datetime import datetime
+from tabulate import tabulate
 from flask import (
     abort,
     flash,
@@ -23,9 +26,10 @@ from flask.ext.bcrypt import Bcrypt
 from functools import wraps
 from math import ceil
 from sqlalchemy import or_, and_  # func
+from sqlalchemy.exc import DataError
 from sqlalchemy.ext.hybrid import hybrid_property
 from syllabifier.phonology import replace_umlauts
-from syllabifier.v8 import syllabify
+# from syllabifier.v8 import syllabify
 from werkzeug.exceptions import BadRequestKeyError
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
@@ -296,7 +300,8 @@ class Token(db.Model):
     def inform_base(self):
         '''Populate Token.base with a syllabifier-friendly form of the orth.'''
         # syllabifcations do not preserve capitalization or umlauts
-        self.base = compound.delimit(replace_umlauts(self.orth.lower()))
+        # self.base = compound.delimit(replace_umlauts(self.orth.lower()))
+        self.base = replace_umlauts(self.orth.lower())
 
     def detect_is_compound(self):
         '''Populate Token.is_test_compound.'''
@@ -306,6 +311,8 @@ class Token(db.Model):
 
     def syllabify(self, gold_base=False):
         '''Programmatically syllabify the Token based on its base form.'''
+        from syllabifier.v8 import syllabify
+
         if gold_base:
             syllabifications = list(syllabify(self.gold_base))
 
@@ -1392,6 +1399,94 @@ def validate_annotation(orth, base):
 
 # Poems -----------------------------------------------------------------------
 
+def get_sequence_tables(query=Sequence.query.filter_by(verified=True)):
+    '''Generate table on Sequence statistics.'''
+    sequences1 = []
+    sequences2 = []
+    sequences3 = []
+    sequences4 = []
+
+    headers1 = ['', 'total', 'split', 'joined', 'unsure']
+    headers2 = ['', 'total', 'S', 'W', 'unsure']
+    headers3 = ['', 'total', 'S', 'W', 'SW', 'WS', 'unsure']
+    headers4 = ['', 'total', 'S', 'W', 'unsure']
+
+    diphthongs = ['', 'iu', 'iy', 'eu', 'ey', 'au', 'äy', 'ou', 'öy']
+
+    f = lambda n, t: '%s %s' % (
+        str(n),
+        '(' + str(round((float(n) / t) * 100.0, 2)) + '%)' if n else '',
+        )
+
+    for vv in diphthongs:
+
+        if vv:
+            seqs = query.filter_by(sequence=vv)
+        else:
+            seqs = query
+            vv = '<i>all</i>'
+
+        total = seqs.count()
+        _join = seqs.filter_by(split='join')
+        join = _join.count()
+        join_s = _join.filter_by(scansion='S').count()
+        join_w = _join.filter_by(scansion='W').count()
+        join_unk = join - join_s - join_w
+        _split = seqs.filter_by(split='split')
+        split = _split.count()
+        split_s = _split.filter_by(scansion='S').count()
+        split_w = _split.filter_by(scansion='W').count()
+        split_sw = _split.filter_by(scansion='SW').count()
+        split_ws = _split.filter_by(scansion='WS').count()
+        split_unk = split - split_s - split_w - split_sw - split_ws
+        _unknown = seqs.filter_by(split='unknown')
+        unknown = unknown = total - split - join
+        unknown_s = _unknown.filter_by(scansion='S').count()
+        unknown_w = _unknown.filter_by(scansion='W').count()
+        unknown_unk = unknown - unknown_s - unknown_w
+
+        sequences1.append([
+            '<strong>' + vv.decode('utf-8') + '</strong>',
+            total,
+            f(join, total),
+            f(split, total),
+            f(unknown, total),
+            ])
+
+        sequences2.append([
+            '<strong>' + vv.decode('utf-8') + '</strong>',
+            join,
+            f(join_s, join),
+            f(join_w, join),
+            f(join_unk, join),
+            ])
+
+        sequences3.append([
+            '<strong>' + vv.decode('utf-8') + '</strong>',
+            split,
+            f(split_s, split),
+            f(split_w, split),
+            f(split_sw, split),
+            f(split_ws, split),
+            f(split_unk, split),
+            ])
+
+        sequences4.append([
+            '<strong>' + vv.decode('utf-8') + '</strong>',
+            unknown,
+            f(unknown_s, unknown),
+            f(unknown_w, unknown),
+            f(unknown_unk, unknown),
+            ])
+
+    table1 = tabulate(sequences1, headers1, tablefmt='html')
+    table2 = tabulate(sequences2, headers2, tablefmt='html')
+    table3 = tabulate(sequences3, headers3, tablefmt='html')
+    table4 = tabulate(sequences4, headers4, tablefmt='html')
+
+    return table1, table2, table3, table4
+
+
 @app.route('/poems', methods=['GET', ])
 @login_required
 def poems_view():
@@ -1425,6 +1520,34 @@ def poem_update_view():
     update_poems()
 
     return redirect(url_for('poem_view', id=1))
+
+
+@app.route('/poems/numbers', methods=['GET', ])
+@app.route('/poems/<poet>-numbers', methods=['GET', ])
+def poem_numbers_view(poet=None):
+    if poet:
+
+        try:
+            query = Sequence.query.join(Variation).join(Poem)
+            query = query.filter(Poem.poet == poet)
+            query = query.outerjoin(Sequence).filter_by(verified=True)
+            table1, table2, table3, table4 = get_sequence_tables(query=query)
+
+        except DataError:
+            abort(404)
+
+    else:
+        table1, table2, table3, table4 = get_sequence_tables()
+
+    return render_template(
+        'sequence.html',
+        table1=table1,
+        table2=table2,
+        table3=table3,
+        table4=table4,
+        poet=poet or 'all',
+        kw='poem-numbers',
+        )
 
 
 # Jinja2 ----------------------------------------------------------------------

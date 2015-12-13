@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<div class='description container sequence'>
+    <br>
+    <div class='center'>
+        <span><a class="{% if poet == 'all' %}highlight{% endif %}" href="{{ url_for('poem_numbers_view') }}">all</a></span>&nbsp;&nbsp;|&nbsp; 
+        <span><a class="{% if poet == 'Erkko' %}highlight{% endif %}" href="{{ url_for('poem_numbers_view', poet='Erkko') }}">Erkko</a></span>&nbsp;&nbsp;|&nbsp;
+        <span><a class="{% if poet == 'Hellaakoski' %}highlight{% endif %}" href="{{ url_for('poem_numbers_view', poet='Hellaakoski') }}">Hellaakoski</a></span>&nbsp;&nbsp;|&nbsp;
+        <span><a class="{% if poet == 'Kaatra' %}highlight{% endif %}" href="{{ url_for('poem_numbers_view', poet='Kaatra') }}">Kaatra</a></span>&nbsp;&nbsp;|&nbsp;
+        <span><a class="{% if poet == 'Koskenniemi' %}highlight{% endif %}" href="{{ url_for('poem_numbers_view', poet='Koskenniemi') }}">Koskenniemi</a></span>&nbsp;&nbsp;|&nbsp;
+        <span><a class="{% if poet == 'Kramsu' %}highlight{% endif %}" href="{{ url_for('poem_numbers_view', poet='Kramsu') }}">Kramsu</a></span>&nbsp;&nbsp;|&nbsp;
+        <span><a class="{% if poet == 'Leino' %}highlight{% endif %}" href="{{ url_for('poem_numbers_view', poet='Leino') }}">Leino</a></span>&nbsp;&nbsp;|&nbsp; 
+        <span><a class="{% if poet == 'Lönnrot' %}highlight{% endif %}" href="{{ url_for('poem_numbers_view', poet='Lönnrot') }}">Lönnrot</a></span>&nbsp;&nbsp;|&nbsp;
+        <span><a class="{% if poet == 'Siljo' %}highlight{% endif %}" href="{{ url_for('poem_numbers_view', poet='Siljo') }}">Siljo</a></span>
+    </div>
+    <h2>all sequences</h2>
+    {{ table1|safe }}
+    <br>
+    <h2>joined sequences &mdash; scansion</h2>
+    {{ table2|safe }}
+    <br>
+    <h2>split sequences &mdash; scansion</h2>
+    {{ table3|safe }}
+    <br>
+    <h2>unsure sequences &mdash; scansion</h2>
+    {{ table4|safe }}
+    <br>
+</div>
+{% endblock %}
