@@ -1406,10 +1406,10 @@ def get_sequence_tables(query=Sequence.query.filter_by(verified=True)):
     sequences3 = []
     sequences4 = []
 
-    headers1 = ['', 'total', 'split', 'joined', 'unsure']
-    headers2 = ['', 'total', 'S', 'W', 'unsure']
-    headers3 = ['', 'total', 'S', 'W', 'SW', 'WS', 'unsure']
-    headers4 = ['', 'total', 'S', 'W', 'unsure']
+    headers1 = ['', 'total', 'joined', 'split', 'unsure']       # all table
+    headers2 = ['', 'total', 'S', 'W', 'unsure']                # joined
+    headers3 = ['', 'total', 'S', 'W', 'SW', 'WS', 'unsure']    # split
+    headers4 = ['', 'total', 'S', 'W', 'unsure']                # unsure
 
     diphthongs = ['', 'iu', 'iy', 'eu', 'ey', 'au', 'äy', 'ou', 'öy']
 
