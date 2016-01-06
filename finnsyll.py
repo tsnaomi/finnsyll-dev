@@ -4,7 +4,6 @@ import re
 # import syllabifier.compound as compound
 # import syllabifier.v8.syllabify as syllabify
 
-from collections import namedtuple
 from datetime import datetime
 from tabulate import tabulate
 from flask import (
@@ -464,7 +463,7 @@ class Poem(db.Model):
         )
 
     # the number of variations associated with this poetry ebook
-    variation_count = db.Column(db.Integer)
+    sequence_count = db.Column(db.Integer)
 
     def __init__(self, **kwargs):
         for attr, value in kwargs.iteritems():
@@ -499,9 +498,19 @@ class Poem(db.Model):
         reviewed = all(variation.verified for variation in self.variations)
         self.reviewed = reviewed
 
-    def get_variation_count(self):
-        '''Return a formatted variation count.'''
-        return format(self.variation_count, ',d')
+    def get_sequence_count(self):
+        '''Return a formatted sequence count.'''
+        return format(self.sequence_count, ',d')
+        # '''Return a formatted sequence count.'''
+        # poems = Poem.query.filter_by(title=self.title, poet=self.poet)
+
+        # seq_count = 0
+
+        # for p in poems:
+        #     for v in p.variations:
+        #         seq_count += v.sequences.count()
+
+        # return format(seq_count, ',d')
 
 
 class Variation(db.Model):
@@ -1421,9 +1430,10 @@ def get_sequence_tables(query=Sequence.query.filter_by(verified=True)):
     for vv in diphthongs:
 
         if vv:
-            seqs = query.filter_by(sequence=vv)
+            seqs = query.filter_by(sequence=vv).distinct()
+
         else:
-            seqs = query
+            seqs = query.distinct()
             vv = '<i>all</i>'
 
         total = seqs.count()

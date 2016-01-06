@@ -24,7 +24,7 @@
     {% if prev != p.ebook_number %}
     {% if prev %}</div></div>{% endif %}
     <span style='text-transform: lowercase;'>
-        <strong>{{ p.title }}</strong> by <strong>{{ p.poet_surname }}</strong>&nbsp;&nbsp;<span class='freq'>{{ p.get_variation_count() }}</span>
+        <strong>{{ p.title }}</strong> by <strong>{{ p.poet_surname }}</strong>&nbsp;&nbsp;<span class='freq'>{{ p.get_sequence_count() }}</span>
     </span>
     <br>
     <div class='row' style='margin-bottom: 10px;'>
