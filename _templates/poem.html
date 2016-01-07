@@ -2,13 +2,6 @@
 
 {% block head %}
 <script>
-    var unverified = document.getElementsByClassName('.variation-unverified')
-    if (unverified == null) {
-        $.ajax({
-            type: 'GET',
-            url: "{{ url_for('poem_update_view') }}",
-        });
-    }
     // scroll to first unverified variation on page load
     $(document).ready(function () {
         $('html, body').animate({
@@ -167,6 +160,10 @@
             $('.sequence-2 :input').attr('disabled', true);
             $('.sequence-2').hide()
         };
-    }
+    };
+    $.ajax({
+        type: 'GET',
+        url: "{{ url_for('poem_update_view') }}",
+    });
 </script>
 {% endblock %}

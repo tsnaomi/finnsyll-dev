@@ -465,6 +465,9 @@ class Poem(db.Model):
     # the number of variations associated with this poetry ebook
     sequence_count = db.Column(db.Integer)
 
+    # a boolean indicating if review has begun for this poem
+    review_begun = db.Column(db.Boolean, default=False)
+
     def __init__(self, **kwargs):
         for attr, value in kwargs.iteritems():
             if hasattr(self, attr):
@@ -501,16 +504,6 @@ class Poem(db.Model):
     def get_sequence_count(self):
         '''Return a formatted sequence count.'''
         return format(self.sequence_count, ',d')
-        # '''Return a formatted sequence count.'''
-        # poems = Poem.query.filter_by(title=self.title, poet=self.poet)
-
-        # seq_count = 0
-
-        # for p in poems:
-        #     for v in p.variations:
-        #         seq_count += v.sequences.count()
-
-        # return format(seq_count, ',d')
 
 
 class Variation(db.Model):
@@ -1507,18 +1500,19 @@ def poems_view():
         Poem.portion,
         ).all()
 
-    return render_template('main.html', poems=poems, kw='poems')
+    return render_template('poems.html', poems=poems, kw='poems')
 
 
 @app.route('/poems/<id>', methods=['GET', 'POST'])
 @login_required
 def poem_view(id):
     '''Present detail view of specified doc, composed of editable Tokens.'''
-    if request.method == 'POST':
-        apply_sequence_form(request.form)
-
     poem = Poem.query.get_or_404(id)
     POEM = poem.query_poem()
+
+    if request.method == 'POST':
+        poem.review_begun = True
+        apply_sequence_form(request.form)
 
     return render_template('poem.html', poem=poem, POEM=POEM, kw='poem')
 

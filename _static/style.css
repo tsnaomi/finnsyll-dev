@@ -80,7 +80,8 @@
     }
 
     .word:hover,
-    .variation, {
+    .variation,
+    .in-progress {
         color: #000;
         background-color: #80FFBF; /* light green */
     }
