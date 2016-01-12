@@ -2,11 +2,9 @@
 
 import finnsyll as finn
 import os
-import pdb
 import re
 
 from datetime import datetime
-from pprint import pprint
 
 characters = u'abcdefghijklmnopqrstuvwxyz -äö'
 punctuation = r'!"#\$%&\'()\*\+,\./:;<=>\?@\[\\\]\^_`{\|}~'
@@ -164,10 +162,20 @@ def duplicate_poem(poem, tokenized_poem, portion):
     return new_poem
 
 
-def u_y_final_diphthongs(word):
-    # this pattern searchs for VV sequenceS that ends in /u/ or /y/
+def u_y_final_diphthongs(word, strict=True):
+    if strict:
+        # this pattern searchs for VV sequences that ends in /u/ or /y/ that do
+        # not appear within larger vowel sequences
+        return list(re.finditer(
+            r'(?<![ieäyöauo])(au|eu|ou|iu|iy|ey|äy|öy)(?:[^ieäyöauo]{1}|$)',
+            # add |Au|Eu|Ou|Iu|Iy|Ey|Äy|Öy for manual search in Sublime
+            word,
+            ))
+
+    # this pattern searchs for VV sequences that ends in /u/ or /y/, regardless
+    # of their environments
     return list(re.finditer(
-        r'(?=(?:^|[^ieAyOauo]+)(au|eu|ou|iu|iy|ey|äy|öy)(?:[^ieäyöauo]+)|$)',
+        r'(au|eu|ou|iu|iy|ey|äy|öy)',
         word,
         ))
 
@@ -185,7 +193,7 @@ def get_token(word):
     return token
 
 
-def curate_sequences(word, sequences, variation):
+def curate_sequences(word, sequences, variation):  # TOTES BROKEN
     previous = []
 
     for seq in sequences:
@@ -214,4 +222,5 @@ def curate_sequences(word, sequences, variation):
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    peruse_gutenberg()
+    # peruse_gutenberg()
+    pass
