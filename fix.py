@@ -5,9 +5,15 @@ import re
 from finnsyll import db, Poem, replace_umlauts, Sequence
 from gutenberg import u_y_final_diphthongs
 
+# This file is set aside for fixing the many bugs that plague the poetry
+# interface. Fu#$@&%*!
 
-# NOTES -----------------------------------------------------------------------
-#   - eliminate cases like pA<strong>Ay</strong>t (pAAyt)
+
+# Eliminate cases like pA<strong>Ay</strong>t (pAAyt) -------------------------
+
+
+# Add Sequence objects for missed sequences -----------------------------------
+
 
 # Add indications of missed sequences to poetry pages -------------------------
 
@@ -58,6 +64,7 @@ def fix_umlaut_bug():
             s.html = replace_umlauts(good, put_back=True)
 
     db.session.commit()
+
 
 # -----------------------------------------------------------------------------
 
