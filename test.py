@@ -17,7 +17,7 @@ class TestPhonotactics(unittest.TestCase):
             ]
 
         for t, e in pairs:
-            self.assertEqual(phon.good_nuclei(t), e)
+            self.assertEqual(phon.check_nuclei(t), e)
 
     def test_good_word_final(self):
         pairs = [
@@ -29,7 +29,7 @@ class TestPhonotactics(unittest.TestCase):
             ]
 
         for t, e in pairs:
-            self.assertEqual(phon.good_coronal(t), e)
+            self.assertEqual(phon.check_word_final(t), e)
 
     def test_is_harmonic(self):
         pairs = [
@@ -63,7 +63,7 @@ class TestPhonotactics(unittest.TestCase):
             ]
 
         for t, e in pairs:
-            self.assertEqual(phon.good_sonseq(t), e)
+            self.assertEqual(phon.check_sonseq(t), e)
 
 
 class TestStrictDiphthongSearch(unittest.TestCase):

@@ -1,5 +1,7 @@
 # coding=utf-8
 
+import re
+
 # Finnish phones --------------------------------------------------------------
 
 # Finnish vowels
@@ -24,6 +26,37 @@ CONSONANTS = [
 CLUSTERS = [
     u'bl', u'br', u'dr', u'fl', u'fr', u'gl', u'gr', u'kl', u'kr', u'kv',
     u'pl', u'pr', u'cl', u'qv', u'schm']
+
+
+# Phonemic functions ----------------------------------------------------------
+
+def is_vowel(ch):
+    return ch in VOWELS
+
+
+def is_consonant(ch):
+    # return ch in CONSONANTS
+    return not is_vowel(ch)  # includes 'w' and other foreign characters
+
+
+def is_coronal(ch):
+    return ch in [u's', u'z', u'd', u't', u'r', u'n', u'l']
+
+
+def is_sonorant(ch):
+    return ch in [u'm', u'n', u'l', u'r']
+
+
+def is_cluster(ch):
+    return ch in CLUSTERS
+
+
+def is_diphthong(chars):
+    return chars in DIPHTHONGS
+
+
+def is_long(chars):
+    return chars == chars[0] * len(chars)
 
 
 # Vowel harmony ---------------------------------------------------------------
@@ -57,55 +90,79 @@ DEPTH = {
     }
 
 
-def is_harmonic(*chars):
+def is_harmonic(chars):
+    # check if the vowels agree in front/back harmony
     vowels = filter(is_vowel, [ch for ch in chars])
     vowels = filter(lambda x: not is_neutral(x), vowels)
     depths = map(lambda x: DEPTH[x], vowels)
 
-    return len(set(depths)) == 1
+    return len(set(depths)) < 2
 
 
-# def is_harmonic(ch1, ch2):
-#     if is_neutral(ch1) or is_neutral(ch2):
-#         return True
+# Phonotactic functions -------------------------------------------------------
 
-#     return DEPTH[ch1] == DEPTH[ch2]
+sonorities = {
+    # sibilant /s/
+    u's': 0,
+
+    # obstruents
+    u'p': 1,
+    u'b': 1,
+    u't': 1,
+    u'd': 1,
+    u'c': 1,  # TODO
+    u'q': 1,  # TODO
+    u'x': 1,  # TODO
+    u'k': 1,
+    u'g': 1,
+    u"'": 1,
+    u'f': 1,
+    u'v': 1,
+    u'z': 1,
+    u'h': 1,
+
+    # approximants
+    u'l': 2,
+    u'r': 2,
+    u'j': 2,
+    u'w': 2,  # TODO
+
+    # nasals
+    u'm': 3,
+    u'n': 3,
+    }
 
 
-# Phonemic functions ----------------------------------------------------------
-
-def is_vowel(ch):
-    return ch in VOWELS
-
-
-def is_consonant(ch):
-    # return ch in CONSONANTS
-    return not is_vowel(ch)  # includes 'w'
+def check_nuclei(word):
+    # check if the nucleus is composed of more than one vowel
+    return len(filter(is_vowel, word)) > 1
 
 
-def is_coronal(ch):
-    return ch in [u's', u'z', u'd', u't', u'r', u'n', u'l']
+def check_word_final(word):
+    # check if the word ends in a vowel or coronal consonant
+    return is_vowel(word[-1]) or is_coronal(word[-1])
 
 
-def is_sonorant(ch):
-    return ch in [u'm', u'n', u'l', u'r']
+def check_sonseq(word):
+    # check if the word has good sonority peaks
 
+    def is_sloping(seq, rising=True):
+        slope = [sonorities.get(s, 0) for s in seq]
 
-def is_cluster(ch):
-    return ch in CLUSTERS
+        return slope == sorted(list(set(slope)), reverse=not rising)
 
+    parts = re.split(r'([ieAyOauo]+)', word)
+    onset, coda = parts[0], parts[-1]
 
-def is_diphthong(chars):
-    return chars in DIPHTHONGS
+    if not onset or len(onset) == 1 or is_cluster(onset) or is_sloping(onset):
+        return not coda or len(coda) == 1 or is_sloping(coda, rising=False)
 
-
-def is_long(chars):
-    return chars == chars[0] * len(chars)
+    return False
 
 
 # Normalization functions -----------------------------------------------------
 
-def replace_umlauts(word, put_back=False):  # TODO: use translate()
+def replace_umlauts(word, put_back=False):  # use translate()
     '''If put_back is True, put in umlauts; else, take them out!'''
     if put_back:
         word = word.replace(u'A', u'ä').replace(u'A', u'\xc3\xa4')
@@ -118,7 +175,7 @@ def replace_umlauts(word, put_back=False):  # TODO: use translate()
     return word
 
 
-# Phonotactic functions -------------------------------------------------------
+# Syllable functions ----------------------------------------------------------
 
 def split_syllable(syllable):
     '''Split syllable into a tuple of its parts: onset, nucleus, and coda.'''
