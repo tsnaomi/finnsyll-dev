@@ -1,7 +1,6 @@
 # coding=utf-8
 
 # A LOT OF COUNTING AND DIVIDING.
-# CHECKOUT: KenLM, Google Ngram Viewer
 
 import math
 import morfessor
@@ -10,10 +9,10 @@ import re
 from itertools import izip_longest as izip, product
 from os import sys, path
 from phonology import (
-    check_nuclei as nuclei,
-    check_sonseq as sonseq,
-    check_word_final as word_final,
-    is_harmonic as harmonic,
+    check_nuclei as _nuclei,
+    check_sonseq as _sonseq,
+    check_word_final as _word_final,
+    is_harmonic as _harmonic,
     replace_umlauts,
     )
 
@@ -23,6 +22,7 @@ import finnsyll as finn
 
 TRAINING = finn.training_set()
 VALIDATION = finn.dev_set()
+TEST = finn.test_set()
 
 
 # Morfessor: "In morphological segmentation, compounds are word forms,
@@ -46,9 +46,9 @@ class DilettanteSplitter(object):
         self.filename = prefix + filename
 
         # ngram containers
-        self.unigrams = {}  # UNK?
-        self.bigrams = {}   # UNK?
-        self.trigrams = {}  # UNK?
+        self.unigrams = {'<UNK>': 0, }
+        self.bigrams = {}
+        self.trigrams = {}
         self.total = 0
 
         # evaluation measure to maximize
@@ -57,7 +57,7 @@ class DilettanteSplitter(object):
         # coefficients
         self.a = a  # ngram
         self.b = b  # nuclei
-        self.c = d  # coronal
+        self.c = d  # word-final
         self.d = d  # harmonic
         self.e = e  # sonseq
         self.f = f  # breaks
@@ -78,7 +78,7 @@ class DilettanteSplitter(object):
         self._train_ngrams()
 
         if self.train_coefficients:
-            self._train_coefficients()
+            self._brute_train_coefficients()
 
     def _train_morfessor(self):
         io = morfessor.MorfessorIO()
@@ -116,12 +116,15 @@ class DilettanteSplitter(object):
     def _train_ngrams(self):
         print 'Training ngrams...'
 
+        # the set of unique morphemes in the training set
+        forms = set()
+
         for t in self.training_tokens:
             stems = re.split(r'=|-| ', t.gold_base)
-            morphemes = map(
+            morphemes = filter(None, map(
                 lambda m: m.replace(' ', '').replace('-', ''),
                 self.model.viterbi_segment(t.orth.lower())[0],
-                )
+                ))
 
             # create word of form [#, morpheme1, X, morpheme2, #]
             word = []
@@ -141,86 +144,27 @@ class DilettanteSplitter(object):
 
             word.append('#')
 
+            # model out of vocabulary (OOV) words with <UNK>
+            WORD = [m if m in forms else '<UNK>' for m in word]
+            forms.update(word)
+
             # get unigram, bigram, and trigram counts
-            for i, morpheme in enumerate(word):
+            for i, morpheme in enumerate(WORD):
                 self.unigrams.setdefault(morpheme, 0)
                 self.unigrams[morpheme] += 1
                 self.total += 1
 
                 if i > 0:
-                    bigram = word[i-1] + morpheme
+                    bigram = WORD[i-1] + morpheme
                     self.bigrams.setdefault(bigram, 0)
                     self.bigrams[bigram] += 1
 
                 if i > 1:
-                    trigram = word[i-2] + bigram
+                    trigram = WORD[i-2] + bigram
                     self.trigrams.setdefault(trigram, 0)
                     self.trigrams[trigram] += 1
 
-    def _train_ngrams_old(self):  # out of commission
-        print 'Training ngrams...'
-
-        self.unigrams['X'] = 1
-        self.unigrams['#'] = 1
-
-        for t in self.training_tokens:
-            stems = re.split(r'=|-| ', t.gold_base)
-            morphemes = map(
-                lambda m: m.replace(' ', '').replace('-', ''),
-                self.model.viterbi_segment(t.orth.lower())[0],
-                )
-
-            if stems == morphemes:
-
-                for morpheme in morphemes:
-                    self.unigrams.setdefault(morpheme, 0)
-                    self.unigrams[morpheme] += 1
-                    self.total += 1
-
-                    bigram = '#' + morpheme
-                    self.bigrams.setdefault(bigram, 0)
-                    self.bigrams[bigram] += 1
-
-                    bigram = morpheme + '#'
-                    self.bigrams.setdefault(bigram, 0)
-                    self.bigrams[bigram] += 1
-
-                    trigram = '#' + morpheme + '#'
-                    self.trigrams.setdefault(trigram, 0)
-                    self.trigrams[trigram] += 1
-
-            else:
-                index = -1
-                indices = [-1, ]
-
-                for stem in stems:
-                    index += len(stem)
-                    indices.append(index)
-
-                index = -1
-
-                for morpheme in morphemes:
-                    L = '#' if index in indices else 'X'
-                    index += len(morpheme)
-                    R = '#' if index in indices else 'X'
-
-                    self.unigrams.setdefault(morpheme, 0)
-                    self.unigrams[morpheme] += 1
-                    self.total += 1
-
-                    bigram = L + morpheme
-                    self.bigrams.setdefault(bigram, 0)
-                    self.bigrams[bigram] += 1
-
-                    bigram = morpheme + R
-                    self.bigrams.setdefault(bigram, 0)
-                    self.bigrams[bigram] += 1
-
-                    trigram = L + morpheme + R
-                    self.trigrams.setdefault(trigram, 0)
-                    self.trigrams[trigram] += 1
-
-    def _train_coefficients(self):
+    def _brute_train_coefficients(self):
         filename = '%s-%s-coefficients.txt' % (self.filename, self.maximize)
 
         # load coefficients, or train coefficients if they are non-existent
@@ -271,15 +215,124 @@ class DilettanteSplitter(object):
             with open(filename, 'w') as f:
                 f.write('%s\n%s\n%s\n%s\n%s' % coefficients)
 
+    def score(self, candidate):
+        # return the candidate's language model score
+        score, candidate = self._stupid_backoff_score(candidate)
+
+        # convert candidate from list to string
+        del candidate[0]
+        del candidate[-1]
+        candidate = ''.join(candidate).replace('#', '=').replace('X', '')
+
+        # note that, if self.a is equal to 1, then the candidate's score is
+        # equal to the score returned by self._score_ngrams()
+        if self.a < 1:
+
+            # convert score from negative to positive
+            score = 100.0 - (score * -1.0)
+            score /= 100.0
+
+            # get segmentation as list: e.g., 'book=worm' > ['book', 'worm']
+            segments = replace_umlauts(candidate).split('=')
+
+            # score phonotactic features
+            nuclei = 1 if all(_nuclei(seg) for seg in segments) else 0
+            word_final = 1 if all(_word_final(seg) for seg in segments) else 0
+            harmonic = 1 if all(_harmonic(seg) for seg in segments) else 0
+            sonseq = 1 if all(_sonseq(seg) for seg in segments) else 0
+            breaks = 1.0 / len(segments)
+
+            # calculate composite score
+            score *= self.a
+            score += nuclei * self.b
+            score += word_final * self.c
+            score += harmonic * self.d
+            score += sonseq * self.e
+            score += breaks * self.f
+
+        return score, candidate
+
+    def _stupid_backoff_score(self, candidate):
+        score = 0
+
+        for i, morpheme in enumerate(candidate):
+            C = morpheme if morpheme in self.unigrams.keys() else '<UNK>'
+
+            if i > 0:
+                B = candidate[i-1]
+
+                if i > 1:
+                    A = candidate[i-2]
+                    ABC = A + B + C
+                    ABC_count = self.trigrams.get(ABC, 0)
+
+                    if ABC_count:
+                        AB = A + B
+                        AB_count = self.bigrams[AB]
+                        score += math.log(ABC_count)
+                        score -= math.log(AB_count)
+                        continue
+
+                BC = B + C
+                BC_count = self.bigrams.get(BC, 0)
+
+                if BC_count:
+                    B_count = self.unigrams[B]
+                    score += math.log(BC_count * 0.4)
+                    score -= math.log(B_count)
+                    continue
+
+                C_count = self.unigrams.get(C, 0)
+                score += math.log(C_count * 0.4)
+                score -= math.log(self.total + len(self.unigrams))
+
+        return score, candidate
+
+    def segment(self, word):
+        token = []
+
+        # split the word along any overt delimiters and iterate across the
+        # components
+        for comp in re.split(r'(-| )', word):
+
+            if len(comp) > 1:
+
+                # use the language model to obtain the component's morphemes
+                morphemes = map(
+                    lambda m: m.replace(' ', '').replace('-', ''),
+                    self.model.viterbi_segment(comp.lower())[0],
+                    )
+
+                scored_candidates = []
+                delimiter_sets = product(['#', 'X'], repeat=len(morphemes) - 1)
+
+                # produce and score each candidate segmentation
+                for d in delimiter_sets:
+                    candidate = [x for y in izip(morphemes, d) for x in y]
+                    candidate = ['#', ] + filter(None, candidate) + ['#', ]
+                    scored_candidates.append(self.score(candidate))
+
+                # select the best-scoring segmentation
+                morphemes = max(scored_candidates)[1]
+                token.append(morphemes)
+
+            else:
+                token.append(comp)
+
+        # return the segmentation in string form
+        return ''.join(token)
+
     def evaluate(self, Eval=True):
         if Eval:
             print 'Evaluating...'
 
-        # true positives, false positives, true negatives, false negatives, and
-        # accurately identifies compounds with 'bad' segmentations
+        # results include true positives, false positives, true negatives,
+        # false negatives, and accurately identified compounds with 'bad'
+        # segmentations
         results = {'TP': [], 'FP': [], 'TN': [], 'FN': [], 'bad': []}
 
         # set validation or training tokens
+        # TODO: Always train coefficients on held-out set?
         tokens = self.validation_tokens if Eval else self.training_tokens
 
         # evaluate tokens
@@ -308,24 +361,26 @@ class DilettanteSplitter(object):
             else:
                 results['FN'].append((word, t.gold_base))
 
-        TP = len(results['TP'])    # 372
-        FP = len(results['FP'])    # 173
-        TN = len(results['TN'])    # 1523
-        FN = len(results['FN'])    # 5
-        bad = len(results['bad'])  # 27
+        TP = len(results['TP'])
+        FP = len(results['FP'])
+        TN = len(results['TN'])
+        FN = len(results['FN'])
+        bad = len(results['bad'])
 
         # calculate precision, recall, and F1
-        P = (TP * 1.0) / (TP + FP + bad)  # 0.6514
-        R = (TP * 1.0) / (TP + FN)        # 0.9867
-        F1 = (2.0 * P * R) / (P + R)      # 0.7848
-        F05 = ((0.5**2 + 1.0) * P * R) / ((0.5**2 * P) + R)  # 0.6989
+        P = (TP * 1.0) / (TP + FP + bad)
+        R = (TP * 1.0) / (TP + FN)
+        F1 = (2.0 * P * R) / (P + R)
+        F05 = ((0.5**2 + 1.0) * P * R) / ((0.5**2 * P) + R)
 
-        # TODO: perplexity measure
+        # TODO: calculate perplexity ("the perplexity of this model on this
+        # test set")
 
         if not Eval:
             return P, R, F1, F05
 
-        # generate evaluation report
+        # TODO: add weights
+        # generate an evaluation report
         self.report = (
             '\n'
             '---- Evaluation: DilettanteSplitter -----------------------------'
@@ -359,129 +414,10 @@ class DilettanteSplitter(object):
 
         print self.report
 
-    def segment(self, word, inform_base=False):
-        if inform_base:
-            word = replace_umlauts(word, put_back=False)
-
-        token = []
-
-        for comp in re.split(r'(-| )', word):
-
-            if len(comp) > 1:
-                morphemes = map(
-                    lambda m: m.replace(' ', '').replace('-', ''),
-                    self.model.viterbi_segment(comp.lower())[0],
-                    )
-                token.append(self._segment(morphemes))
-                continue
-
-            token.append(comp)
-
-        token = ''.join(token)
-
-        if inform_base:
-            token = replace_umlauts(token)
-
-        return token
-
-    def _segment(self, morphemes):
-        scored_candidates = []
-        delimiter_sets = product(['#', 'X'], repeat=len(morphemes) - 1)
-
-        for delimiters in delimiter_sets:
-            candidate = [x for y in izip(morphemes, delimiters) for x in y]
-            candidate = ['#', ] + filter(None, candidate) + ['#', ]
-            scored_candidates.append(self.score(candidate))
-
-        morphemes = max(scored_candidates)[1]
-
-        return morphemes
-
-    def score(self, candidate):
-        score, candidate = self._score_ngrams(candidate)
-        score, candidate = self._score_phonotactics(score, candidate)
-
-        return score, candidate
-
-    def _score_ngrams(self, candidate):
-        score = 0
-
-        for i, morpheme in enumerate(candidate):
-            C = morpheme
-
-            if i > 0:
-                B = candidate[i-1]
-
-                if i > 1:
-                    A = candidate[i-2]
-                    ABC = A + B + C
-                    ABC_count = self.trigrams.get(ABC, 0)
-
-                    if ABC_count:
-                        AB = A + B
-                        AB_count = self.bigrams[AB]
-                        score += math.log(ABC_count)
-                        score -= math.log(AB_count)
-                        continue
-
-                BC = B + C
-                BC_count = self.bigrams.get(BC, 0)
-
-                if BC_count:
-                    B_count = self.unigrams[B]
-                    score += math.log(BC_count * 0.4)
-                    score -= math.log(B_count)
-                    continue
-
-            C_count = self.unigrams.get(C, 0) + 1
-            score += math.log(C_count * 0.4)
-            score -= math.log(self.total + len(self.unigrams))  # UNK?
-
-        # convert score from negative to positive
-        score = 100.0 - (score * -1.0)
-        score /= 100.0
-
-        # convert candidate from list to string
-        del candidate[0]
-        del candidate[-1]
-        candidate = ''.join(candidate).replace('#', '=').replace('X', '')
-
-        return score, candidate
-
-    def _score_phonotactics(self, score, candidate):
-        if self.a < 1:
-
-            # get suggested segmentations as list
-            segments = replace_umlauts(candidate).split('=')
-
-            if len(segments) > 1:
-
-                # score phonotactic features
-                nuclei = 1 if all(nuclei(seg) for seg in segments) else 0
-                coronal = 1 if all(word_final(seg) for seg in segments) else 0
-                harmonic = 1 if all(harmonic(seg) for seg in segments) else 0
-                sonseq = 1 if all(sonseq(seg) for seg in segments) else 0
-                breaks = 1.0 / len(segments)
-
-                score *= self.a
-                score += nuclei * self.b
-                score += coronal * self.c
-                score += harmonic * self.d
-                score += sonseq * self.e
-                score += breaks * self.f
-
-        return score, candidate
-
-
-def delimit(word):
-    '''Insert syllable breaks at non-delimited compound boundaries.'''
-    return word
-
-
 if __name__ == '__main__':
     # DilettanteSplitter(maximize='P')
     # DilettanteSplitter(maximize='R')
     # DilettanteSplitter(maximize='F1')
     # DilettanteSplitter(maximize='F05')
-    # DilettanteSplitter(train_coefficients=False)
-    DilettanteSplitter(a=0.8, b=0.1, c=0.0, d=0.0, e=0.0, f=0.1)
+    DilettanteSplitter(train_coefficients=False)
+    # DilettanteSplitter(a=0.8, b=0.08, c=0.01, d=0.01, e=0.08, f=0.02)
