@@ -8,6 +8,7 @@ try:
 except ImportError:
     import pickle
 
+import csv
 import math
 import morfessor
 import re
@@ -309,10 +310,7 @@ class FinnSeg(object):
             if len(comp) > 1:
 
                 # use the language model to obtain the component's morphemes
-                morphemes = map(
-                    lambda m: m.replace(' ', '').replace('-', ''),
-                    self.model.viterbi_segment(comp.lower())[0],
-                    )
+                morphemes = self.model.viterbi_segment(comp.lower())[0]
 
                 scored_candidates = []
                 delimiter_sets = product(['#', 'X'], repeat=len(morphemes) - 1)
@@ -552,12 +550,124 @@ class FinnSeg(object):
 
         print self.report
 
+
+class MaxEntInput(object):
+
+    def __init__(self):
+        self.FinnSeg = FinnSeg(train_coefficients=False, Eval=False)
+        self.create_maxent_input()
+        self.tableaux = None
+
+    def create_maxent_input(self):
+        try:
+            open('data/MaxEntInput.csv', 'rb')  # TODO
+
+        except IOError:
+            print 'Generating tableaux...'
+
+            tableaux = [
+                ['', '', '', 'Nuclei', 'Word-final', 'Harmonic', 'SonSeq', 'Boundaries'],  # noqa
+                ['', '', '', 'C1',     'C2',         'C3',       'C4',     'C5'],  # noqa
+                ]
+
+            for t in self.FinnSeg.training_tokens:
+                Input = t.orth.lower()
+                candidates = self._get_candidates(Input)
+
+                try:
+                    candidates.remove(t.gold_base)
+
+                except ValueError:
+                    pass
+
+                outputs = [t.gold_base, ] + candidates
+
+                # if there are no losing candidates, exclude the token from the
+                # tableaux
+                if len(outputs) == 1:
+                    continue
+
+                violations = self._get_constraint_violations(outputs)
+
+                # append the winner to the tableaux
+                winner = [Input.encode('utf-8'), outputs[0], 1] + violations[0]
+                tableaux.append(winner)
+
+                # append the losers to the tableaux
+                for o, v in zip(outputs, violations)[1:]:
+                    tableaux.append(['', o, 0] + v)
+
+            # write tableaux to a csv file
+            with open('data/MaxEntInput.csv', 'wb') as f:
+                writer = csv.writer(f)
+                writer.writerows(tableaux)
+
+            self.tableaux = tableaux
+
+    def _get_candidates(self, word):
+        candidates = []
+
+        # split the word along any overt delimiters and iterate across the
+        # components
+        for comp in re.split(r'(-| )', word):
+
+            if len(comp) > 1:
+
+                # use the language model to obtain the component's morphemes
+                morphemes = self.FinnSeg.model.viterbi_segment(comp)[0]
+
+                comp_candidates = []
+                delimiter_sets = product(['#', 'X'], repeat=len(morphemes) - 1)
+
+                # produce and score each candidate segmentation
+                for d in delimiter_sets:
+                    candidate = [x for y in izip(morphemes, d) for x in y]
+                    candidate = ['#', ] + filter(None, candidate) + ['#', ]
+                    comp_candidates.append(self.FinnSeg.score(candidate)[1])
+
+                candidates.append(comp_candidates)
+
+            else:
+                candidates.append(comp)
+
+        # convert candidates into string form
+        candidates = [''.join(c) for c in product(*candidates)]
+
+        # convert candidates into gold_base form
+        for i, c in enumerate(candidates):
+            cand = c.replace('#', '=').replace('X', '')
+            cand = replace_umlauts(cand)
+            candidates[i] = cand
+
+        return candidates
+
+    def _get_constraint_violations(self, outputs):
+        # constraints: b  c  d  e  f
+        violations = [[0, 0, 0, 0, 0] for i in xrange(len(outputs))]
+
+        for i, output in enumerate(outputs):
+
+            for seg in re.split(r'=|-| ', output):
+
+                if '=' in seg or '-' in seg or ' ' in seg:
+                    raise ValueError('Abort!')
+
+                violations[i][0] += 0 if _nuclei(seg) else 1
+                violations[i][1] += 0 if _word_final(seg) else 1
+                violations[i][2] += 0 if _harmonic(seg) else 1
+                violations[i][3] += 0 if _sonseq(seg) else 1
+
+            violations[i][4] += output.count('=')  # asserted boundaries
+            violations[i] = map(lambda n: '' if n == 0 else n, violations[i])
+
+        return violations
+
+# -----------------------------------------------------------------------------
+
 if __name__ == '__main__':
-    # FinnSeg(maximize='P')
-    # FinnSeg(maximize='R')
-    # FinnSeg(maximize='F1')
-    # FinnSeg(maximize='F05')
-    FinnSeg(train_coefficients=False)
+    MaxEntInput()
+
+    # FinnSeg(train_coefficients=False)
     # FinnSeg(a=0.70, b=0.18, c=0.01, d=0.01, e=0.08, f=0.02)
     # FinnSeg(train_coefficients=False, absolute=True)
 

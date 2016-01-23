@@ -140,7 +140,12 @@ def check_nuclei(word):
 
 def check_word_final(word):
     # check if the word ends in a vowel or coronal consonant
-    return is_vowel(word[-1]) or is_coronal(word[-1])
+    try:
+        return is_vowel(word[-1]) or is_coronal(word[-1])
+
+    # this error catches if the word is of length 1
+    except IndexError:
+        return is_vowel(word) or is_coronal(word)
 
 
 def check_sonseq(word):
@@ -150,6 +155,10 @@ def check_sonseq(word):
         slope = [sonorities.get(s, 0) for s in seq]
 
         return slope == sorted(list(set(slope)), reverse=not rising)
+
+    # a single consonant does not a sonority peak make
+    if len(word) == 1 and is_consonant(word):
+        return False
 
     parts = re.split(r'([ieAyOauo]+)', word)
     onset, coda = parts[0], parts[-1]
