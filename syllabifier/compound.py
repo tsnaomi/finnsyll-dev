@@ -2,10 +2,17 @@
 
 # A LOT OF COUNTING AND DIVIDING.
 
+try:
+    import cpickle as pickle
+
+except ImportError:
+    import pickle
+
 import math
 import morfessor
 import re
 
+from collections import Counter
 from itertools import izip_longest as izip, product
 from os import sys, path
 from phonology import (
@@ -29,12 +36,16 @@ TEST = finn.test_set()
 # constructions are morphs, and atoms are characters. In chunking, compounds
 # are sentences, constructions are phrases, and atoms are words."
 
-class DilettanteSplitter(object):
+class FinnSeg(object):
 
-    def __init__(self, training=TRAINING, validation=VALIDATION,
-                 filename='data/morfessor-training', test=False,
-                 maximize='P', Eval=True, train_coefficients=True,
-                 a=1.0, b=0.0, c=0.0, d=0.0, e=0.0, f=0.0):
+    def __init__(self, training=TRAINING, validation=VALIDATION, Eval=True,
+                 filename='data/morfessor', train_coefficients=True,
+                 absolute=False, a=1.0, b=0.0, c=0.0, d=0.0, e=0.0, f=0.0):
+
+        # if coefficients do not sum to 1, throw an error
+        if round(sum([a, b, c, d, e, f]), 4) != 1:
+            raise ValueError('Coefficients need to sum to 1.')
+
         self.training_tokens = training
         self.validation_tokens = validation
 
@@ -45,14 +56,10 @@ class DilettanteSplitter(object):
         prefix = 'syllabifier/' if __name__ != '__main__' else ''  # UH OH
         self.filename = prefix + filename
 
-        # ngram containers
-        self.unigrams = {'<UNK>': 0, }
-        self.bigrams = {}
-        self.trigrams = {}
+        # ngram and open vocabulary containers
+        self.ngrams = {'<UNK>': 0, }
+        self.vocab = set('<UNK>', )
         self.total = 0
-
-        # evaluation measure to maximize
-        self.maximize = {'P': 0, 'R': 1, 'F1': 2, 'F05': 3}[maximize]
 
         # coefficients
         self.a = a  # ngram
@@ -69,6 +76,16 @@ class DilettanteSplitter(object):
         self.train_coefficients = False if a < 1.0 else train_coefficients
         self.train()
 
+        # if failing the nuclei and sonority sequencing tests is automatic
+        # disqualification, give the ngram weight the weights assigned to the
+        # nuclei and sonority sequencing tests
+        self.absolute = absolute
+
+        if self.absolute:
+            self.a += self.b + self.e
+            self.b = 0
+            self.e = 0
+
         # evaluate segmenter
         if Eval:
             self.evaluate()
@@ -78,20 +95,21 @@ class DilettanteSplitter(object):
         self._train_ngrams()
 
         if self.train_coefficients:
-            self._brute_train_coefficients()
+            pass
 
     def _train_morfessor(self):
         io = morfessor.MorfessorIO()
+        filename = self.filename + '-training'
 
         # load model, or train and save model if it is nonexistent
         try:
-            self.model = io.read_binary_model_file(self.filename + '.bin')
+            self.model = io.read_binary_model_file(filename + '.bin')
 
         except IOError:
 
             # load training data, or create training data if it is nonexistent
             try:
-                train_data = list(io.read_corpus_file(self.filename + '.txt'))
+                train_data = list(io.read_corpus_file(filename + '.txt'))
 
             except IOError:
                 print 'Creating training data...'
@@ -104,116 +122,83 @@ class DilettanteSplitter(object):
                 with open(self.filename + '.txt', 'w') as f:
                     f.write(tokens)
 
-                train_data = list(io.read_corpus_file(self.filename + '.txt'))
+                train_data = list(io.read_corpus_file(filename + '.txt'))
 
             print 'Training Morfessor model...'
 
             self.model = morfessor.BaselineModel()
             self.model.load_data(train_data)
             self.model.train_batch()
-            io.write_binary_model_file(self.filename + '.bin', self.model)
+            io.write_binary_model_file(filename + '.bin', self.model)
 
     def _train_ngrams(self):
-        print 'Training ngrams...'
+        filename = self.filename + '-ngrams-UNK'
 
-        # the set of unique morphemes in the training set
-        forms = set()
-
-        for t in self.training_tokens:
-            stems = re.split(r'=|-| ', t.gold_base)
-            morphemes = filter(None, map(
-                lambda m: m.replace(' ', '').replace('-', ''),
-                self.model.viterbi_segment(t.orth.lower())[0],
-                ))
-
-            # create word of form [#, morpheme1, X, morpheme2, #]
-            word = []
-            index = -1
-            indices = [-1, ]
-
-            for stem in stems:
-                index += len(stem)
-                indices.append(index)
-
-            index = -1
-
-            for morpheme in morphemes:
-                word.append('#' if index in indices else 'X')
-                word.append(morpheme)
-                index += len(morpheme)
-
-            word.append('#')
-
-            # model out of vocabulary (OOV) words with <UNK>
-            WORD = [m if m in forms else '<UNK>' for m in word]
-            forms.update(word)
-
-            # get unigram, bigram, and trigram counts
-            for i, morpheme in enumerate(WORD):
-                self.unigrams.setdefault(morpheme, 0)
-                self.unigrams[morpheme] += 1
-                self.total += 1
-
-                if i > 0:
-                    bigram = WORD[i-1] + morpheme
-                    self.bigrams.setdefault(bigram, 0)
-                    self.bigrams[bigram] += 1
-
-                if i > 1:
-                    trigram = WORD[i-2] + bigram
-                    self.trigrams.setdefault(trigram, 0)
-                    self.trigrams[trigram] += 1
-
-    def _brute_train_coefficients(self):
-        filename = '%s-%s-coefficients.txt' % (self.filename, self.maximize)
-
-        # load coefficients, or train coefficients if they are non-existent
+        # load ngrams, or train and save ngrams if they are nonexistent
         try:
-            with open(filename, 'r') as f:
-                coefficients = [float(i) for i in f.read().split()]
-                self.a, self.b, self.d, self.g, self.p, self.k = coefficients
+            self.ngrams, self.vocab, self.total = \
+                pickle.load(open(filename + '.pickle'))
 
         except IOError:
-            # generate all possible sets of coefficients
-            coefficients = [float(i) / 100 for i in range(0, 101, 5)]
-            coefficients = product(coefficients, repeat=6)
-            coefficients = filter(lambda x: sum(x) == 1.0, coefficients)
+            print 'Training ngrams...'
 
-            # further filter coefficients so that ngram scores cannot receive a
-            # weight less than 0
-            coefficients = filter(lambda x: x[0] > 0, coefficients)
+            for t in self.training_tokens:
+                stems = re.split(r'=|-| ', t.gold_base)
+                morphemes = filter(None, map(
+                    lambda m: m.replace(' ', '').replace('-', ''),
+                    self.model.viterbi_segment(t.orth.lower())[0],
+                    ))
 
-            # number of sets of coefficients
-            count = len(coefficients)
+                # create word of form [#, morpheme1, X, morpheme2, #]
+                word = []
+                index = -1
+                indices = [-1, ]
 
-            scored_coefficients = []
+                for stem in stems:
+                    index += len(stem)
+                    indices.append(index)
 
-            # evaluate segmenter performance with each set of coefficients
-            for i, co in enumerate(coefficients):
+                index = -1
 
-                # write progress to terminal
-                message = 'Training coefficients... %s / %s               \r'
-                sys.stdout.write(message % (i, count))
-                sys.stdout.flush()
+                for morpheme in morphemes:
+                    word.append('#' if index in indices else 'X')
+                    word.append(morpheme)
+                    index += len(morpheme)
 
-                self.a, self.b, self.d, self.g, self.p, self.k = co
-                score = self.evaluate(Eval=False)[self.maximize]
-                scored_coefficients.append((score, co))
+                word.append('#')
 
-            # write final progress to terminal (e.g., 604/604)
-            print 'Training coefficients... %s / %s' % (count, count)
+                # model out of vocabulary (OOV) words with <UNK>
+                # (this is done by replacing every first instance of
+                # a morpheme with <UNK>)
+                WORD = [m if m in self.vocab else '<UNK>' for m in word]
+                self.vocab.update(word)
 
-            # set coefficients that maximizes the f1 score of the training data
-            coefficients = max(scored_coefficients)[1]
-            self.a, self.b, self.d, self.g, self.p, self.k = coefficients
+                # get unigram, bigram, and trigram counts
+                for i, morpheme in enumerate(WORD):
+                    self.ngrams.setdefault(morpheme, 0)
+                    self.ngrams[morpheme] += 1
+                    self.total += 1
 
-            print (
-                '\na=%s\tngram\nb=%s\tnuclei\nd=%s\tcoronal\ng=%s\tharmonic'
-                '\np=%s\tsonseq\n'
-                ) % tuple([format(c, '.2f') for c in coefficients])
+                    if i > 0:
+                        bigram = WORD[i-1] + ' ' + morpheme
+                        self.ngrams.setdefault(bigram, 0)
+                        self.ngrams[bigram] += 1
 
-            with open(filename, 'w') as f:
-                f.write('%s\n%s\n%s\n%s\n%s' % coefficients)
+                    if i > 1:
+                        trigram = WORD[i-2] + ' ' + bigram
+                        self.ngrams.setdefault(trigram, 0)
+                        self.ngrams[trigram] += 1
+
+            # remove any morphemes that were only seen once (since these were
+            # were previously converted into <UNK>)
+            self.vocab = filter(lambda w: w in self.ngrams.keys(), self.vocab)
+
+            # pickle ngrams to file
+            pickle.dump(
+                [self.ngrams, self.vocab, self.total],
+                open(filename + '.pickle', 'wb'),
+                protocol=pickle.HIGHEST_PROTOCOL,
+                )
 
     def score(self, candidate):
         # return the candidate's language model score
@@ -226,7 +211,7 @@ class DilettanteSplitter(object):
 
         # note that, if self.a is equal to 1, then the candidate's score is
         # equal to the score returned by self._score_ngrams()
-        if self.a < 1:
+        if self.a < 1 or self.absolute:
 
             # convert score from negative to positive
             score = 100.0 - (score * -1.0)
@@ -242,6 +227,11 @@ class DilettanteSplitter(object):
             sonseq = 1 if all(_sonseq(seg) for seg in segments) else 0
             breaks = 1.0 / len(segments)
 
+            # automatically disqualify candidates that fail nuclei and
+            # sonority sequencing tests, if absolute is specified
+            if self.absolute and (not nuclei or not sonseq):
+                return 0, candidate
+
             # calculate composite score
             score *= self.a
             score += nuclei * self.b
@@ -256,37 +246,58 @@ class DilettanteSplitter(object):
         score = 0
 
         for i, morpheme in enumerate(candidate):
-            C = morpheme if morpheme in self.unigrams.keys() else '<UNK>'
+            C = morpheme if morpheme in self.vocab else '<UNK>'
 
             if i > 0:
                 B = candidate[i-1]
 
                 if i > 1:
                     A = candidate[i-2]
-                    ABC = A + B + C
-                    ABC_count = self.trigrams.get(ABC, 0)
+                    ABC = A + ' ' + B + ' ' + C
+                    ABC_count = self.ngrams.get(ABC, 0)
 
                     if ABC_count:
-                        AB = A + B
-                        AB_count = self.bigrams[AB]
+                        AB = A + ' ' + B
+                        AB_count = self.ngrams[AB]
                         score += math.log(ABC_count)
                         score -= math.log(AB_count)
                         continue
 
-                BC = B + C
-                BC_count = self.bigrams.get(BC, 0)
+                BC = B + ' ' + C
+                BC_count = self.ngrams.get(BC, 0)
 
                 if BC_count:
-                    B_count = self.unigrams[B]
+                    B_count = self.ngrams[B]
                     score += math.log(BC_count * 0.4)
                     score -= math.log(B_count)
                     continue
 
-                C_count = self.unigrams.get(C, 0)
-                score += math.log(C_count * 0.4)
-                score -= math.log(self.total + len(self.unigrams))
+            C_count = self.ngrams.get(C, 0)
+            score += math.log(C_count * 0.4)
+            score -= math.log(self.total)
 
         return score, candidate
+
+    def _calculate_modified_kneser_ney_discounts(self):
+        ngrams = Counter(self.ngrams.values())
+
+        # N# is the number of ngrams with exactly count #
+        N1 = float(ngrams[1])
+        N2 = float(ngrams[2])
+        N3 = float(ngrams[3])
+        N4 = float(ngrams[4])
+        Y = N1 / (N1 + 2 * N2)
+
+        self.discounts = {  # TODO
+            0: 0,                       # D0
+            1: 1 - 2 * Y * (N2 / N1),   # D1
+            2: 2 - 3 * Y * (N3 / N2),   # D2
+            3: 3 - 4 * Y * (N4 / N3),   # D3
+            }
+
+    def _interpolated_modified_kneser_ney_score(self, candidate):
+        # Coming soon!
+        pass
 
     def segment(self, word):
         token = []
@@ -322,21 +333,157 @@ class DilettanteSplitter(object):
         # return the segmentation in string form
         return ''.join(token)
 
-    def evaluate(self, Eval=True):
-        if Eval:
-            print 'Evaluating...'
+    def get_morphemes(self, word):
+        morphemes = []
+
+        # split the word along any overt delimiters and iterate across the
+        # components
+        for comp in re.split(r'(-| )', word):
+
+            if len(comp) > 1:
+
+                # use the language model to obtain the component's morphemes
+                comp = map(
+                    lambda m: m.replace(' ', '').replace('-', ''),
+                    self.model.viterbi_segment(comp.lower())[0],
+                    )
+                morphemes.extend(comp)
+
+            else:
+                morphemes.append(comp)
+
+        return morphemes
+
+    def trial_evaluate(self):
+
+        # results include true positives, false positives, true negatives,
+        # false negatives, and accurately identified compounds with 'bad'
+        # segmentations
+        results = {'TP': [], 'FP': [], 'TN': [], 'FN': [], 'bad': []}
+        measures = {'p': [], 'r': [], 'f1': [], 'f05': []}
+
+        evaluations = (self._evaluate(t) for t in self.validation_token)
+
+        for label, word, gold, p, r, f1, f05 in evaluations:
+            results[label].append((word, gold))
+            measures['p'].append(p)
+            measures['r'].append(r)
+            measures['f1'].append(f1)
+            measures['f05'].append(f05)
+
+        TP = len(results['TP'])
+        FP = len(results['FP'])
+        TN = len(results['TN'])
+        FN = len(results['FN'])
+        bad = len(results['bad'])
+
+        # calculate precision, recall, and F1 (the original way)
+        P = (TP * 1.0) / (TP + FP + bad)
+        R = (TP * 1.0) / (TP + FN)
+        F1 = (2.0 * P * R) / (P + R)
+        F05 = ((0.5**2 + 1.0) * P * R) / ((0.5**2 * P) + R)
+
+        # calculate precision, recall, F1, and F0.5 by averaging the
+        # boundary-by-boundary measures of each token
+        length = len(measures['p'])
+        p = float(sum(measures['p'])) / length
+        r = float(sum(measures['r'])) / length
+        f1 = float(sum(measures['f1'])) / length
+        f05 = float(sum(measures['f05'])) / length
+
+        # TODO: calculate perplexity
+
+        # generate an evaluation report
+        self.report = (
+            '\n'
+            '---- Evaluation: FinnSeg ----------------------------------------'
+            '\n\nTrue negatives:\n\t%s'
+            '\n\nTrue positives:\n\t%s'
+            '\n\nFalse negatives:\n\t%s'
+            '\n\nFalse positives:\n\t%s'
+            '\n\nBad segmentations:\n\t%s'
+            '\n\nWeights: a=%s, b=%s, c=%s, d=%s, e=%s, f=%s'
+            '\n\t ngram, nuclei, word-final, harmony, sonseq, breaks%s'
+            '\n\nTP:\t%s\nFP:\t%s\nTN:\t%s\nFN:\t%s\nBad:\t%s'
+            '\n\nWord Level:\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s'
+            '\n\nBoundary Level:\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s\n\n'
+            '-----------------------------------------------------------------'
+            '\n'
+            ) % (
+                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TN']]),
+                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TP']]),
+                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FN']]),
+                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FP']]),
+                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['bad']]),
+                self.a, self.b, self.c, self.d, self.e, self.f,
+                '\n\t Absolute nuclei and sonseq.' if self.absolute else '',
+                TP, FP, TN, FN, bad, P, R, F1, F05, p, r, f1, f05,
+                )
+
+        print self.report
+
+    def _evaluate(self, token):
+
+        # calculate precision and recall on a boundary-by-boundary basis
+        def pr(word, token):
+            w = [i for i, j in enumerate(word)]
+            t = [i for i, j in enumerate(token.gold_base)]
+
+            tp = float(len([i for i in w if i in t]))
+            fp = len([i for i in w if i not in t])
+            fn = len([i for i in t if i not in w])
+
+            p = tp / (tp + fp)
+            r = tp / (tp + fn)
+
+            return p, r
+
+        word = self.segment(token.orth)
+
+        if replace_umlauts(word) == token.gold_base:
+
+            # true positive
+            if token.is_complex:
+                label, p, r = 'TP', 1, 1
+
+            # true negative
+            else:
+                label, p, r = 'TN', 1, 1  # ASK ARTO
+
+        elif '=' in word:
+
+            # bad segmentation
+            if token.is_complex:
+                label = 'bad'
+                p, r = pr(word, token)
+
+            # false positive
+            else:
+                label, p, r = 'FP', 0, 0
+
+        else:
+            # false negative
+            label, p, r = 'FN', 0, 0
+
+        try:
+            f1 = (2.0 * p * r) / (p + r)
+            f05 = ((0.5**2 + 1.0) * p * r) / ((0.5**2 * p) + r)
+
+        except ZeroDivisionError:
+            f1 = 0
+            f05 = 0
+
+        return label, word, token.gold_base, p, r, f1, f05
+
+    def evaluate(self):
 
         # results include true positives, false positives, true negatives,
         # false negatives, and accurately identified compounds with 'bad'
         # segmentations
         results = {'TP': [], 'FP': [], 'TN': [], 'FN': [], 'bad': []}
 
-        # set validation or training tokens
-        # TODO: Always train coefficients on held-out set?
-        tokens = self.validation_tokens if Eval else self.training_tokens
-
         # evaluate tokens
-        for t in tokens:
+        for t in self.validation_tokens:
             word = self.segment(t.orth)
 
             if replace_umlauts(word) == t.gold_base:
@@ -367,29 +514,27 @@ class DilettanteSplitter(object):
         FN = len(results['FN'])
         bad = len(results['bad'])
 
+        # TODO: average precision, recall, and F1 compound by compound
+
         # calculate precision, recall, and F1
         P = (TP * 1.0) / (TP + FP + bad)
         R = (TP * 1.0) / (TP + FN)
         F1 = (2.0 * P * R) / (P + R)
         F05 = ((0.5**2 + 1.0) * P * R) / ((0.5**2 * P) + R)
 
-        # TODO: calculate perplexity ("the perplexity of this model on this
-        # test set")
+        # TODO: calculate perplexity
 
-        if not Eval:
-            return P, R, F1, F05
-
-        # TODO: add weights
         # generate an evaluation report
         self.report = (
             '\n'
-            '---- Evaluation: DilettanteSplitter -----------------------------'
+            '---- Evaluation: FinnSeg ----------------------------------------'
             # '\n\nTrue negatives:\n\t%s'
             # '\n\nTrue positives:\n\t%s'
             '\n\nFalse negatives:\n\t%s'
             '\n\nFalse positives:\n\t%s'
             '\n\nBad segmentations:\n\t%s'
-            '\n\nMaximizing: %s (0=P, 1=R, 2=F1, 3=F0.5)'
+            '\n\nWeights: a=%s, b=%s, c=%s, d=%s, e=%s, f=%s'
+            '\n\t ngram, nuclei, word-final, harmony, sonseq, boundaries%s'
             '\n\nTP:\t%s\nFP:\t%s\nTN:\t%s\nFN:\t%s\nBad:\t%s'
             '\n\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s\n\n'
             '-----------------------------------------------------------------'
@@ -400,24 +545,21 @@ class DilettanteSplitter(object):
                 '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FN']]),
                 '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FP']]),
                 '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['bad']]),
-                'N/A' if not self.train_coefficients else self.maximize,
-                TP,
-                FP,
-                TN,
-                FN,
-                bad,
-                P,
-                R,
-                F1,
-                F05,
+                self.a, self.b, self.c, self.d, self.e, self.f,
+                '\n\t Absolute nuclei and sonseq.' if self.absolute else '',
+                TP, FP, TN, FN, bad, P, R, F1, F05,
                 )
 
         print self.report
 
 if __name__ == '__main__':
-    # DilettanteSplitter(maximize='P')
-    # DilettanteSplitter(maximize='R')
-    # DilettanteSplitter(maximize='F1')
-    # DilettanteSplitter(maximize='F05')
-    DilettanteSplitter(train_coefficients=False)
-    # DilettanteSplitter(a=0.8, b=0.08, c=0.01, d=0.01, e=0.08, f=0.02)
+    # FinnSeg(maximize='P')
+    # FinnSeg(maximize='R')
+    # FinnSeg(maximize='F1')
+    # FinnSeg(maximize='F05')
+    FinnSeg(train_coefficients=False)
+    # FinnSeg(a=0.70, b=0.18, c=0.01, d=0.01, e=0.08, f=0.02)
+    # FinnSeg(train_coefficients=False, absolute=True)
+
+    # no false positives!
+    # FinnSeg(a=0.8, c=0.05, d=0.05, f=0.1, absolute=True)
