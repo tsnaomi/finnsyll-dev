@@ -13,7 +13,7 @@ import math
 import morfessor
 import re
 
-from collections import Counter
+from collections import Counter, defaultdict
 from itertools import izip_longest as izip, product
 from os import sys, path
 from phonology import (
@@ -41,7 +41,8 @@ class FinnSeg(object):
 
     def __init__(self, training=TRAINING, validation=VALIDATION, Eval=True,
                  filename='data/morfessor', train_coefficients=True,
-                 absolute=False, a=1.0, b=0.0, c=0.0, d=0.0, e=0.0, f=0.0):
+                 smoothing='stupid', absolute=False,
+                 a=1.0, b=0.0, c=0.0, d=0.0, e=0.0, f=0.0):
 
         # if coefficients do not sum to 1, throw an error
         if round(sum([a, b, c, d, e, f]), 4) != 1:
@@ -58,9 +59,25 @@ class FinnSeg(object):
         self.filename = prefix + filename
 
         # ngram and open vocabulary containers
-        self.ngrams = {'<UNK>': 0, }
-        self.vocab = set('<UNK>', )
+        self.ngrams = {}
+        self.vocab = set()
         self.total = 0
+
+        # select smoothing algorithm
+        self.smoothing = smoothing
+
+        # Stupid Backoff (smoothed scoring method)
+        if smoothing.lower() == 'stupid':
+            self.ngram_score = self._stupid_backoff_score
+
+        # Interpolated Modified Kneser-Ney (smoothed scoring method)
+        elif smoothing.lower() == 'mkn':
+            self.ngram_score = self._interpolated_modified_kneser_ney_score
+            self.discounts = None
+            self.alphas = {}
+
+        else:
+            raise ValueError('Invalid smoothing algorithm specified.')
 
         # coefficients
         self.a = a  # ngram
@@ -70,16 +87,12 @@ class FinnSeg(object):
         self.e = e  # sonseq
         self.f = f  # breaks
 
-        # evaluation report
-        self.report = None
-
         # train segmenter
         self.train_coefficients = False if a < 1.0 else train_coefficients
         self.train()
 
-        # if failing the nuclei and sonority sequencing tests is automatic
-        # disqualification, give the ngram weight the weights assigned to the
-        # nuclei and sonority sequencing tests
+        # if absolute is specified, treat nuclei and sonority sequencing tests
+        # as unviolable constraints
         self.absolute = absolute
 
         if self.absolute:
@@ -87,13 +100,21 @@ class FinnSeg(object):
             self.b = 0
             self.e = 0
 
+        # evaluation report
+        self.report = None
+
         # evaluate segmenter
         if Eval:
             self.evaluate()
 
+    # Training ----------------------------------------------------------------
+
     def train(self, train_coefficients=True):
         self._train_morfessor()
         self._train_ngrams()
+
+        if self.smoothing == 'mkn':
+            self._train_modified_kneser_ney_parameters()
 
         if self.train_coefficients:
             pass
@@ -131,6 +152,8 @@ class FinnSeg(object):
             self.model.load_data(train_data)
             self.model.train_batch()
             io.write_binary_model_file(filename + '.bin', self.model)
+
+    # Language modeling -------------------------------------------------------
 
     def _train_ngrams(self):
         filename = self.filename + '-ngrams-UNK'
@@ -201,9 +224,115 @@ class FinnSeg(object):
                 protocol=pickle.HIGHEST_PROTOCOL,
                 )
 
+    # Smoothing ---------------------------------------------------------------
+
+    def _train_modified_kneser_ney_parameters(self):
+        ngrams = Counter(self.ngrams.values())
+
+        # N# is the number of ngrams with exactly count #
+        N1 = float(ngrams[1])
+        N2 = float(ngrams[2])
+        N3 = float(ngrams[3])
+        N4 = float(ngrams[4])
+        Y = N1 / (N1 + 2 * N2)
+
+        D1 = 1 - 2 * Y * (N2 / N1)
+        D2 = 2 - 3 * Y * (N3 / N2)
+        D3 = 3 - 4 * Y * (N4 / N3)
+
+        # add discounts to dict
+        self.discounts = defaultdict(lambda: D3)
+        self.discounts[0] = 0
+        self.discounts[1] = D1
+        self.discounts[2] = D2
+        self.discounts[3] = D3
+
+        continuations = defaultdict(lambda: {1: set(), 2: set(), 3: set()})
+
+        # get unique continuations for each history
+        for ngram, counts in self.ngrams.iteritems():
+            morphemes = ngram.split(' ')
+
+            if len(morphemes) > 1:
+                history, word = ' '.join(morphemes[:-1]), morphemes[-1]
+                counts = counts if counts < 4 else 3
+                continuations[history][counts].add(word)
+
+        # set alpha parameters for each history
+        for history, v in continuations.iteritems():
+            alpha = (D1 * len(v[1])) + (D2 * len(v[2])) + (D3 * len(v[3]))
+            alpha /= self.ngrams[history]
+            self.alphas[history] = alpha
+
+    def _interpolated_modified_kneser_ney_score(self, candidate):
+
+        def interpolate(ngram):
+
+            # if unigram
+            if len(ngram) == 1:
+                return 1.0 / self.total
+
+            # if bigram or trigram
+            else:
+                history = ' '.join(ngram[:-1])
+                count = self.ngrams.get(' '.join(ngram), 0)
+                score = float(max(count - self.discounts[count], 0))
+                score /= self.ngrams.get(history, 1)
+                score += self.alphas.get(history, 0) * interpolate(ngram[1:])
+
+            return score
+
+        score = 0
+
+        for i, morpheme in enumerate(candidate):
+            ngram = candidate[i-2:i+1] or candidate[i-1:i+1] or [morpheme, ]
+            score += math.log(interpolate(ngram) or 1)
+
+        return score, candidate
+
+    def _stupid_backoff_score(self, candidate):
+        score = 0
+
+        # candidateUNK = [c if c in self.vocab else '<UNK>' for c in candidate]
+
+        for i, morpheme in enumerate(candidate):
+            C = morpheme if morpheme in self.vocab else '<UNK>'
+
+            if i > 0:
+                B = candidate[i-1]
+
+                if i > 1:
+                    A = candidate[i-2]
+                    ABC = A + ' ' + B + ' ' + C
+                    ABC_count = self.ngrams.get(ABC, 0)
+
+                    if ABC_count:
+                        AB = A + ' ' + B
+                        AB_count = self.ngrams[AB]
+                        score += math.log(ABC_count)
+                        score -= math.log(AB_count)
+                        continue
+
+                BC = B + ' ' + C
+                BC_count = self.ngrams.get(BC, 0)
+
+                if BC_count:
+                    B_count = self.ngrams[B]
+                    score += math.log(BC_count * 0.4)
+                    score -= math.log(B_count)
+                    continue
+
+            C_count = self.ngrams.get(C, 0)
+            score += math.log(C_count * 0.4)
+            score -= math.log(self.total)
+
+        return score, candidate
+
+    # Scoring -----------------------------------------------------------------
+
     def score(self, candidate):
-        # return the candidate's language model score
-        score, candidate = self._stupid_backoff_score(candidate)
+        # return the candidate's smoothed language model score
+        score, candidate = self.ngram_score(candidate)
 
         # convert candidate from list to string
         del candidate[0]
@@ -243,62 +372,7 @@ class FinnSeg(object):
 
         return score, candidate
 
-    def _stupid_backoff_score(self, candidate):
-        score = 0
-
-        for i, morpheme in enumerate(candidate):
-            C = morpheme if morpheme in self.vocab else '<UNK>'
-
-            if i > 0:
-                B = candidate[i-1]
-
-                if i > 1:
-                    A = candidate[i-2]
-                    ABC = A + ' ' + B + ' ' + C
-                    ABC_count = self.ngrams.get(ABC, 0)
-
-                    if ABC_count:
-                        AB = A + ' ' + B
-                        AB_count = self.ngrams[AB]
-                        score += math.log(ABC_count)
-                        score -= math.log(AB_count)
-                        continue
-
-                BC = B + ' ' + C
-                BC_count = self.ngrams.get(BC, 0)
-
-                if BC_count:
-                    B_count = self.ngrams[B]
-                    score += math.log(BC_count * 0.4)
-                    score -= math.log(B_count)
-                    continue
-
-            C_count = self.ngrams.get(C, 0)
-            score += math.log(C_count * 0.4)
-            score -= math.log(self.total)
-
-        return score, candidate
-
-    def _calculate_modified_kneser_ney_discounts(self):
-        ngrams = Counter(self.ngrams.values())
-
-        # N# is the number of ngrams with exactly count #
-        N1 = float(ngrams[1])
-        N2 = float(ngrams[2])
-        N3 = float(ngrams[3])
-        N4 = float(ngrams[4])
-        Y = N1 / (N1 + 2 * N2)
-
-        self.discounts = {  # TODO
-            0: 0,                       # D0
-            1: 1 - 2 * Y * (N2 / N1),   # D1
-            2: 2 - 3 * Y * (N3 / N2),   # D2
-            3: 3 - 4 * Y * (N4 / N3),   # D3
-            }
-
-    def _interpolated_modified_kneser_ney_score(self, candidate):
-        # Coming soon!
-        pass
+    # Segmentation ------------------------------------------------------------
 
     def segment(self, word):
         token = []
@@ -351,6 +425,85 @@ class FinnSeg(object):
                 morphemes.append(comp)
 
         return morphemes
+
+    # Evalutation -------------------------------------------------------------
+
+    def evaluate(self):
+
+        # results include true positives, false positives, true negatives,
+        # false negatives, and accurately identified compounds with 'bad'
+        # segmentations
+        results = {'TP': [], 'FP': [], 'TN': [], 'FN': [], 'bad': []}
+
+        # evaluate tokens
+        for t in self.validation_tokens:
+            word = self.segment(t.orth)
+
+            if replace_umlauts(word) == t.gold_base:
+
+                # true positives
+                if t.is_complex:
+                    results['TP'].append((word, t.gold_base))
+
+                # true negatives
+                else:
+                    results['TN'].append((word, t.gold_base))
+
+            # bad segmentations
+            elif '=' in word and '=' in t.gold_base:
+                results['bad'].append((word, t.gold_base))
+
+            # false positives
+            elif '=' in word:
+                results['FP'].append((word, t.gold_base))
+
+            # false negatives
+            else:
+                results['FN'].append((word, t.gold_base))
+
+        TP = len(results['TP'])
+        FP = len(results['FP'])
+        TN = len(results['TN'])
+        FN = len(results['FN'])
+        bad = len(results['bad'])
+
+        # TODO: average precision, recall, and F1 compound by compound
+
+        # calculate precision, recall, and F1
+        P = (TP * 1.0) / (TP + FP + bad)
+        R = (TP * 1.0) / (TP + FN)
+        F1 = (2.0 * P * R) / (P + R)
+        F05 = ((0.5**2 + 1.0) * P * R) / ((0.5**2 * P) + R)
+
+        # TODO: calculate perplexity
+
+        # generate an evaluation report
+        self.report = (
+            '\n'
+            '---- Evaluation: FinnSeg ----------------------------------------'
+            # '\n\nTrue negatives:\n\t%s'
+            # '\n\nTrue positives:\n\t%s'
+            # '\n\nFalse negatives:\n\t%s'
+            # '\n\nFalse positives:\n\t%s'
+            # '\n\nBad segmentations:\n\t%s'
+            '\n\nWeights: a=%s, b=%s, c=%s, d=%s, e=%s, f=%s'
+            '\n\t ngram, nuclei, word-final, harmony, sonseq, boundaries%s'
+            '\n\nTP:\t%s\nFP:\t%s\nTN:\t%s\nFN:\t%s\nBad:\t%s'
+            '\n\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s\n\n'
+            '-----------------------------------------------------------------'
+            '\n'
+            ) % (
+                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TN']]),
+                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TP']]),
+                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FN']]),
+                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FP']]),
+                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['bad']]),
+                self.a, self.b, self.c, self.d, self.e, self.f,
+                '\n\t Absolute nuclei and sonseq.' if self.absolute else '',
+                TP, FP, TN, FN, bad, P, R, F1, F05,
+                )
+
+        print self.report
 
     def trial_evaluate(self):
 
@@ -473,82 +626,7 @@ class FinnSeg(object):
 
         return label, word, token.gold_base, p, r, f1, f05
 
-    def evaluate(self):
-
-        # results include true positives, false positives, true negatives,
-        # false negatives, and accurately identified compounds with 'bad'
-        # segmentations
-        results = {'TP': [], 'FP': [], 'TN': [], 'FN': [], 'bad': []}
-
-        # evaluate tokens
-        for t in self.validation_tokens:
-            word = self.segment(t.orth)
-
-            if replace_umlauts(word) == t.gold_base:
-
-                # true positives
-                if t.is_complex:
-                    results['TP'].append((word, t.gold_base))
-
-                # true negatives
-                else:
-                    results['TN'].append((word, t.gold_base))
-
-            # bad segmentations
-            elif '=' in word and '=' in t.gold_base:
-                results['bad'].append((word, t.gold_base))
-
-            # false positives
-            elif '=' in word:
-                results['FP'].append((word, t.gold_base))
-
-            # false negatives
-            else:
-                results['FN'].append((word, t.gold_base))
-
-        TP = len(results['TP'])
-        FP = len(results['FP'])
-        TN = len(results['TN'])
-        FN = len(results['FN'])
-        bad = len(results['bad'])
-
-        # TODO: average precision, recall, and F1 compound by compound
-
-        # calculate precision, recall, and F1
-        P = (TP * 1.0) / (TP + FP + bad)
-        R = (TP * 1.0) / (TP + FN)
-        F1 = (2.0 * P * R) / (P + R)
-        F05 = ((0.5**2 + 1.0) * P * R) / ((0.5**2 * P) + R)
-
-        # TODO: calculate perplexity
-
-        # generate an evaluation report
-        self.report = (
-            '\n'
-            '---- Evaluation: FinnSeg ----------------------------------------'
-            # '\n\nTrue negatives:\n\t%s'
-            # '\n\nTrue positives:\n\t%s'
-            '\n\nFalse negatives:\n\t%s'
-            '\n\nFalse positives:\n\t%s'
-            '\n\nBad segmentations:\n\t%s'
-            '\n\nWeights: a=%s, b=%s, c=%s, d=%s, e=%s, f=%s'
-            '\n\t ngram, nuclei, word-final, harmony, sonseq, boundaries%s'
-            '\n\nTP:\t%s\nFP:\t%s\nTN:\t%s\nFN:\t%s\nBad:\t%s'
-            '\n\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s\n\n'
-            '-----------------------------------------------------------------'
-            '\n'
-            ) % (
-                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TN']]),
-                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TP']]),
-                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FN']]),
-                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FP']]),
-                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['bad']]),
-                self.a, self.b, self.c, self.d, self.e, self.f,
-                '\n\t Absolute nuclei and sonseq.' if self.absolute else '',
-                TP, FP, TN, FN, bad, P, R, F1, F05,
-                )
-
-        print self.report
+    # -------------------------------------------------------------------------
 
 
 class MaxEntInput(object):
@@ -665,9 +743,10 @@ class MaxEntInput(object):
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    MaxEntInput()
+    # MaxEntInput()
 
     # FinnSeg(train_coefficients=False)
+    FinnSeg(train_coefficients=False, smoothing='mkn')
     # FinnSeg(a=0.70, b=0.18, c=0.01, d=0.01, e=0.08, f=0.02)
     # FinnSeg(train_coefficients=False, absolute=True)
 
