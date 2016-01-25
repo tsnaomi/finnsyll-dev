@@ -41,7 +41,7 @@ class FinnSeg(object):
 
     def __init__(self, training=TRAINING, validation=VALIDATION, Eval=True,
                  filename='data/morfessor', train_coefficients=True,
-                 smoothing='stupid', absolute=False, UNK=False,
+                 smoothing='stupid', unviolable=False, UNK=False,
                  a=1.0, b=0.0, c=0.0, d=0.0, e=0.0, f=0.0):
 
         # if coefficients do not sum to 1, throw an error
@@ -92,11 +92,11 @@ class FinnSeg(object):
         self.train_coefficients = False if a < 1.0 else train_coefficients
         self.train()
 
-        # if absolute is specified, treat nuclei and sonority sequencing tests
-        # as unviolable constraints
-        self.absolute = absolute
+        # if unviolable is specified, treat nuclei and sonority sequencing
+        # tests as unviolable constraints
+        self.unviolable = unviolable
 
-        if self.absolute:
+        if self.unviolable:
             self.a += self.b + self.e
             self.b = 0
             self.e = 0
@@ -346,8 +346,9 @@ class FinnSeg(object):
         candidate = ''.join(candidate).replace('#', '=').replace('X', '')
 
         # note that, if self.a is equal to 1, then the candidate's score is
-        # equal to the score returned by self._score_ngrams()
-        if self.a < 1 or self.absolute:
+        # equal to the score returned by self._score_ngrams(), unless
+        # self.unviolable is True
+        if self.a < 1 or self.unviolable:
 
             # convert score from negative to positive
             score = 100.0 - (score * -1.0)
@@ -356,17 +357,19 @@ class FinnSeg(object):
             # get segmentation as list: e.g., 'book=worm' > ['book', 'worm']
             segments = replace_umlauts(candidate).split('=')
 
-            # score phonotactic features
+            # score unviolable phonotactic features
             nuclei = 1 if all(_nuclei(seg) for seg in segments) else 0
+            sonseq = 1 if all(_sonseq(seg) for seg in segments) else 0
+
+            # treat nuclei and sonority sequencing tests as unviolable
+            # constraints
+            if self.unviolable and (not nuclei or not sonseq):
+                return 0, candidate
+
+            # score violable phonotactic features
             word_final = 1 if all(_word_final(seg) for seg in segments) else 0
             harmonic = 1 if all(_harmonic(seg) for seg in segments) else 0
-            sonseq = 1 if all(_sonseq(seg) for seg in segments) else 0
             breaks = 1.0 / len(segments)
-
-            # automatically disqualify candidates that fail nuclei and
-            # sonority sequencing tests, if absolute is specified
-            if self.absolute and (not nuclei or not sonseq):
-                return 0, candidate
 
             # calculate composite score
             score *= self.a
@@ -432,6 +435,20 @@ class FinnSeg(object):
 
         return morphemes
 
+    def morpheme_compound_segment(self, word):
+        token = []
+
+        for comp in re.split(r'(-| )', word):
+
+            if len(comp) > 1:
+                morphemes = self.model.viterbi_segment(comp.lower())[0]
+                token.append('='.join(morphemes))
+
+            else:
+                token.append(comp)
+
+        return ''.join(token)
+
     # Evalutation -------------------------------------------------------------
 
     def evaluate(self):
@@ -477,7 +494,7 @@ class FinnSeg(object):
 
         # calculate precision, recall, and F1
         P = (TP * 1.0) / (TP + FP + bad)
-        R = (TP * 1.0) / (TP + FN)
+        R = (TP * 1.0) / (TP + FN + bad)
         F1 = (2.0 * P * R) / (P + R)
         F05 = ((0.5**2 + 1.0) * P * R) / ((0.5**2 * P) + R)
 
@@ -492,8 +509,9 @@ class FinnSeg(object):
             # '\n\nFalse negatives:\n\t%s'
             # '\n\nFalse positives:\n\t%s'
             # '\n\nBad segmentations:\n\t%s'
+            '%s%s'
             '\n\nWeights: a=%s, b=%s, c=%s, d=%s, e=%s, f=%s'
-            '\n\t ngram, nuclei, word-final, harmony, sonseq, boundaries%s'
+            '\n\t ngram, nuclei, word-final, harmony, sonseq, boundaries'
             '\n\nTP:\t%s\nFP:\t%s\nTN:\t%s\nFN:\t%s\nBad:\t%s'
             '\n\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s\n\n'
             '-----------------------------------------------------------------'
@@ -504,8 +522,9 @@ class FinnSeg(object):
                 # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FN']]),
                 # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FP']]),
                 # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['bad']]),
+                '\n\n** Unviolable constraints' if self.unviolable else '',
+                '\n\n** UNK modeling' if self.UNK else '',
                 self.a, self.b, self.c, self.d, self.e, self.f,
-                '\n\t Absolute nuclei and sonseq.' if self.absolute else '',
                 TP, FP, TN, FN, bad, P, R, F1, F05,
                 )
 
@@ -559,6 +578,7 @@ class FinnSeg(object):
             '\n\nFalse negatives:\n\t%s'
             '\n\nFalse positives:\n\t%s'
             '\n\nBad segmentations:\n\t%s'
+            '%s%s'
             '\n\nWeights: a=%s, b=%s, c=%s, d=%s, e=%s, f=%s'
             '\n\t ngram, nuclei, word-final, harmony, sonseq, breaks%s'
             '\n\nTP:\t%s\nFP:\t%s\nTN:\t%s\nFN:\t%s\nBad:\t%s'
@@ -572,8 +592,9 @@ class FinnSeg(object):
                 '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FN']]),
                 '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FP']]),
                 '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['bad']]),
+                '\n\n** Unviolable constraints' if self.unviolable else '',
+                '\n\n** UNK modeling' if self.UNK else '',
                 self.a, self.b, self.c, self.d, self.e, self.f,
-                '\n\t Absolute nuclei and sonseq.' if self.absolute else '',
                 TP, FP, TN, FN, bad, P, R, F1, F05, p, r, f1, f05,
                 )
 
@@ -632,8 +653,8 @@ class FinnSeg(object):
 
         return label, word, token.gold_base, p, r, f1, f05
 
-    # -------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------
 
 class MaxEntInput(object):
 
@@ -751,19 +772,12 @@ class MaxEntInput(object):
 if __name__ == '__main__':
     # MaxEntInput()
 
-    print 'train_coefficients=False'
     FinnSeg(train_coefficients=False)
-
-    print 'train_coefficients=False, UNK=True'
     FinnSeg(train_coefficients=False, UNK=True)
-
-    print 'train_coefficients=False, absolute=True'
-    FinnSeg(train_coefficients=False, absolute=True)  # the best!
-
-    print 'rain_coefficients=False, UNK=True, absolute=True'
-    FinnSeg(train_coefficients=False, UNK=True, absolute=True)
+    FinnSeg(train_coefficients=False, unviolable=True)  # the best!
+    FinnSeg(train_coefficients=False, UNK=True, unviolable=True)
 
     # FinnSeg(a=0.70, b=0.18, c=0.01, d=0.01, e=0.08, f=0.02)
 
     # no false positives!
-    # FinnSeg(a=0.8, c=0.05, d=0.05, f=0.1, absolute=True)
+    # FinnSeg(a=0.8, c=0.05, d=0.05, f=0.1, unviolable=True)
