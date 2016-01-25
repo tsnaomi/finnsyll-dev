@@ -41,7 +41,7 @@ class FinnSeg(object):
 
     def __init__(self, training=TRAINING, validation=VALIDATION, Eval=True,
                  filename='data/morfessor', train_coefficients=True,
-                 smoothing='stupid', absolute=False,
+                 smoothing='stupid', absolute=False, UNK=False,
                  a=1.0, b=0.0, c=0.0, d=0.0, e=0.0, f=0.0):
 
         # if coefficients do not sum to 1, throw an error
@@ -59,6 +59,7 @@ class FinnSeg(object):
         self.filename = prefix + filename
 
         # ngram and open vocabulary containers
+        self.UNK = UNK
         self.ngrams = {}
         self.vocab = set()
         self.total = 0
@@ -156,7 +157,7 @@ class FinnSeg(object):
     # Language modeling -------------------------------------------------------
 
     def _train_ngrams(self):
-        filename = self.filename + '-ngrams-UNK'
+        filename = self.filename + ('-ngrams-UNK' if self.UNK else '-ngrams')
 
         # load ngrams, or train and save ngrams if they are nonexistent
         try:
@@ -191,10 +192,11 @@ class FinnSeg(object):
 
                 word.append('#')
 
-                # model out of vocabulary (OOV) words with <UNK>
-                # (this is done by replacing every first instance of
-                # a morpheme with <UNK>)
-                WORD = [m if m in self.vocab else '<UNK>' for m in word]
+                # if self.UNK, model out of vocabulary (OOV) words with <UNK>
+                # (this is done by replacing every first instance of a morpheme
+                # with <UNK>)
+                WORD = [m if m in self.vocab else '<UNK>' for m in word] \
+                    if self.UNK else word
                 self.vocab.update(word)
 
                 # get unigram, bigram, and trigram counts
@@ -284,19 +286,23 @@ class FinnSeg(object):
 
         score = 0
 
+        if self.UNK:
+            candidate = [m if m in self.vocab else '<UNK>' for m in candidate]
+
         for i, morpheme in enumerate(candidate):
             ngram = candidate[i-2:i+1] or candidate[i-1:i+1] or [morpheme, ]
             score += math.log(interpolate(ngram) or 1)
 
-        return score, candidate
+        return score
 
     def _stupid_backoff_score(self, candidate):
         score = 0
 
-        # candidateUNK = [c if c in self.vocab else '<UNK>' for c in candidate]
+        if self.UNK:
+            candidate = [m if m in self.vocab else '<UNK>' for m in candidate]
 
         for i, morpheme in enumerate(candidate):
-            C = morpheme if morpheme in self.vocab else '<UNK>'
+            C = morpheme
 
             if i > 0:
                 B = candidate[i-1]
@@ -322,17 +328,17 @@ class FinnSeg(object):
                     score -= math.log(B_count)
                     continue
 
-            C_count = self.ngrams.get(C, 0)
+            C_count = self.ngrams.get(C, 1)  # Laplace smoothed unigram
             score += math.log(C_count * 0.4)
-            score -= math.log(self.total)
+            score -= math.log(self.total + len(self.vocab) + 1)
 
-        return score, candidate
+        return score
 
     # Scoring -----------------------------------------------------------------
 
     def score(self, candidate):
         # return the candidate's smoothed language model score
-        score, candidate = self.ngram_score(candidate)
+        score = self.ngram_score(candidate)
 
         # convert candidate from list to string
         del candidate[0]
@@ -745,10 +751,19 @@ class MaxEntInput(object):
 if __name__ == '__main__':
     # MaxEntInput()
 
-    # FinnSeg(train_coefficients=False)
-    FinnSeg(train_coefficients=False, smoothing='mkn')
+    print 'train_coefficients=False'
+    FinnSeg(train_coefficients=False)
+
+    print 'train_coefficients=False, UNK=True'
+    FinnSeg(train_coefficients=False, UNK=True)
+
+    print 'train_coefficients=False, absolute=True'
+    FinnSeg(train_coefficients=False, absolute=True)  # the best!
+
+    print 'rain_coefficients=False, UNK=True, absolute=True'
+    FinnSeg(train_coefficients=False, UNK=True, absolute=True)
+
     # FinnSeg(a=0.70, b=0.18, c=0.01, d=0.01, e=0.08, f=0.02)
-    # FinnSeg(train_coefficients=False, absolute=True)
 
     # no false positives!
     # FinnSeg(a=0.8, c=0.05, d=0.05, f=0.1, absolute=True)
