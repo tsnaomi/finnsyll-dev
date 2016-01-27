@@ -490,8 +490,6 @@ class FinnSeg(object):
         FN = len(results['FN'])
         bad = len(results['bad'])
 
-        # TODO: average precision, recall, and F1 compound by compound
-
         # calculate precision, recall, and F1
         P = (TP * 1.0) / (TP + FP + bad)
         R = (TP * 1.0) / (TP + FN + bad)
@@ -773,10 +771,9 @@ if __name__ == '__main__':
     # MaxEntInput()
 
     FinnSeg(train_coefficients=False)
-    FinnSeg(train_coefficients=False, UNK=True)
-    FinnSeg(train_coefficients=False, unviolable=True)  # the best!
-    FinnSeg(train_coefficients=False, UNK=True, unviolable=True)
-
+    # FinnSeg(train_coefficients=False, UNK=True)
+    # FinnSeg(train_coefficients=False, unviolable=True)  # the best!
+    # FinnSeg(train_coefficients=False, UNK=True, unviolable=True)
     # FinnSeg(a=0.70, b=0.18, c=0.01, d=0.01, e=0.08, f=0.02)
 
     # no false positives!
