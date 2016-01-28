@@ -14,7 +14,7 @@ import morfessor
 import re
 
 from collections import Counter, defaultdict
-from itertools import izip_longest as izip, izip_longest, product
+from itertools import izip_longest as izip, product
 from os import sys, path
 from phonology import (
     check_nuclei as _nuclei,
@@ -31,17 +31,6 @@ import finnsyll as finn
 TRAINING = finn.training_set()
 VALIDATION = finn.dev_set()
 TEST = finn.test_set()
-
-# WITH ARTO:
-# - MaxEnt and ngram constraint violations -- discrete LM scores
-# - precision and recall
-# - paper detail -- write to everyone (linguists and compouter scientists),
-#   choice of smoothing algorithm, Markov assumption is very appropriate here
-# - paper format
-
-# TODO:
-# - 1-page high-level intermediary error analysis (negative results and
-#   solutions)
 
 
 # Morfessor: "In morphological segmentation, compounds are word forms,
@@ -94,7 +83,7 @@ class FinnSeg(object):
         # coefficients
         self.a = a  # ngram
         self.b = b  # nuclei
-        self.c = d  # word-final
+        self.c = c  # word-final
         self.d = d  # harmonic
         self.e = e  # sonseq
         self.f = f  # breaks
@@ -108,9 +97,13 @@ class FinnSeg(object):
         self.unviolable = unviolable
 
         if self.unviolable:
-            self.a += self.b + self.e
             self.b = 0
             self.e = 0
+            divisor = sum([a, c, d, f])
+            self.a /= divisor
+            self.c /= divisor
+            self.d /= divisor
+            self.f /= divisor
 
         # evaluation report
         self.report = None
@@ -549,11 +542,11 @@ class FinnSeg(object):
             '-----------------------------------------------------------------'
             '\n'
             ) % (
-                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TN']]),
-                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TP']]),
-                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FN']]),
-                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FP']]),
-                # '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['bad']]),
+                # '\n\t'.join(['%s (%s)' % t for t in results['TN']]),
+                # '\n\t'.join(['%s (%s)' % t for t in results['TP']]),
+                # '\n\t'.join(['%s (%s)' % t for t in results['FN']]),
+                # '\n\t'.join(['%s (%s)' % t for t in results['FP']]),
+                # '\n\t'.join(['%s (%s)' % t for t in results['bad']]),
                 '\n\n** Unviolable constraints' if self.unviolable else '',
                 '\n\n** UNK modeling' if self.UNK else '',
                 self.a, self.b, self.c, self.d, self.e, self.f,
@@ -633,42 +626,45 @@ class MaxEntInput(object):
 
     def create_maxent_input(self):
         try:
-            open('data/MaxEntInput.csv', 'rb')
+            open('data/MaxEntInputTest.csv', 'rb')
 
         except IOError:
             print 'Generating tableaux...'
 
             tableaux = [
-                ['', '', '', 'Nuclei', 'Word-final', 'Harmonic', 'SonSeq', 'Boundaries'],  # noqa
-                ['', '', '', 'C1',     'C2',         'C3',       'C4',     'C5'],  # noqa
+                ['', '', '', 'Ngram', 'Nuclei', 'Word-final', 'Harmonic', 'SonSeq'],  # noqa
+                ['', '', '', 'C1',    'C2',     'C3',         'C4',       'C5'],  # noqa
                 ]
 
             for t in self.FinnSeg.training_tokens:
                 Input = t.orth.lower()
-                candidates = self._get_candidates(Input)
+                scored_candidates = self._get_scored_candidates(Input)
 
+                # delete winning candidate to preprend it to outputs
                 try:
-                    candidates.remove(t.gold_base)
+                    winner_violations = scored_candidates.get(t.gold_base, 0)
+                    del scored_candidates[t.gold_base]
 
-                except ValueError:
+                except (ValueError, KeyError):
                     pass
 
-                outputs = [t.gold_base, ] + candidates
+                outputs = [(t.gold_base, winner_violations), ]
+                outputs += scored_candidates.items()
 
                 # if there are no losing candidates, exclude the token from the
                 # tableaux
                 if len(outputs) == 1:
                     continue
 
-                violations = self._get_constraint_violations(outputs)
+                all_violations = self._get_constraint_violations(outputs)
 
                 # append the winner to the tableaux
-                winner = [Input.encode('utf-8'), outputs[0], 1] + violations[0]
-                tableaux.append(winner)
+                Input = Input.encode('utf-8')
+                tableaux.append([Input, outputs[0][0], 1] + all_violations[0])
 
                 # append the losers to the tableaux
-                for o, v in zip(outputs, violations)[1:]:
-                    tableaux.append(['', o, 0] + v)
+                for output, violations in zip(outputs, all_violations)[1:]:
+                    tableaux.append(['', output[0], 0] + violations)
 
             # write tableaux to a csv file
             with open('data/MaxEntInput.csv', 'wb') as f:
@@ -677,7 +673,9 @@ class MaxEntInput(object):
 
             self.tableaux = tableaux
 
-    def _get_candidates(self, word):
+    def _get_scored_candidates(self, word):
+        scored_candidates = {}
+        scores = {}
         candidates = []
 
         # split the word along any overt delimiters and iterate across the
@@ -696,46 +694,58 @@ class MaxEntInput(object):
                 for d in delimiter_sets:
                     candidate = [x for y in izip(morphemes, d) for x in y]
                     candidate = ['#', ] + filter(None, candidate) + ['#', ]
-                    comp_candidates.append(self.FinnSeg.score(candidate)[1])
+
+                    # collect ngram violations before the candidate component
+                    # is converted into string form
+                    score = self.FinnSeg._stupid_backoff_score(candidate)
+                    score *= -1.0
+
+                    # convert candidate into string form
+                    candidate = ''.join(candidate[1:-1])
+                    candidate = candidate.replace('#', '=').replace('X', '')
+                    candidate = replace_umlauts(candidate)
+
+                    comp_candidates.append(candidate)
+                    scores[candidate] = round(score)
 
                 candidates.append(comp_candidates)
 
             else:
                 candidates.append(comp)
 
-        # convert candidates into string form
-        candidates = [''.join(c) for c in product(*candidates)]
+        # generate full candidates
+        candidates = [c for c in product(*candidates)]
 
-        # convert candidates into gold_base form
-        for i, c in enumerate(candidates):
-            cand = c.replace('#', '=').replace('X', '')
-            cand = replace_umlauts(cand)
-            candidates[i] = cand
+        # collect ngram violations for full candidates
+        for candidate in candidates:
+            violations = 0
 
-        return candidates
+            for morphemes in candidate:
+                violations += scores.get(morphemes, 0)
+
+            # convert fulls candidates into string form
+            candidate = ''.join(candidate)
+            scored_candidates[candidate] = violations
+
+        return scored_candidates
 
     def _get_constraint_violations(self, outputs):
-        # constraints: b  c  d  e  f
+        # constraints: a  b  c  d  e
         violations = [[0, 0, 0, 0, 0] for i in xrange(len(outputs))]
 
         for i, output in enumerate(outputs):
+            violations[i][0] = int(output[1])
 
-            for seg in re.split(r'=|-| ', output):
+            for seg in re.split(r'=|-| ', output[0]):
+                violations[i][1] += 0 if _nuclei(seg) else 1
+                violations[i][2] += 0 if _word_final(seg) else 1
+                violations[i][3] += 0 if _harmonic(seg) else 1
+                violations[i][4] += 0 if _sonseq(seg) else 1
 
-                if '=' in seg or '-' in seg or ' ' in seg:
-                    raise ValueError('Abort!')
-
-                violations[i][0] += 0 if _nuclei(seg) else 1
-                violations[i][1] += 0 if _word_final(seg) else 1
-                violations[i][2] += 0 if _harmonic(seg) else 1
-                violations[i][3] += 0 if _sonseq(seg) else 1
-
-            violations[i][4] += output.count('=')  # asserted boundaries
             violations[i] = map(lambda n: '' if n == 0 else n, violations[i])
 
         return violations
 
-    # TODO: create violations consulting the gnram score
     # TODO: extract weights for FinnSeg
 
 # -----------------------------------------------------------------------------
@@ -745,9 +755,21 @@ if __name__ == '__main__':
 
     FinnSeg(train_coefficients=False)
     # FinnSeg(train_coefficients=False, UNK=True)
-    # FinnSeg(train_coefficients=False, unviolable=True)  # the best!
+    # FinnSeg(train_coefficients=False, unviolable=True)
     # FinnSeg(train_coefficients=False, UNK=True, unviolable=True)
     # FinnSeg(a=0.70, b=0.18, c=0.01, d=0.01, e=0.08, f=0.02)
 
     # no false positives!
     # FinnSeg(a=0.8, c=0.05, d=0.05, f=0.1, unviolable=True)
+
+    # # MaxEnt: 5 constraints
+    # weights = dict(
+    #     a=1.5631777946044625,       # ngram
+    #     b=1.3520000193826711,       # nuclei
+    #     c=4.904941422169471,        # word-final
+    #     d=1.3877787807814457E-17,   # harmonic
+    #     e=8.93479259279159,         # sonseq
+    #     )
+    # Sum = sum(weights.values())
+    # coefficients = {k: v / Sum for k, v in weights.iteritems()}
+    # FinnSeg(**coefficients)  # obviates unviolable=True
