@@ -14,7 +14,7 @@ import morfessor
 import re
 
 from collections import Counter, defaultdict
-from itertools import izip_longest as izip, product
+from itertools import izip_longest as izip, izip_longest, product
 from os import sys, path
 from phonology import (
     check_nuclei as _nuclei,
@@ -31,6 +31,17 @@ import finnsyll as finn
 TRAINING = finn.training_set()
 VALIDATION = finn.dev_set()
 TEST = finn.test_set()
+
+# WITH ARTO:
+# - MaxEnt and ngram constraint violations -- discrete LM scores
+# - precision and recall
+# - paper detail -- write to everyone (linguists and compouter scientists),
+#   choice of smoothing algorithm, Markov assumption is very appropriate here
+# - paper format
+
+# TODO:
+# - 1-page high-level intermediary error analysis (negative results and
+#   solutions)
 
 
 # Morfessor: "In morphological segmentation, compounds are word forms,
@@ -435,54 +446,68 @@ class FinnSeg(object):
 
         return morphemes
 
-    def morpheme_compound_segment(self, word):
-        token = []
+    def get_candidates(self, word, gold_base_form=False):
+        candidates = []
 
+        # split the word along any overt delimiters and iterate across the
+        # components
         for comp in re.split(r'(-| )', word):
 
             if len(comp) > 1:
-                morphemes = self.model.viterbi_segment(comp.lower())[0]
-                token.append('='.join(morphemes))
+
+                # use the language model to obtain the component's morphemes
+                morphemes = self.FinnSeg.model.viterbi_segment(comp)[0]
+
+                comp_candidates = []
+                delimiter_sets = product(['#', 'X'], repeat=len(morphemes) - 1)
+
+                # produce and score each candidate segmentation
+                for d in delimiter_sets:
+                    candidate = [x for y in izip(morphemes, d) for x in y]
+                    candidate = ['#', ] + filter(None, candidate) + ['#', ]
+                    comp_candidates.append(self.FinnSeg.score(candidate)[1])
+
+                candidates.append(comp_candidates)
 
             else:
-                token.append(comp)
+                candidates.append(comp)
 
-        return ''.join(token)
+        # convert candidates into string form
+        candidates = [''.join(c) for c in product(*candidates)]
+
+        if gold_base_form:
+
+            # convert candidates into gold_base form
+            for i, c in enumerate(candidates):
+                candidates = c.replace('#', '=').replace('X', '')
+                candidates = replace_umlauts(candidates)
+                candidates[i] = candidates
+
+        return candidates
 
     # Evalutation -------------------------------------------------------------
 
     def evaluate(self):
-
         # results include true positives, false positives, true negatives,
         # false negatives, and accurately identified compounds with 'bad'
         # segmentations
         results = {'TP': [], 'FP': [], 'TN': [], 'FN': [], 'bad': []}
+        precision, recall, tp, fp, fn = [], [], 0, 0, 0
 
-        # evaluate tokens
         for t in self.validation_tokens:
             word = self.segment(t.orth)
+            gold = replace_umlauts(t.gold_base, put_back=True)
 
-            if replace_umlauts(word) == t.gold_base:
+            label = self._word_level_evaluate(word, gold, t.is_complex)
+            results[label].append((word, gold))
 
-                # true positives
-                if t.is_complex:
-                    results['TP'].append((word, t.gold_base))
-
-                # true negatives
-                else:
-                    results['TN'].append((word, t.gold_base))
-
-            # bad segmentations
-            elif '=' in word and '=' in t.gold_base:
-                results['bad'].append((word, t.gold_base))
-
-            # false positives
-            elif '=' in word:
-                results['FP'].append((word, t.gold_base))
-
-            # false negatives
-            else:
-                results['FN'].append((word, t.gold_base))
+            if label != 'TN':
+                p, r, tp_, fp_, fn_ = self._boundary_level_evaluate(word, gold)
+                precision.append(p)
+                recall.append(r)
+                tp += tp_
+                fp += fp_
+                fn += fn_
 
         TP = len(results['TP'])
         FP = len(results['FP'])
@@ -490,11 +515,18 @@ class FinnSeg(object):
         FN = len(results['FN'])
         bad = len(results['bad'])
 
-        # calculate precision, recall, and F1
+        # calculate precision, recall, and F-measures on a word-by-word basis
         P = (TP * 1.0) / (TP + FP + bad)
         R = (TP * 1.0) / (TP + FN + bad)
         F1 = (2.0 * P * R) / (P + R)
         F05 = ((0.5**2 + 1.0) * P * R) / ((0.5**2 * P) + R)
+
+        # calculate precision, recall, and F-measures on a
+        # boundary-by-boundary basis
+        p = float(sum(precision)) / len(precision)
+        r = float(sum(recall)) / len(recall)
+        f1 = (2.0 * p * r) / (p + r)
+        f05 = ((0.5**2 + 1.0) * p * r) / ((0.5**2 * p) + r)
 
         # TODO: calculate perplexity
 
@@ -509,9 +541,11 @@ class FinnSeg(object):
             # '\n\nBad segmentations:\n\t%s'
             '%s%s'
             '\n\nWeights: a=%s, b=%s, c=%s, d=%s, e=%s, f=%s'
-            '\n\t ngram, nuclei, word-final, harmony, sonseq, boundaries'
-            '\n\nTP:\t%s\nFP:\t%s\nTN:\t%s\nFN:\t%s\nBad:\t%s'
-            '\n\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s\n\n'
+            '\n\t ngram, nuclei, word-final, harmony, sonseq, breaks'
+            '\n\nWord-Level:\nTP:\t%s\nFP:\t%s\nTN:\t%s\nFN:\t%s\nBad:\t%s'
+            '\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s'
+            '\n\nBoundary-Level:\nTP:\t%s\nFP:\t%s\nFN:\t%s'
+            '\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s\n\n'
             '-----------------------------------------------------------------'
             '\n'
             ) % (
@@ -524,132 +558,68 @@ class FinnSeg(object):
                 '\n\n** UNK modeling' if self.UNK else '',
                 self.a, self.b, self.c, self.d, self.e, self.f,
                 TP, FP, TN, FN, bad, P, R, F1, F05,
+                tp, fp, fn, p, r, f1, f05,
                 )
 
         print self.report
 
-    def trial_evaluate(self):
+    def _word_level_evaluate(self, word, gold, is_complex):
+        # true positive or true negative
+        if word == gold:
+            label = 'TP' if is_complex else 'TN'
 
-        # results include true positives, false positives, true negatives,
-        # false negatives, and accurately identified compounds with 'bad'
-        # segmentations
-        results = {'TP': [], 'FP': [], 'TN': [], 'FN': [], 'bad': []}
-        measures = {'p': [], 'r': [], 'f1': [], 'f05': []}
-
-        evaluations = (self._evaluate(t) for t in self.validation_token)
-
-        for label, word, gold, p, r, f1, f05 in evaluations:
-            results[label].append((word, gold))
-            measures['p'].append(p)
-            measures['r'].append(r)
-            measures['f1'].append(f1)
-            measures['f05'].append(f05)
-
-        TP = len(results['TP'])
-        FP = len(results['FP'])
-        TN = len(results['TN'])
-        FN = len(results['FN'])
-        bad = len(results['bad'])
-
-        # calculate precision, recall, and F1 (the original way)
-        P = (TP * 1.0) / (TP + FP + bad)
-        R = (TP * 1.0) / (TP + FN)
-        F1 = (2.0 * P * R) / (P + R)
-        F05 = ((0.5**2 + 1.0) * P * R) / ((0.5**2 * P) + R)
-
-        # calculate precision, recall, F1, and F0.5 by averaging the
-        # boundary-by-boundary measures of each token
-        length = len(measures['p'])
-        p = float(sum(measures['p'])) / length
-        r = float(sum(measures['r'])) / length
-        f1 = float(sum(measures['f1'])) / length
-        f05 = float(sum(measures['f05'])) / length
-
-        # TODO: calculate perplexity
-
-        # generate an evaluation report
-        self.report = (
-            '\n'
-            '---- Evaluation: FinnSeg ----------------------------------------'
-            '\n\nTrue negatives:\n\t%s'
-            '\n\nTrue positives:\n\t%s'
-            '\n\nFalse negatives:\n\t%s'
-            '\n\nFalse positives:\n\t%s'
-            '\n\nBad segmentations:\n\t%s'
-            '%s%s'
-            '\n\nWeights: a=%s, b=%s, c=%s, d=%s, e=%s, f=%s'
-            '\n\t ngram, nuclei, word-final, harmony, sonseq, breaks%s'
-            '\n\nTP:\t%s\nFP:\t%s\nTN:\t%s\nFN:\t%s\nBad:\t%s'
-            '\n\nWord Level:\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s'
-            '\n\nBoundary Level:\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s\n\n'
-            '-----------------------------------------------------------------'
-            '\n'
-            ) % (
-                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TN']]),
-                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['TP']]),
-                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FN']]),
-                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['FP']]),
-                '\n\t'.join(['%s (%s)' % (w, t) for w, t in results['bad']]),
-                '\n\n** Unviolable constraints' if self.unviolable else '',
-                '\n\n** UNK modeling' if self.UNK else '',
-                self.a, self.b, self.c, self.d, self.e, self.f,
-                TP, FP, TN, FN, bad, P, R, F1, F05, p, r, f1, f05,
-                )
-
-        print self.report
-
-    def _evaluate(self, token):
-
-        # calculate precision and recall on a boundary-by-boundary basis
-        def pr(word, token):
-            w = [i for i, j in enumerate(word)]
-            t = [i for i, j in enumerate(token.gold_base)]
-
-            tp = float(len([i for i in w if i in t]))
-            fp = len([i for i in w if i not in t])
-            fn = len([i for i in t if i not in w])
-
-            p = tp / (tp + fp)
-            r = tp / (tp + fn)
-
-            return p, r
-
-        word = self.segment(token.orth)
-
-        if replace_umlauts(word) == token.gold_base:
-
-            # true positive
-            if token.is_complex:
-                label, p, r = 'TP', 1, 1
-
-            # true negative
-            else:
-                label, p, r = 'TN', 1, 1  # ASK ARTO
-
+        # bad segmentation or false positive
         elif '=' in word:
+            label = 'bad' if is_complex else 'FP'
 
-            # bad segmentation
-            if token.is_complex:
-                label = 'bad'
-                p, r = pr(word, token)
+        # false negative
+        else:
+            label = 'FN'
 
-            # false positive
-            else:
-                label, p, r = 'FP', 0, 0
+        return label
+
+    def _boundary_level_evaluate(self, word, gold):
+        tp = 0
+        fp = 0
+        fn = 0
+
+        if word == gold:
+
+            tp += word.count('=') + word.count(' ') + word.count('-')
+            precision = 1
+            recall = 1
 
         else:
-            # false negative
-            label, p, r = 'FN', 0, 0
+            gold_index = 0
+            word_index = 0
 
-        try:
-            f1 = (2.0 * p * r) / (p + r)
-            f05 = ((0.5**2 + 1.0) * p * r) / ((0.5**2 * p) + r)
+            for i in range(max(len(word), len(gold))):
+                w = word[i - word_index]
+                g = gold[i - gold_index]
 
-        except ZeroDivisionError:
-            f1 = 0
-            f05 = 0
+                if g == w and g != '=':
+                    continue
 
-        return label, word, token.gold_base, p, r, f1, f05
+                elif g == w == '=':
+                    tp += 1
+
+                elif g == '=':
+                    fn += 1
+                    word_index += 1
+
+                else:
+                    fp += 1
+                    gold_index += 1
+
+            try:
+                precision = float(tp) / (tp + fp)
+                recall = float(tp) / (tp + fn)
+
+            except ZeroDivisionError:
+                precision = 0
+                recall = 0
+
+        return precision, recall, tp, fp, fn
 
 
 # -----------------------------------------------------------------------------
@@ -663,7 +633,7 @@ class MaxEntInput(object):
 
     def create_maxent_input(self):
         try:
-            open('data/MaxEntInput.csv', 'rb')  # TODO
+            open('data/MaxEntInput.csv', 'rb')
 
         except IOError:
             print 'Generating tableaux...'
@@ -764,6 +734,9 @@ class MaxEntInput(object):
             violations[i] = map(lambda n: '' if n == 0 else n, violations[i])
 
         return violations
+
+    # TODO: create violations consulting the gnram score
+    # TODO: extract weights for FinnSeg
 
 # -----------------------------------------------------------------------------
 
