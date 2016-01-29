@@ -13,7 +13,7 @@ import math
 import morfessor
 import re
 
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, namedtuple
 from itertools import izip_longest as izip, product
 from os import sys, path
 from phonology import (
@@ -28,26 +28,96 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))  # UH OH
 
 import finnsyll as finn
 
+# Data ------------------------------------------------------------------------
+
 TRAINING = finn.training_set()
 VALIDATION = finn.dev_set()
 TEST = finn.test_set()
 
 
-# Morfessor: "In morphological segmentation, compounds are word forms,
-# constructions are morphs, and atoms are characters. In chunking, compounds
-# are sentences, constructions are phrases, and atoms are words."
+# Linguistic constraints ------------------------------------------------------
+
+Constraint = namedtuple('Constraint', 'name test unviolable')
+Constraint.__str__ = lambda self: self.name
+
+
+# unviolable
+def nuclei(segments):
+    return 1 if all(_nuclei(seg) for seg in segments) else 0
+
+
+# unviolable
+def sonseq(segments):
+    return 1 if all(_sonseq(seg) for seg in segments) else 0
+
+
+# violable
+def harmonic(segments):
+    return 1 if all(_harmonic(seg) for seg in segments) else 0
+
+
+# violable
+def word_final(segments):
+    return 1 if all(_word_final(seg) for seg in segments) else 0
+
+
+# violable
+def boundaries(segments):
+    return 1.0 / len(segments)
+
+CONSTRAINTS = [
+    Constraint('nuclei', nuclei, True),
+    Constraint('sonseq', sonseq, True),
+    Constraint('harmonic', harmonic, False),
+    Constraint('word-final', word_final, False),
+    Constraint('boundaries', boundaries, False),
+    ]
+
+
+# FinnSeg ---------------------------------------------------------------------
 
 class FinnSeg(object):
 
     def __init__(self, training=TRAINING, validation=VALIDATION, Eval=True,
-                 filename='data/morfessor', train_coefficients=True,
+                 filename='data/morfessor', train_weights=True,
                  smoothing='stupid', unviolable=False, UNK=False,
-                 a=1.0, b=0.0, c=0.0, d=0.0, e=0.0, f=0.0):
+                 constraints=CONSTRAINTS, weights=None):
 
-        # if coefficients do not sum to 1, throw an error
-        if round(sum([a, b, c, d, e, f]), 4) != 1:
-            raise ValueError('Coefficients need to sum to 1.')
+        # preprend "ngram" constraint to the list of constraints
+        ngram = Constraint('ngram', lambda: None, False)
+        constraints = [ngram, ] + constraints
 
+        if weights:
+            # if weights do not sum to 1 or if the constraint-to-weight ratio
+            # is off, throw an error
+            if len(weights) != len(constraints) or round(sum(weights), 4) != 1:
+                raise ValueError('Uh oh.')
+
+        else:
+            # create weights, with ngrams having a weight of 1.0, if no weights
+            # were given
+            weights = [1.0, ] + [0.0 for c in xrange(len(constraints))]
+
+        # train weights if ngrams do not receive a weight of 1.0, or if
+        # train_weights is specified
+        self.train_weights = False if weights[0] == 1.0 else train_weights
+
+        # if unviolable is specified, treat nuclei and sonority sequencing
+        # tests as unviolable constraints
+        self.unviolable = unviolable
+
+        # if unviolable is specified and the weights are untrained,
+        # re-shape the weights of violables constraints to sum to 1
+        if unviolable and not self.train_weights:
+            cw = zip(constraints, weights)
+            divisor = float(sum(w for c, w in cw if not c.unviolable))
+
+            for i, (c, w) in enumerate(cw):
+                weights[i] = w / divisor if not c.unviolable else w
+
+        self.weighted_constraints = zip(constraints, weights)
+
+        # set training and validation data
         self.training_tokens = training
         self.validation_tokens = validation
 
@@ -80,30 +150,8 @@ class FinnSeg(object):
         else:
             raise ValueError('Invalid smoothing algorithm specified.')
 
-        # coefficients
-        self.a = a  # ngram
-        self.b = b  # nuclei
-        self.c = c  # word-final
-        self.d = d  # harmonic
-        self.e = e  # sonseq
-        self.f = f  # breaks
-
         # train segmenter
-        self.train_coefficients = False if a < 1.0 else train_coefficients
         self.train()
-
-        # if unviolable is specified, treat nuclei and sonority sequencing
-        # tests as unviolable constraints
-        self.unviolable = unviolable
-
-        if self.unviolable:
-            self.b = 0
-            self.e = 0
-            divisor = sum([a, c, d, f])
-            self.a /= divisor
-            self.c /= divisor
-            self.d /= divisor
-            self.f /= divisor
 
         # evaluation report
         self.report = None
@@ -121,7 +169,7 @@ class FinnSeg(object):
         if self.smoothing == 'mkn':
             self._train_modified_kneser_ney_parameters()
 
-        if self.train_coefficients:
+        if self.train_weights:
             pass
 
     def _train_morfessor(self):
@@ -352,7 +400,7 @@ class FinnSeg(object):
         # note that, if self.a is equal to 1, then the candidate's score is
         # equal to the score returned by self._score_ngrams(), unless
         # self.unviolable is True
-        if self.a < 1 or self.unviolable:
+        if self.weighted_constraints[0][1] < 1 or self.unviolable:
 
             # convert score from negative to positive
             score = 100.0 - (score * -1.0)
@@ -361,27 +409,20 @@ class FinnSeg(object):
             # get segmentation as list: e.g., 'book=worm' > ['book', 'worm']
             segments = replace_umlauts(candidate).split('=')
 
-            # score unviolable phonotactic features
-            nuclei = 1 if all(_nuclei(seg) for seg in segments) else 0
-            sonseq = 1 if all(_sonseq(seg) for seg in segments) else 0
+            # multiply the ngram score by the ngram weight
+            score *= self.weighted_constraints[0][1]
 
-            # treat nuclei and sonority sequencing tests as unviolable
-            # constraints
-            if self.unviolable and (not nuclei or not sonseq):
-                return 0, candidate
+            # score phonotactic features
+            for constraint, weight in self.weighted_constraints[1:]:
+                score_ = constraint.test(segments)
 
-            # score violable phonotactic features
-            word_final = 1 if all(_word_final(seg) for seg in segments) else 0
-            harmonic = 1 if all(_harmonic(seg) for seg in segments) else 0
-            breaks = 1.0 / len(segments)
+                # treat nuclei and sonority sequencing tests as unviolable
+                # constraints
+                if self.unviolable and constraint.unviolable and not score_:
+                    return 0, candidate
 
-            # calculate composite score
-            score *= self.a
-            score += nuclei * self.b
-            score += word_final * self.c
-            score += harmonic * self.d
-            score += sonseq * self.e
-            score += breaks * self.f
+                # compute composite score
+                score += score_ * weight
 
         return score, candidate
 
@@ -423,23 +464,26 @@ class FinnSeg(object):
 
         # split the word along any overt delimiters and iterate across the
         # components
-        for comp in re.split(r'(-| )', word):
+        for component in re.split(r'(-| )', word):
 
-            if len(comp) > 1:
+            if len(component) > 1:
 
                 # use the language model to obtain the component's morphemes
                 comp = map(
                     lambda m: m.replace(' ', '').replace('-', ''),
-                    self.model.viterbi_segment(comp.lower())[0],
+                    self.model.viterbi_segment(component.lower())[0],
                     )
                 morphemes.extend(comp)
 
             else:
                 morphemes.append(comp)
 
+        # convert morphemes into string form
+        morphemes = '_'.join(morphemes)
+
         return morphemes
 
-    def get_candidates(self, word, gold_base_form=False):
+    def get_candidates(self, word, gold_base_form=True):
         candidates = []
 
         # split the word along any overt delimiters and iterate across the
@@ -523,7 +567,6 @@ class FinnSeg(object):
 
         # TODO: calculate perplexity
 
-        # generate an evaluation report
         self.report = (
             '\n'
             '---- Evaluation: FinnSeg ----------------------------------------'
@@ -533,12 +576,13 @@ class FinnSeg(object):
             # '\n\nFalse positives:\n\t%s'
             # '\n\nBad segmentations:\n\t%s'
             '%s%s'
-            '\n\nWeights: a=%s, b=%s, c=%s, d=%s, e=%s, f=%s'
-            '\n\t ngram, nuclei, word-final, harmony, sonseq, breaks'
-            '\n\nWord-Level:\nTP:\t%s\nFP:\t%s\nTN:\t%s\nFN:\t%s\nBad:\t%s'
-            '\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s'
-            '\n\nBoundary-Level:\nTP:\t%s\nFP:\t%s\nFN:\t%s'
-            '\nP/R:\t%s / %s\nF1:\t%s\nF0.5:\t%s\n\n'
+            '\n\nWeights:\n\t%s'
+            '\n\nWord-Level:'
+            '\n\tTP:\t%s\n\tFP:\t%s\n\tTN:\t%s\n\tFN:\t%s\n\tBad:\t%s'
+            '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s'
+            '\n\nBoundary-Level:'
+            '\n\tTP:\t%s\n\tFP:\t%s\n\tFN:\t%s'
+            '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s\n\n'
             '-----------------------------------------------------------------'
             '\n'
             ) % (
@@ -549,7 +593,7 @@ class FinnSeg(object):
                 # '\n\t'.join(['%s (%s)' % t for t in results['bad']]),
                 '\n\n** Unviolable constraints' if self.unviolable else '',
                 '\n\n** UNK modeling' if self.UNK else '',
-                self.a, self.b, self.c, self.d, self.e, self.f,
+                '\n\t'.join(['%s=%s' % t for t in self.weighted_constraints]),
                 TP, FP, TN, FN, bad, P, R, F1, F05,
                 tp, fp, fn, p, r, f1, f05,
                 )
@@ -615,7 +659,7 @@ class FinnSeg(object):
         return precision, recall, tp, fp, fn
 
 
-# -----------------------------------------------------------------------------
+# MaxEnt ----------------------------------------------------------------------
 
 class MaxEntInput(object):
 
@@ -631,25 +675,29 @@ class MaxEntInput(object):
         except IOError:
             print 'Generating tableaux...'
 
+            # underlying forms, candidates, and frequency columns
+            col3 = ['', '', '']
+
+            # constraint columns
             tableaux = [
-                ['', '', '', 'Ngram', 'Nuclei', 'Word-final', 'Harmonic', 'SonSeq'],  # noqa
-                ['', '', '', 'C1',    'C2',     'C3',         'C4',       'C5'],  # noqa
+                col3 + ['Ngram', 'Nuclei', 'Word-final', 'Harmonic', 'SonSeq'],
+                col3 + ['C1',    'C2',     'C3',         'C4',       'C5'],
                 ]
 
             for t in self.FinnSeg.training_tokens:
                 Input = t.orth.lower()
-                scored_candidates = self._get_scored_candidates(Input)
+                candidates = self._get_candidates(Input)
 
                 # delete winning candidate to preprend it to outputs
                 try:
-                    winner_violations = scored_candidates.get(t.gold_base, 0)
-                    del scored_candidates[t.gold_base]
+                    winner_violations = candidates.get(t.gold_base, 0)
+                    del candidates[t.gold_base]
 
                 except (ValueError, KeyError):
                     pass
 
                 outputs = [(t.gold_base, winner_violations), ]
-                outputs += scored_candidates.items()
+                outputs += candidates.items()
 
                 # if there are no losing candidates, exclude the token from the
                 # tableaux
@@ -673,7 +721,7 @@ class MaxEntInput(object):
 
             self.tableaux = tableaux
 
-    def _get_scored_candidates(self, word):
+    def _get_candidates(self, word):
         scored_candidates = {}
         scores = {}
         candidates = []
@@ -753,23 +801,24 @@ class MaxEntInput(object):
 if __name__ == '__main__':
     # MaxEntInput()
 
-    FinnSeg(train_coefficients=False)
-    # FinnSeg(train_coefficients=False, UNK=True)
-    # FinnSeg(train_coefficients=False, unviolable=True)
-    # FinnSeg(train_coefficients=False, UNK=True, unviolable=True)
-    # FinnSeg(a=0.70, b=0.18, c=0.01, d=0.01, e=0.08, f=0.02)
+    FinnSeg(train_weights=False)
+    # FinnSeg(train_weights=False, UNK=True)
+    # FinnSeg(train_weights=False, unviolable=True)  # No. 2
+    # FinnSeg(train_weights=False, UNK=True, unviolable=True)
+    # FinnSeg(weights=[0.1, 0.0, 0.0, 0.0, 0.0, 0.0])
 
-    # no false positives!
-    # FinnSeg(a=0.8, c=0.05, d=0.05, f=0.1, unviolable=True)
+    # # no false positives!
+    # FinnSeg(weights=[0.80, 0.0, 0.0, 0.05, 0.05, 0.1], unviolable=True)
 
     # # MaxEnt: 5 constraints
-    # weights = dict(
-    #     a=1.5631777946044625,       # ngram
-    #     b=1.3520000193826711,       # nuclei
-    #     c=4.904941422169471,        # word-final
-    #     d=1.3877787807814457E-17,   # harmonic
-    #     e=8.93479259279159,         # sonseq
-    #     )
-    # Sum = sum(weights.values())
-    # coefficients = {k: v / Sum for k, v in weights.iteritems()}
-    # FinnSeg(**coefficients)  # obviates unviolable=True
+    # maxent_weights = [
+    #     1.5631777946044625,         # ngram
+    #     1.3520000193826711,         # nuclei
+    #     8.93479259279159,           # sonseq
+    #     1.3877787807814457E-17,     # harmonic
+    #     4.904941422169471,          # word-final
+    #     0.0,                        # boundaries
+    #     ]
+    # Sum = sum(maxent_weights)
+    # weights = [w / Sum for w in maxent_weights]
+    # FinnSeg(weights=weights)  # No. 1
