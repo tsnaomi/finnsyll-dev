@@ -28,7 +28,7 @@ CLUSTERS = [
     u'pl', u'pr', u'cl', u'qv', u'schm']
 
 
-# Phonemic functions ----------------------------------------------------------
+# Phonotactic functions -------------------------------------------------------
 
 def is_vowel(ch):
     return ch in VOWELS
@@ -40,7 +40,8 @@ def is_consonant(ch):
 
 
 def is_coronal(ch):
-    return ch in [u's', u'z', u'd', u't', u'r', u'n', u'l']
+    # return ch in [u's', u'z', u'd', u't', u'r', u'n', u'l']
+    return ch in [u's', u't', u'r', u'n', u'l']  # Suomi et al. 2008
 
 
 def is_sonorant(ch):
@@ -59,7 +60,47 @@ def is_long(chars):
     return chars == chars[0] * len(chars)
 
 
-# Vowel harmony ---------------------------------------------------------------
+# Linguistic constraints ------------------------------------------------------
+
+phonemic_inventory = [
+    u'i', u'e', u'A', u'y', u'O', u'a', u'u', u'o', u' ', u'-',
+    u'd', u'h', u'j', u'k', u'l', u'm', u'n', u'p', u'r', u's', u't', u'v',
+]
+
+word_final_inventory = [
+    u'i', u'e', u'A', u'y', u'O', u'a', u'u', u'o',  # vowels
+    u'l', u'n', u'r', u's', u't',  # coronal consonants
+]
+
+onsets_inventory = [
+    u'pl', u'pr', u'tr', u'kl', u'kr', u'sp', u'st', u'sk', u'ps', u'ts',
+    u'sn', u'dr', u'spr', u'str',
+]
+
+codas_inventory = [u'ps', u'ts', u'ks']
+
+
+def is_foreign(segments):
+    word = replace_umlauts(''.join(segments))
+
+    # if the word ends in a non-coronal consonant (excluding /d/), it is likely
+    # foreign
+    if len(word) > 1 and not word[-1] in word_final_inventory:
+        return True
+
+    foreign_chars = set([c for c in word if c not in phonemic_inventory])
+
+    # the letter 'g' indicates a foreign word unless it is preceded by an 'n',
+    # in which case, their collective underlying form is /ŋ/, which does appear
+    # in the Finnish phonemic inventory
+    if set('g') == foreign_chars:
+        g = word.index('g')
+        return not g or word[g - 1] != 'n'
+
+    return bool(foreign_chars)
+
+
+# Vowel Harmony ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 FRONT_VOWELS = [u'A', u'y', u'O']
 
@@ -79,7 +120,6 @@ def is_back(ch):
 def is_neutral(ch):
     return ch in NEUTRAL_VOWELS
 
-
 DEPTH = {
     'A': 'front',
     'y': 'front',
@@ -90,16 +130,19 @@ DEPTH = {
     }
 
 
-def is_harmonic(chars):
+def harmonic(word, foreign=False):
+    # if foreign:
+    #     return True
+
     # check if the vowels agree in front/back harmony
-    vowels = filter(is_vowel, [ch for ch in chars])
+    vowels = filter(is_vowel, [ch for ch in word])
     vowels = filter(lambda x: not is_neutral(x), vowels)
     depths = map(lambda x: DEPTH[x], vowels)
 
     return len(set(depths)) < 2
 
 
-# Phonotactic functions -------------------------------------------------------
+# Sonority Sequencing ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 sonorities = {
     # sibilant /s/
@@ -133,40 +176,53 @@ sonorities = {
     }
 
 
-def check_nuclei(word):
-    # check if the nucleus is composed of more than one vowel
-    return len(filter(is_vowel, word)) > 1
-
-
-def check_word_final(word):
-    # check if the word ends in a vowel or coronal consonant
-    try:
-        return is_vowel(word[-1]) or is_coronal(word[-1])
-
-    # this error catches if the word is of length 1
-    except IndexError:
-        return is_vowel(word) or is_coronal(word)
-
-
-def check_sonseq(word):
+def sonseq(word, foreign=False):
     # check if the word has good sonority peaks
-
-    def is_sloping(seq, rising=True):
-        slope = [sonorities.get(s, 0) for s in seq]
+    def is_sloping(word, rising=True):
+        slope = [sonorities.get(s, 0) for s in word]
 
         return slope == sorted(list(set(slope)), reverse=not rising)
-
-    # a single consonant does not a sonority peak make
-    if len(word) == 1 and is_consonant(word):
-        return False
 
     parts = re.split(r'([ieAyOauo]+)', word)
     onset, coda = parts[0], parts[-1]
 
-    if not onset or len(onset) == 1 or is_cluster(onset) or is_sloping(onset):
-        return not coda or len(coda) == 1 or is_sloping(coda, rising=False)
+    # if foreign:
+    #     return is_sloping(onset) and is_sloping(coda, rising=False)
+
+    #  simplex onset      Finnish complex onset
+    if len(onset) <= 1 or onset in onsets_inventory:
+        #      simplex coda    Finnish complex coda
+        return len(coda) <= 1  # or coda in codas_inventory
 
     return False
+
+
+# MinWord ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def min_word(word, _):
+    # check if the segment contains more than one vowel
+    return len(filter(is_vowel, word)) > 1
+
+
+# *VVC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def not_VVC(word, _):
+    # check that the word is not of the form VVC
+    if len(word) == 3:
+        return not(
+            is_vowel(word[0]) and
+            is_vowel(word[1]) and
+            is_consonant(word[2])
+            )
+
+    return True
+
+
+# Word-final ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def word_final(seg, _):
+    # check if the word ends in a coronal consonant
+    return seg[-1] in word_final_inventory
 
 
 # Normalization functions -----------------------------------------------------

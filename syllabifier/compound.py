@@ -8,25 +8,19 @@ try:
 except ImportError:
     import pickle
 
-import csv
 import math
 import morfessor
+import phonology as phon
 import re
 
-from collections import Counter, defaultdict, namedtuple
 from itertools import izip_longest as izip, product
 from os import sys, path
-from phonology import (
-    check_nuclei as _nuclei,
-    check_sonseq as _sonseq,
-    check_word_final as _word_final,
-    is_harmonic as _harmonic,
-    replace_umlauts,
-    )
+from tabulate import tabulate
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))  # UH OH
 
 import finnsyll as finn
+
 
 # Data ------------------------------------------------------------------------
 
@@ -37,118 +31,107 @@ TEST = finn.test_set()
 
 # Linguistic constraints ------------------------------------------------------
 
-Constraint = namedtuple('Constraint', 'name test unviolable')
-Constraint.__str__ = lambda self: self.name
+class Constraint:
 
+    def __init__(self, name, test, weight=0.0):
+        self.name = name
+        self.test = test
+        self.weight = weight
 
-# unviolable
-def nuclei(segments):
-    return 1 if all(_nuclei(seg) for seg in segments) else 0
+    def __str__(self):
+        if self.weight:
+            return '%s=%s' % (self.name, self.weight)
 
+        return self.name
 
-# unviolable
-def sonseq(segments):
-    return 1 if all(_sonseq(seg) for seg in segments) else 0
+C1 = Constraint('MnWrd', phon.min_word)
+C2 = Constraint('SonSeq', phon.sonseq)
+C3 = Constraint('*VVC', phon.not_VVC)
+C4 = Constraint('Harmonic', phon.harmonic)
+C5 = Constraint('Word#', phon.word_final)
 
-
-# violable
-def harmonic(segments):
-    return 1 if all(_harmonic(seg) for seg in segments) else 0
-
-
-# violable
-def word_final(segments):
-    return 1 if all(_word_final(seg) for seg in segments) else 0
-
-
-# violable
-def boundaries(segments):
-    return 1.0 / len(segments)
-
-CONSTRAINTS = [
-    Constraint('nuclei', nuclei, True),
-    Constraint('sonseq', sonseq, True),
-    Constraint('harmonic', harmonic, False),
-    Constraint('word-final', word_final, False),
-    Constraint('boundaries', boundaries, False),
-    ]
+CONSTRAINTS = [C1, C2, C3, C4, C5]
 
 
 # FinnSeg ---------------------------------------------------------------------
 
 class FinnSeg(object):
 
-    def __init__(self, training=TRAINING, validation=VALIDATION, Eval=True,
-                 filename='data/morfessor', train_weights=True,
-                 smoothing='stupid', unviolable=False, UNK=False,
-                 constraints=CONSTRAINTS, weights=None):
+    def __init__(self, training=TRAINING, validation=VALIDATION, Eval=True, filename='data/morfessor', smoothing='stupid', UNK=False, constraints=CONSTRAINTS, unviolable=False, weighted=False):  # noqa
+        # the segmenter can take either a violable or unviolable approach
+        # (or neither)
+        if unviolable and weighted:
+            msg = 'May not select both "weighted" and "unviolable".'
+            raise ValueError(msg)
 
-        # preprend "ngram" constraint to the list of constraints
-        ngram = Constraint('ngram', lambda: None, False)
-        constraints = [ngram, ] + constraints
-
-        if weights:
-            # if weights do not sum to 1 or if the constraint-to-weight ratio
-            # is off, throw an error
-            if len(weights) != len(constraints) or round(sum(weights), 4) != 1:
-                raise ValueError('Uh oh.')
+        # select the ngram scoring function
+        if smoothing.lower() == 'stupid':
+            self.ngram_score = self._stupid_backoff_score
 
         else:
-            # create weights, with ngrams having a weight of 1.0, if no weights
-            # were given
-            weights = [1.0, ] + [0.0 for c in xrange(len(constraints))]
+            raise ValueError('Invalid smoothing algorithm specified.')
 
-        # train weights if ngrams do not receive a weight of 1.0, or if
-        # train_weights is specified
-        self.train_weights = False if weights[0] == 1.0 else train_weights
+        # if unviolable is specified, use unviolable linguistic constraints
+        if unviolable:
+            # set the score-candidates function
+            self._score_candidates = self._score_candidates_unviolable
 
-        # if unviolable is specified, treat nuclei and sonority sequencing
-        # tests as unviolable constraints
+            # set the description for the evaluation report
+            self.description = '%s** Unviolable constraints\n\n\t%s' % (
+                '** UNK modeling\n' if UNK else '',
+                '\n\t'.join([c.__str__() for c in constraints]),
+                )
+
+        # if weighted is specified, use weighted linguistic constraints
+        elif weighted:
+            # set the "ngram constraint" weight to whatever weight mass is
+            # missing from the provided constraints
+            self.ngram_weight = 1.0 - sum(c.weight for c in constraints)
+
+            # including the "ngram constraint", the constraint weights must
+            # collectively sum to 1
+            if self.ngram_weight < 0:
+                msg = 'The sum of the constraint weights may not exceed 1.'
+                raise ValueError(msg)
+
+            self._score_candidates = self._score_candidates_weighted
+            self.description = '%s** Weighted constraints\n\n\t%s\n\t%s' % (
+                '** UNK modeling\n' if UNK else '',
+                '\n\t'.join([c.__str__() for c in constraints]),
+                'Ngram=%s' % self.ngram_weight,
+                )
+
+        # if neither weighted nor unviolable is specified, use only the
+        # language model
+        else:
+            self._score_candidates = self._score_candidates_ngram
+            self.description = '** Language model alone%s' % (
+                '\n** UNK modeling\n' if UNK else '',
+                )
+
+        # constraint details
+        self.weighted = weighted
         self.unviolable = unviolable
-
-        # if unviolable is specified and the weights are untrained,
-        # re-shape the weights of violables constraints to sum to 1
-        if unviolable and not self.train_weights:
-            cw = zip(constraints, weights)
-            divisor = float(sum(w for c, w in cw if not c.unviolable))
-
-            for i, (c, w) in enumerate(cw):
-                weights[i] = w / divisor if not c.unviolable else w
-
-        self.weighted_constraints = zip(constraints, weights)
+        self.constraints = constraints
+        self.constraint_count = len(constraints)
+        self.constraint_names = [c.name for c in constraints]
 
         # set training and validation data
         self.training_tokens = training
         self.validation_tokens = validation
 
-        # Morfessor model, or some other morphological analyzer
+        # Morfessor model
         self.model = None
 
         # filename of training text and morfessor model binary file
-        prefix = 'syllabifier/' if __name__ != '__main__' else ''  # UH OH
-        self.filename = prefix + filename
+        self.filename = filename
 
-        # ngram and open vocabulary containers
+        # ngram and open vocabulary containers, etc.
         self.UNK = UNK
         self.ngrams = {}
         self.vocab = set()
         self.total = 0
-
-        # select smoothing algorithm
         self.smoothing = smoothing
-
-        # Stupid Backoff (smoothed scoring method)
-        if smoothing.lower() == 'stupid':
-            self.ngram_score = self._stupid_backoff_score
-
-        # Interpolated Modified Kneser-Ney (smoothed scoring method)
-        elif smoothing.lower() == 'mkn':
-            self.ngram_score = self._interpolated_modified_kneser_ney_score
-            self.discounts = None
-            self.alphas = {}
-
-        else:
-            raise ValueError('Invalid smoothing algorithm specified.')
 
         # train segmenter
         self.train()
@@ -156,7 +139,7 @@ class FinnSeg(object):
         # evaluation report
         self.report = None
 
-        # evaluate segmenter
+        # evaluate segmenter on validation set
         if Eval:
             self.evaluate()
 
@@ -165,12 +148,6 @@ class FinnSeg(object):
     def train(self, train_coefficients=True):
         self._train_morfessor()
         self._train_ngrams()
-
-        if self.smoothing == 'mkn':
-            self._train_modified_kneser_ney_parameters()
-
-        if self.train_weights:
-            pass
 
     def _train_morfessor(self):
         io = morfessor.MorfessorIO()
@@ -181,7 +158,6 @@ class FinnSeg(object):
             self.model = io.read_binary_model_file(filename + '.bin')
 
         except IOError:
-
             # load training data, or create training data if it is nonexistent
             try:
                 train_data = list(io.read_corpus_file(filename + '.txt'))
@@ -191,10 +167,10 @@ class FinnSeg(object):
 
                 tokens = [t.gold_base for t in self.training_tokens]
                 tokens = ' '.join(tokens).replace('-', ' ').replace('=', ' ')
-                tokens = replace_umlauts(tokens, put_back=True)
+                tokens = phon.replace_umlauts(tokens, put_back=True)
                 tokens = tokens.lower().encode('utf-8')
 
-                with open(self.filename + '.txt', 'w') as f:
+                with open(filename + '.txt', 'w') as f:
                     f.write(tokens)
 
                 train_data = list(io.read_corpus_file(filename + '.txt'))
@@ -278,74 +254,7 @@ class FinnSeg(object):
                 protocol=pickle.HIGHEST_PROTOCOL,
                 )
 
-    # Smoothing ---------------------------------------------------------------
-
-    def _train_modified_kneser_ney_parameters(self):
-        ngrams = Counter(self.ngrams.values())
-
-        # N# is the number of ngrams with exactly count #
-        N1 = float(ngrams[1])
-        N2 = float(ngrams[2])
-        N3 = float(ngrams[3])
-        N4 = float(ngrams[4])
-        Y = N1 / (N1 + 2 * N2)
-
-        D1 = 1 - 2 * Y * (N2 / N1)
-        D2 = 2 - 3 * Y * (N3 / N2)
-        D3 = 3 - 4 * Y * (N4 / N3)
-
-        # add discounts to dict
-        self.discounts = defaultdict(lambda: D3)
-        self.discounts[0] = 0
-        self.discounts[1] = D1
-        self.discounts[2] = D2
-        self.discounts[3] = D3
-
-        continuations = defaultdict(lambda: {1: set(), 2: set(), 3: set()})
-
-        # get unique continuations for each history
-        for ngram, counts in self.ngrams.iteritems():
-            morphemes = ngram.split(' ')
-
-            if len(morphemes) > 1:
-                history, word = ' '.join(morphemes[:-1]), morphemes[-1]
-                counts = counts if counts < 4 else 3
-                continuations[history][counts].add(word)
-
-        # set alpha parameters for each history
-        for history, v in continuations.iteritems():
-            alpha = (D1 * len(v[1])) + (D2 * len(v[2])) + (D3 * len(v[3]))
-            alpha /= self.ngrams[history]
-            self.alphas[history] = alpha
-
-    def _interpolated_modified_kneser_ney_score(self, candidate):
-
-        def interpolate(ngram):
-
-            # if unigram
-            if len(ngram) == 1:
-                return 1.0 / self.total
-
-            # if bigram or trigram
-            else:
-                history = ' '.join(ngram[:-1])
-                count = self.ngrams.get(' '.join(ngram), 0)
-                score = float(max(count - self.discounts[count], 0))
-                score /= self.ngrams.get(history, 1)
-                score += self.alphas.get(history, 0) * interpolate(ngram[1:])
-
-            return score
-
-        score = 0
-
-        if self.UNK:
-            candidate = [m if m in self.vocab else '<UNK>' for m in candidate]
-
-        for i, morpheme in enumerate(candidate):
-            ngram = candidate[i-2:i+1] or candidate[i-1:i+1] or [morpheme, ]
-            score += math.log(interpolate(ngram) or 1)
-
-        return score
+    # Smoothing/Scoring -------------------------------------------------------
 
     def _stupid_backoff_score(self, candidate):
         score = 0
@@ -384,47 +293,10 @@ class FinnSeg(object):
             score += math.log(C_count * 0.4)
             score -= math.log(self.total + len(self.vocab) + 1)
 
+        score = 100.0 - (score * -1.0)
+        score /= 100.0
+
         return score
-
-    # Scoring -----------------------------------------------------------------
-
-    def score(self, candidate):
-        # return the candidate's smoothed language model score
-        score = self.ngram_score(candidate)
-
-        # convert candidate from list to string
-        del candidate[0]
-        del candidate[-1]
-        candidate = ''.join(candidate).replace('#', '=').replace('X', '')
-
-        # note that, if self.a is equal to 1, then the candidate's score is
-        # equal to the score returned by self._score_ngrams(), unless
-        # self.unviolable is True
-        if self.weighted_constraints[0][1] < 1 or self.unviolable:
-
-            # convert score from negative to positive
-            score = 100.0 - (score * -1.0)
-            score /= 100.0
-
-            # get segmentation as list: e.g., 'book=worm' > ['book', 'worm']
-            segments = replace_umlauts(candidate).split('=')
-
-            # multiply the ngram score by the ngram weight
-            score *= self.weighted_constraints[0][1]
-
-            # score phonotactic features
-            for constraint, weight in self.weighted_constraints[1:]:
-                score_ = constraint.test(segments)
-
-                # treat nuclei and sonority sequencing tests as unviolable
-                # constraints
-                if self.unviolable and constraint.unviolable and not score_:
-                    return 0, candidate
-
-                # compute composite score
-                score += score_ * weight
-
-        return score, candidate
 
     # Segmentation ------------------------------------------------------------
 
@@ -433,67 +305,199 @@ class FinnSeg(object):
 
         # split the word along any overt delimiters and iterate across the
         # components
-        for comp in re.split(r'(-| )', word):
+        for comp in re.split(r'(-| )', word.lower()):
 
             if len(comp) > 1:
 
                 # use the language model to obtain the component's morphemes
-                morphemes = self.model.viterbi_segment(comp.lower())[0]
+                morphemes = self.model.viterbi_segment(comp)[0]
 
-                scored_candidates = []
+                candidates = []
                 delimiter_sets = product(['#', 'X'], repeat=len(morphemes) - 1)
 
                 # produce and score each candidate segmentation
                 for d in delimiter_sets:
                     candidate = [x for y in izip(morphemes, d) for x in y]
-                    candidate = ['#', ] + filter(None, candidate) + ['#', ]
-                    scored_candidates.append(self.score(candidate))
+                    candidate = filter(None, candidate)
+                    candidates.append(candidate)
 
-                # select the best-scoring segmentation
-                morphemes = max(scored_candidates)[1]
-                token.append(morphemes)
+                # # select the best-scoring segmentation
+                # comp = self._select_best(comp, candidates)
+                candidates = self._score_candidates(comp, candidates)
 
-            else:
-                token.append(comp)
+                # # if multiple candidates have the same score, select the
+                # # least segmented candidate
+                # best = max(candidates)[0]
+                # candidates = filter(lambda c: c[0] == best, candidates)
+
+                # if len(candidates) > 1:
+                #     candidates.sort(key=lambda c: c[1].count('='))
+                #     candidate = candidates[0][1]
+
+                # else:
+                #     candidate = max(candidates)[1]
+
+                comp = max(candidates)[1]
+                comp = phon.replace_umlauts(comp, put_back=True)
+
+            token.append(comp)
 
         # return the segmentation in string form
         return ''.join(token)
 
-    def get_morphemes(self, word):
+    def _score_candidates_ngram(self, comp, candidates):
+        # (['#', 'm', 'X', 'm', '#', 'm', '#'], 'mm=m')
+        for i, cand in enumerate(candidates):
+            cand = ''.join(cand)
+            cand = cand.replace('#', '=').replace('X', '')
+            cand = phon.replace_umlauts(cand)
+            candidates[i] = (['#', ] + candidates[i] + ['#', ], cand)
+
+        return [(self.ngram_score(c1), c2) for c1, c2 in candidates]
+
+    def _score_candidates_unviolable(self, comp, candidates):
+        count = len(candidates)
+
+        # a boolean indicating if the component is likely foreign
+        f = phon.is_foreign(comp)
+
+        # (['#', 'm', 'X', 'm', '#', 'm', '#'], 'mm=m')
+        for i, cand in enumerate(candidates):
+            cand = ''.join(cand)
+            cand = cand.replace('#', '=').replace('X', '')
+            cand = phon.replace_umlauts(cand)
+            candidates[i] = (['#', ] + candidates[i] + ['#', ], cand)
+
+        if count > 1:
+            #         Cand1   Cand2
+            # C1      [0,     0]
+            # C2      [0,     0]
+            # C3      [0,     0]
+            tableau = [[0] * count for i in range(self.constraint_count)]
+
+            for i, const in enumerate(self.constraints):
+                for j, cand in enumerate(candidates):
+                    for seg in cand[1].split('='):
+                        tableau[i][j] += 0 if const.test(seg, f) else 1
+
+                # ignore violations when they are incurred by every candidate
+                min_violations = min(tableau[i])
+                tableau[i] = map(lambda v: v - min_violations, tableau[i])
+
+            violations = {
+                c[1]: sum(tableau[r][i] for r in range(self.constraint_count))
+                for i, c in enumerate(candidates)
+                }
+
+            # filter out candidates that violate any constraints
+            candidates = filter(lambda c: not violations[c[1]], candidates)
+
+            # if every candidate violates some constraint, back off to the
+            # simplex candidate
+            if len(candidates) == 0:
+                return [(1.0, comp)]
+
+        return [(self.ngram_score(c1), c2) for c1, c2 in candidates]
+
+    def _score_candidates_weighted(self, comp, candidates):
+        # adjust the constraint test to apply to a set of segments instead
+        # of to a single segment
+        def extend(const, cand, foreign):
+            return 1.0 if all(const.test(c, foreign) for c in cand) else 0.0
+
+        # a boolean indicating if the component is likely foreign
+        f = phon.is_foreign(comp)
+
+        # (['#', 'm', 'X', 'm', '#', 'm', '#'], 'mm=m', ['mm', 'm'])
+        for i, cand in enumerate(candidates):
+            cand = ''.join(cand)
+            cand = cand.replace('#', '=').replace('X', '')
+            cand = phon.replace_umlauts(cand)
+            candidates[i] = (
+                ['#', ] + candidates[i] + ['#', ],
+                cand,
+                cand.split('='),
+                )
+
+        scored_candidates = []
+
+        for c1, c2, c3 in candidates:
+            score = sum(extend(c, c3, f) * c.weight for c in self.constraints)
+            score += self.ngram_score(c1) * self.ngram_weight
+            scored_candidates.append((score, c2))
+
+        return scored_candidates
+
+    # Info --------------------------------------------------------------------
+
+    def get_info(self, orth, gold='N/A'):
+        foreign = ' (foreign)' if phon.is_foreign(orth) else ''
+        candidates = self.get_candidates(orth)
+        inputs = [c[1] for c in candidates]
+
+        info = '\n%s%s\nGold: %s\nWinner: %s\nMorphemes: %s%s' % (
+            orth, foreign, gold, self.segment(orth), self.get_morphemes(orth),
+            ' (Morfessor error)' if gold not in inputs else '',
+            )
+
+        headers = [''] + self.constraint_names + ['Ngram']
+        violations = [[i] + [0] * self.constraint_count + [''] for i in inputs]
+
+        for i, row in enumerate(violations):
+
+            # tally linguistic constaint violations
+            for seg in re.split(r'=|-| ', row[0]):
+                for j, const in enumerate(self.constraints, start=1):
+                    violations[i][j] += 0 if const.test(seg, foreign) else 1
+
+            # tally "ngram" violations
+            for seg in re.split(r'-| ', candidates[i][0]):
+                candidate = re.split(r'(X|#)', seg)
+                candidate = ['#'] + candidate + ['#']
+                violations[i][-1] += ' %s' % self.ngram_score(candidate)
+
+            # replace zeros with empty strings
+            violations[i] = map(lambda n: '' if n == 0 else n, violations[i])
+
+        tableau = tabulate(violations, headers=headers).replace('\n', '\n\t')
+        info += '\n\n\t%s' % tableau
+
+        return info
+
+    def get_morphemes(self, word, string_form=True):
         morphemes = []
 
         # split the word along any overt delimiters and iterate across the
         # components
-        for component in re.split(r'(-| )', word):
+        for comp in re.split(r'(-| )', word.lower()):
 
-            if len(component) > 1:
+            if len(comp) > 1:
 
                 # use the language model to obtain the component's morphemes
-                comp = map(
-                    lambda m: m.replace(' ', '').replace('-', ''),
-                    self.model.viterbi_segment(component.lower())[0],
-                    )
+                comp = self.model.viterbi_segment(comp)[0]
                 morphemes.extend(comp)
 
             else:
                 morphemes.append(comp)
 
-        # convert morphemes into string form
-        morphemes = '_'.join(morphemes)
+        if string_form:
+
+            # convert morphemes into string form
+            morphemes = '{' + ', '.join(morphemes) + '}'
 
         return morphemes
 
-    def get_candidates(self, word, gold_base_form=True):
+    def get_candidates(self, word, gold_base_form=False):
         candidates = []
 
         # split the word along any overt delimiters and iterate across the
         # components
-        for comp in re.split(r'(-| )', word):
+        for comp in re.split(r'(-| )', word.lower()):
 
             if len(comp) > 1:
 
                 # use the language model to obtain the component's morphemes
-                morphemes = self.FinnSeg.model.viterbi_segment(comp)[0]
+                morphemes = self.model.viterbi_segment(comp)[0]
 
                 comp_candidates = []
                 delimiter_sets = product(['#', 'X'], repeat=len(morphemes) - 1)
@@ -501,8 +505,8 @@ class FinnSeg(object):
                 # produce and score each candidate segmentation
                 for d in delimiter_sets:
                     candidate = [x for y in izip(morphemes, d) for x in y]
-                    candidate = ['#', ] + filter(None, candidate) + ['#', ]
-                    comp_candidates.append(self.FinnSeg.score(candidate)[1])
+                    candidate = filter(None, candidate)
+                    comp_candidates.append(''.join(candidate))
 
                 candidates.append(comp_candidates)
 
@@ -512,13 +516,15 @@ class FinnSeg(object):
         # convert candidates into string form
         candidates = [''.join(c) for c in product(*candidates)]
 
-        if gold_base_form:
+        # convert candidates into gold_base form
+        # # (['#', 'm', 'X', 'm', '#', 'm', '#'], 'mm=m')
+        for i, c in enumerate(candidates):
+            c = c.replace('#', '=').replace('X', '')
+            c = phon.replace_umlauts(c)
+            candidates[i] = (candidates[i], c)
 
-            # convert candidates into gold_base form
-            for i, c in enumerate(candidates):
-                candidates = c.replace('#', '=').replace('X', '')
-                candidates = replace_umlauts(candidates)
-                candidates[i] = candidates
+        if gold_base_form:
+            candidates = [cand[1] for cand in candidates]
 
         return candidates
 
@@ -529,19 +535,21 @@ class FinnSeg(object):
         # false negatives, and accurately identified compounds with 'bad'
         # segmentations
         results = {'TP': [], 'FP': [], 'TN': [], 'FN': [], 'bad': []}
-        precision, recall, tp, fp, fn = [], [], 0, 0, 0
+        tp, fp, fn = 0.0, 0.0, 0.0
 
         for t in self.validation_tokens:
             word = self.segment(t.orth)
-            gold = replace_umlauts(t.gold_base, put_back=True)
+            gold = phon.replace_umlauts(t.gold_base, put_back=True)
 
             label = self._word_level_evaluate(word, gold, t.is_complex)
-            results[label].append((word, gold))
+            results[label].append((
+                (word, gold, self.get_morphemes(t.orth)),
+                t,
+                ))
 
+            # if the word is a closed compound
             if label != 'TN':
-                p, r, tp_, fp_, fn_ = self._boundary_level_evaluate(word, gold)
-                precision.append(p)
-                recall.append(r)
+                tp_, fp_, fn_ = self._boundary_level_evaluate(word, gold)
                 tp += tp_
                 fp += fp_
                 fn += fn_
@@ -553,17 +561,22 @@ class FinnSeg(object):
         bad = len(results['bad'])
 
         # calculate precision, recall, and F-measures on a word-by-word basis
-        P = (TP * 1.0) / (TP + FP + bad)
-        R = (TP * 1.0) / (TP + FN + bad)
+        P = float(TP) / (TP + FP + bad)
+        R = float(TP) / (TP + FN + bad)
         F1 = (2.0 * P * R) / (P + R)
-        F05 = ((0.5**2 + 1.0) * P * R) / ((0.5**2 * P) + R)
+        F05 = (float(0.5**2) * P * R) / ((0.5**2 * P) + R)
+        ACCURACY = float(TP + TN) / (TP + TN + FP + FN + bad)
 
         # calculate precision, recall, and F-measures on a
         # boundary-by-boundary basis
-        p = float(sum(precision)) / len(precision)
-        r = float(sum(recall)) / len(recall)
+        tn = ''.join(
+            self.get_morphemes(t.orth) for t in self.validation_tokens
+            ).count(',') - tp - fp - fn
+        p = tp / (tp + fp)
+        r = tp / (tp + fn)
         f1 = (2.0 * p * r) / (p + r)
-        f05 = ((0.5**2 + 1.0) * p * r) / ((0.5**2 * p) + r)
+        f05 = (float(0.5**2) * p * r) / ((0.5**2 * p) + r)
+        accuracy = float(tp + tn) / (tp + tn + fp + fn)
 
         # TODO: calculate perplexity
 
@@ -575,27 +588,24 @@ class FinnSeg(object):
             # '\n\nFalse negatives:\n\t%s'
             # '\n\nFalse positives:\n\t%s'
             # '\n\nBad segmentations:\n\t%s'
-            '%s%s'
-            '\n\nWeights:\n\t%s'
+            '\n\n%s'
             '\n\nWord-Level:'
             '\n\tTP:\t%s\n\tFP:\t%s\n\tTN:\t%s\n\tFN:\t%s\n\tBad:\t%s'
-            '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s'
+            '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s\n\tAcc.:\t%s'
             '\n\nBoundary-Level:'
             '\n\tTP:\t%s\n\tFP:\t%s\n\tFN:\t%s'
-            '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s\n\n'
+            '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s\n\tAcc.:\t%s\n\n'
             '-----------------------------------------------------------------'
             '\n'
             ) % (
-                # '\n\t'.join(['%s (%s)' % t for t in results['TN']]),
-                # '\n\t'.join(['%s (%s)' % t for t in results['TP']]),
-                # '\n\t'.join(['%s (%s)' % t for t in results['FN']]),
-                # '\n\t'.join(['%s (%s)' % t for t in results['FP']]),
-                # '\n\t'.join(['%s (%s)' % t for t in results['bad']]),
-                '\n\n** Unviolable constraints' if self.unviolable else '',
-                '\n\n** UNK modeling' if self.UNK else '',
-                '\n\t'.join(['%s=%s' % t for t in self.weighted_constraints]),
-                TP, FP, TN, FN, bad, P, R, F1, F05,
-                tp, fp, fn, p, r, f1, f05,
+                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['TN']]),
+                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['TP']]),
+                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FN']]),
+                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FP']]),
+                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['bad']]),
+                self.description,
+                TP, FP, TN, FN, bad, P, R, F1, F05, ACCURACY,
+                int(tp), int(fp), int(fn), p, r, f1, f05, accuracy,
                 )
 
         print self.report
@@ -603,7 +613,7 @@ class FinnSeg(object):
     def _word_level_evaluate(self, word, gold, is_complex):
         # true positive or true negative
         if word == gold:
-            label = 'TP' if is_complex else 'TN'
+            label = 'TP' if is_complex and '=' in gold else 'TN'
 
         # bad segmentation or false positive
         elif '=' in word:
@@ -616,15 +626,10 @@ class FinnSeg(object):
         return label
 
     def _boundary_level_evaluate(self, word, gold):
-        tp = 0
-        fp = 0
-        fn = 0
+        tp, fp, fn = 0, 0, 0
 
         if word == gold:
-
-            tp += word.count('=') + word.count(' ') + word.count('-')
-            precision = 1
-            recall = 1
+            tp += word.count('=')
 
         else:
             gold_index = 0
@@ -648,177 +653,32 @@ class FinnSeg(object):
                     fp += 1
                     gold_index += 1
 
-            try:
-                precision = float(tp) / (tp + fp)
-                recall = float(tp) / (tp + fn)
+        return tp, fp, fn
 
-            except ZeroDivisionError:
-                precision = 0
-                recall = 0
-
-        return precision, recall, tp, fp, fn
-
-
-# MaxEnt ----------------------------------------------------------------------
-
-class MaxEntInput(object):
-
-    def __init__(self):
-        self.FinnSeg = FinnSeg(train_coefficients=False, Eval=False)
-        self.create_maxent_input()
-        self.tableaux = None
-
-    def create_maxent_input(self):
-        try:
-            open('data/MaxEntInputTest.csv', 'rb')
-
-        except IOError:
-            print 'Generating tableaux...'
-
-            # underlying forms, candidates, and frequency columns
-            col3 = ['', '', '']
-
-            # constraint columns
-            tableaux = [
-                col3 + ['Ngram', 'Nuclei', 'Word-final', 'Harmonic', 'SonSeq'],
-                col3 + ['C1',    'C2',     'C3',         'C4',       'C5'],
-                ]
-
-            for t in self.FinnSeg.training_tokens:
-                Input = t.orth.lower()
-                candidates = self._get_candidates(Input)
-
-                # delete winning candidate to preprend it to outputs
-                try:
-                    winner_violations = candidates.get(t.gold_base, 0)
-                    del candidates[t.gold_base]
-
-                except (ValueError, KeyError):
-                    pass
-
-                outputs = [(t.gold_base, winner_violations), ]
-                outputs += candidates.items()
-
-                # if there are no losing candidates, exclude the token from the
-                # tableaux
-                if len(outputs) == 1:
-                    continue
-
-                all_violations = self._get_constraint_violations(outputs)
-
-                # append the winner to the tableaux
-                Input = Input.encode('utf-8')
-                tableaux.append([Input, outputs[0][0], 1] + all_violations[0])
-
-                # append the losers to the tableaux
-                for output, violations in zip(outputs, all_violations)[1:]:
-                    tableaux.append(['', output[0], 0] + violations)
-
-            # write tableaux to a csv file
-            with open('data/MaxEntInput.csv', 'wb') as f:
-                writer = csv.writer(f)
-                writer.writerows(tableaux)
-
-            self.tableaux = tableaux
-
-    def _get_candidates(self, word):
-        scored_candidates = {}
-        scores = {}
-        candidates = []
-
-        # split the word along any overt delimiters and iterate across the
-        # components
-        for comp in re.split(r'(-| )', word):
-
-            if len(comp) > 1:
-
-                # use the language model to obtain the component's morphemes
-                morphemes = self.FinnSeg.model.viterbi_segment(comp)[0]
-
-                comp_candidates = []
-                delimiter_sets = product(['#', 'X'], repeat=len(morphemes) - 1)
-
-                # produce and score each candidate segmentation
-                for d in delimiter_sets:
-                    candidate = [x for y in izip(morphemes, d) for x in y]
-                    candidate = ['#', ] + filter(None, candidate) + ['#', ]
-
-                    # collect ngram violations before the candidate component
-                    # is converted into string form
-                    score = self.FinnSeg._stupid_backoff_score(candidate)
-                    score *= -1.0
-
-                    # convert candidate into string form
-                    candidate = ''.join(candidate[1:-1])
-                    candidate = candidate.replace('#', '=').replace('X', '')
-                    candidate = replace_umlauts(candidate)
-
-                    comp_candidates.append(candidate)
-                    scores[candidate] = round(score)
-
-                candidates.append(comp_candidates)
-
-            else:
-                candidates.append(comp)
-
-        # generate full candidates
-        candidates = [c for c in product(*candidates)]
-
-        # collect ngram violations for full candidates
-        for candidate in candidates:
-            violations = 0
-
-            for morphemes in candidate:
-                violations += scores.get(morphemes, 0)
-
-            # convert fulls candidates into string form
-            candidate = ''.join(candidate)
-            scored_candidates[candidate] = violations
-
-        return scored_candidates
-
-    def _get_constraint_violations(self, outputs):
-        # constraints: a  b  c  d  e
-        violations = [[0, 0, 0, 0, 0] for i in xrange(len(outputs))]
-
-        for i, output in enumerate(outputs):
-            violations[i][0] = int(output[1])
-
-            for seg in re.split(r'=|-| ', output[0]):
-                violations[i][1] += 0 if _nuclei(seg) else 1
-                violations[i][2] += 0 if _word_final(seg) else 1
-                violations[i][3] += 0 if _harmonic(seg) else 1
-                violations[i][4] += 0 if _sonseq(seg) else 1
-
-            violations[i] = map(lambda n: '' if n == 0 else n, violations[i])
-
-        return violations
-
-    # TODO: extract weights for FinnSeg
 
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    # MaxEntInput()
+    FinnSeg()
+    FinnSeg(unviolable=True)
 
-    FinnSeg(train_weights=False)
-    # FinnSeg(train_weights=False, UNK=True)
-    # FinnSeg(train_weights=False, unviolable=True)  # No. 2
-    # FinnSeg(train_weights=False, UNK=True, unviolable=True)
-    # FinnSeg(weights=[0.1, 0.0, 0.0, 0.0, 0.0, 0.0])
+    maxent_weights = [
+        5.305329775582556,          # MnWord
+        6.153882174305419,          # SonSeq
+        4.163580509823143,          # *VVC
+        1.0976921761078926,         # Harmonic
+        2.2953719576790137,         # Word#
+        1.7446722100824115,         # Ngram
+        ]
 
-    # # no false positives!
-    # FinnSeg(weights=[0.80, 0.0, 0.0, 0.05, 0.05, 0.1], unviolable=True)
+    Sum = sum(maxent_weights)
+    weights = [w / Sum for w in maxent_weights]
 
-    # # MaxEnt: 5 constraints
-    # maxent_weights = [
-    #     1.5631777946044625,         # ngram
-    #     1.3520000193826711,         # nuclei
-    #     8.93479259279159,           # sonseq
-    #     1.3877787807814457E-17,     # harmonic
-    #     4.904941422169471,          # word-final
-    #     0.0,                        # boundaries
-    #     ]
-    # Sum = sum(maxent_weights)
-    # weights = [w / Sum for w in maxent_weights]
-    # FinnSeg(weights=weights)  # No. 1
+    for i in xrange(len(CONSTRAINTS)):
+        CONSTRAINTS[i].weight = weights[i]
+
+    FinnSeg(weighted=True, constraints=CONSTRAINTS)
+
+    # F = FinnSeg(Eval=False)
+    # for t in VALIDATION:
+    #     print F.get_info(t.orth.lower(), t.gold_base)
