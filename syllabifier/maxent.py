@@ -11,13 +11,21 @@ from sys import argv
 
 F = FinnSeg(Eval=False)
 
+date = str(datetime.utcnow())
+
 
 # MaxEnt Harmonic Grammar -----------------------------------------------------
 
 class MaxEntInput(object):
 
-    def __init__(self, filename=str(datetime.utcnow())):
+    def __init__(self, ignore_foreign=False, training=True, filename=None):
+        self.ignore_foreign = ignore_foreign
+        self.tokens = F.training_tokens if training else F.validation_tokens
+
+        filename = date if not filename else filename.capitalize()
+        filename = ('Training' if training else 'Validation') + filename
         self.filename = 'data/MaxEnt-' + filename + '-Input.txt'
+
         self.create_maxent_input()
         self.tableaux = None
 
@@ -37,7 +45,7 @@ class MaxEntInput(object):
 
             # for each token, generate a violations tableau and append it to
             # the master tableaux
-            for t in F.training_tokens:
+            for t in self.tokens:
 
                 try:
                     tableaux += self.prepare_tableau(t)
@@ -57,7 +65,7 @@ class MaxEntInput(object):
         Gold = token.gold_base
 
         # ignore foreign words in the constraint weighting
-        if is_foreign(Input):
+        if self.ignore_foreign and is_foreign(Input):
             return None
 
         candidates = F.get_candidates(Input)
@@ -122,9 +130,15 @@ class MaxEntInput(object):
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
+    ignore_foreign = '-f' in argv
+    training = '-v' not in argv
 
     try:
-        MaxEntInput(argv[1])
+        MaxEntInput(
+            ignore_foreign=ignore_foreign,
+            training=training,
+            filename=argv[1] if argv[1] not in '-f -v' else None,
+            )
 
     except IndexError:
-        MaxEntInput()
+        MaxEntInput(ignore_foreign=ignore_foreign, training=training)
