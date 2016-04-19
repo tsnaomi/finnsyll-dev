@@ -581,24 +581,13 @@ class FinnSeg(object):
         # false negatives, and accurately identified compounds with 'bad'
         # segmentations
         results = {'TP': [], 'FP': [], 'TN': [], 'FN': [], 'bad': []}
-        tp, fp, fn = 0.0, 0.0, 0.0
 
         for t in self.validation_tokens:
             word = self.segment(t.orth)
             gold = phon.replace_umlauts(t.gold_base, put_back=True)
 
             label = self._word_level_evaluate(word, gold, t.is_complex)
-            results[label].append((
-                (word, gold, self.get_morphemes(t.orth)),
-                t,
-                ))
-
-            # if the word is a closed compound
-            if label != 'TN':
-                tp_, fp_, fn_ = self._boundary_level_evaluate(word, gold)
-                tp += tp_
-                fp += fp_
-                fn += fn_
+            results[label].append((word, gold, self.get_morphemes(t.orth)))
 
         TP = len(results['TP'])
         FP = len(results['FP'])
@@ -629,11 +618,11 @@ class FinnSeg(object):
             '-----------------------------------------------------------------'
             '\n'
             ) % (
-                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['TN']]),
-                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['TP']]),
-                '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FN']]),
-                '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FP']]),
-                '\n\t'.join(['%s (%s) %s' % t[0] for t in results['bad']]),
+                # '\n\t'.join(['%s (%s) %s' % t for t in results['TN']]),
+                # '\n\t'.join(['%s (%s) %s' % t for t in results['TP']]),
+                '\n\t'.join(['%s (%s) %s' % t for t in results['FN']]),
+                '\n\t'.join(['%s (%s) %s' % t for t in results['FP']]),
+                '\n\t'.join(['%s (%s) %s' % t for t in results['bad']]),
                 self.description,
                 TP, FP, TN, FN, bad, P, R, F1, F05, ACCURACY,
                 )
@@ -672,7 +661,7 @@ if __name__ == '__main__':
     FinnSeg(approach='Unviolable')
     # FinnSeg(approach='Unviolable', excl_val_loans=True)
 
-    FinnSeg(approach='OT')
+    # FinnSeg(approach='OT')
     # FinnSeg(approach='OT', excl_val_loans=True)
 
     # maxent-4-exclLoans
