@@ -613,60 +613,39 @@ class FinnSeg(object):
         F05 = (float(0.5**2 + 1) * P * R) / ((0.5**2 * P) + R)
         ACCURACY = float(TP + TN) / (TP + TN + FP + FN + bad)
 
-        # # calculate precision, recall, and F-measures on a
-        # # boundary-by-boundary basis
-        # tn = ''.join(
-        #     self.get_morphemes(t.orth) for t in self.validation_tokens
-        #     ).count(',') - tp - fp - fn
-        # p = tp / (tp + fp)
-        # r = tp / (tp + fn)
-        # f1 = (2.0 * p * r) / (p + r)
-        # f05 = (float(0.5**2 + 1) * p * r) / ((0.5**2 * p) + r)
-        # accuracy = float(tp + tn) / (tp + tn + fp + fn)
-
         self.report = (
             '\n'
             '---- Evaluation: FinnSeg ----------------------------------------'
             # '\n\nTrue negatives:\n\t%s'
             # '\n\nTrue positives:\n\t%s'
-            # '\n\nFalse negatives:\n\t%s'
-            # '\n\nFalse positives:\n\t%s'
-            # '\n\nBad segmentations:\n\t%s'
+            '\n\nFalse negatives:\n\t%s'
+            '\n\nFalse positives:\n\t%s'
+            '\n\nBad segmentations:\n\t%s'
             '\n\n%s'
             '\n\nWord-Level:'
             '\n\tTP:\t%s\n\tFP:\t%s\n\tTN:\t%s\n\tFN:\t%s\n\tBad:\t%s'
             '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s\n\tAcc.:\t%s'
-            # '\n\nBoundary-Level:'
-            # '\n\tTP:\t%s\n\tFP:\t%s\n\tTN:\t%s\n\tFN:\t%s'
-            # '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s\n\tAcc.:\t%s'
             '\n\n'
             '-----------------------------------------------------------------'
             '\n'
             ) % (
                 # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['TN']]),
                 # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['TP']]),
-                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FN']]),
-                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FP']]),
-                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['bad']]),
+                '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FN']]),
+                '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FP']]),
+                '\n\t'.join(['%s (%s) %s' % t[0] for t in results['bad']]),
                 self.description,
                 TP, FP, TN, FN, bad, P, R, F1, F05, ACCURACY,
-                # int(tp), int(fp), int(tn), int(fn), p, r, f1, f05, accuracy,
                 )
 
         if self.Print:
             print self.report
 
-        # save word-level performance for
+        # save word-level performance
         self.w_precision = P
         self.w_recall = R
         self.w_f1 = F1
         self.w_accuracy = ACCURACY
-
-        # # save boundary-level performance for
-        # self.b_precision = p
-        # self.b_recall = r
-        # self.b_f1 = f1
-        # self.b_accuracy = accuracy
 
     def _word_level_evaluate(self, word, gold, is_complex):
         # true positive or true negative
@@ -683,40 +662,10 @@ class FinnSeg(object):
 
         return label
 
-    def _boundary_level_evaluate(self, word, gold):
-        tp, fp, fn = 0, 0, 0
-
-        if word == gold:
-            tp += word.count('=')
-
-        else:
-            gold_index = 0
-            word_index = 0
-
-            for i in range(max(len(word), len(gold))):
-                w = word[i - word_index]
-                g = gold[i - gold_index]
-
-                if g == w and g != '=':
-                    continue
-
-                elif g == w == '=':
-                    tp += 1
-
-                elif g == '=':
-                    fn += 1
-                    word_index += 1
-
-                else:
-                    fp += 1
-                    gold_index += 1
-
-        return tp, fp, fn
-
 # ----------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    FinnSeg()
+    # FinnSeg()
     # FinnSeg(excl_val_loans=True)
     # FinnSeg(annotation=False)
 
@@ -726,13 +675,13 @@ if __name__ == '__main__':
     FinnSeg(approach='OT')
     # FinnSeg(approach='OT', excl_val_loans=True)
 
-    # # maxent-t-4-exclLoans
+    # maxent-4-exclLoans
     # maxent_weights = [
-    #     9.918085228621225,          # MnWord
-    #     7.334780578539304,          # SonSeq
-    #     2.4936181148956535,         # Word#
-    #     9.010501248259635,          # Harmonic
-    #     1.5199510494680544,         # Ngram
+    #     9.836141130279886,          # MnWord
+    #     10.228120047000191,         # SonSeq
+    #     3.071492845484277,          # Word#
+    #     8.430433259658745,          # Harmonic
+    #     1.7105398264864282,         # Ngram
     #     ]
 
     # Sum = sum(maxent_weights)
@@ -744,13 +693,13 @@ if __name__ == '__main__':
     # FinnSeg(approach='Maxent', constraints=CONSTRAINTS)
     # FinnSeg(approach='Maxent', constraints=CONSTRAINTS, excl_val_loans=True)
 
-    # # maxent-t-4
+    # maxent-4
     # maxent_weights = [
-    #     1.1344166610426272,         # MnWord
-    #     3.7241108876669204,         # SonSeq
-    #     4.640499891637007,          # Word#
+    #     1.44670171294681,           # MnWord
+    #     4.2840695236354795,         # SonSeq
+    #     2.8222276280581564,         # Word#
     #     0.0,                        # Harmonic
-    #     1.5831766171600858,         # Ngram
+    #     1.77894448249793,           # Ngram
     #     ]
 
     # Sum = sum(maxent_weights)
