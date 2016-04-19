@@ -60,33 +60,13 @@ def is_long(chars):
     return chars == chars[0] * len(chars)
 
 
-# Linguistic constraints ------------------------------------------------------
+# Loanwords -------------------------------------------------------------------
 
-phonemic_inventory = [
-    u'i', u'e', u'A', u'y', u'O', u'a', u'u', u'o', u' ', u'-',
-    u'd', u'h', u'j', u'k', u'l', u'm', u'n', u'p', u'r', u's', u't', u'v',
-]
-
-word_final_inventory = [
-    u'i', u'e', u'A', u'y', u'O', u'a', u'u', u'o',  # vowels
-    u'l', u'n', u'r', u's', u't',  # coronal consonants
-]
-
-onsets_inventory = [
-    u'pl', u'pr', u'tr', u'kl', u'kr', u'sp', u'st', u'sk', u'ps', u'ts',
-    u'sn', u'dr', u'spr', u'str',
-]
-
-codas_inventory = [u'ps', u'ts', u'ks']
-
-
-def is_foreign(segments):
-    word = replace_umlauts(''.join(segments))
-
-    # if the word ends in a non-coronal consonant (excluding /d/), it is likely
-    # foreign
-    if len(word) > 1 and not word[-1] in word_final_inventory:
-        return True
+def is_loanword(word):  # token.gold_base
+    for constituent in re.split(r'-| |=', word):
+        for costraint in [min_word, sonseq, word_final, harmonic]:
+            if not costraint(constituent):
+                return True
 
     foreign_chars = set([c for c in word if c not in phonemic_inventory])
 
@@ -95,99 +75,41 @@ def is_foreign(segments):
     # in the Finnish phonemic inventory
     if set('g') == foreign_chars:
         g = word.index('g')
+
+        if not g or word[g - 1] != 'n':
+            return True
+
+        g = word.rindex('g')
         return not g or word[g - 1] != 'n'
 
     return bool(foreign_chars)
 
 
-# Vowel Harmony ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Linguistic constraints ------------------------------------------------------
 
-FRONT_VOWELS = [u'A', u'y', u'O']
+phonemic_inventory = [
+    u'i', u'e', u'A', u'y', u'O', u'a', u'u', u'o', u' ', u'-', '=',
+    u'd', u'h', u'j', u'k', u'l', u'm', u'n', u'p', u'r', u's', u't', u'v']
 
-BACK_VOWELS = [u'a', u'u', u'o']
+word_final_inventory = [
+    u'i', u'e', u'A', u'y', u'O', u'a', u'u', u'o',  # vowels
+    u'l', u'n', u'r', u's', u't']  # coronal consonants
 
-NEUTRAL_VOWELS = [u'e', u'i']
+onsets_inventory = [
+    u'pl', u'pr', u'tr', u'kl', u'kr', u'sp', u'st', u'sk', u'ps', u'ts',
+    u'sn', u'dr', u'spr', u'str']
 
-
-def is_front(ch):
-    return ch in FRONT_VOWELS
-
-
-def is_back(ch):
-    return ch in BACK_VOWELS
-
-
-def is_neutral(ch):
-    return ch in NEUTRAL_VOWELS
-
-DEPTH = {
-    'A': 'front',
-    'y': 'front',
-    'O': 'front',
-    'a': 'back',
-    'u': 'back',
-    'o': 'back',
-    }
+codas_inventory = [u'ps', u'ts', u'ks']
 
 
-def harmonic(word, foreign=False):
-    # if foreign:
-    #     return True
-
-    # check if the vowels agree in front/back harmony
-    vowels = filter(is_vowel, [ch for ch in word])
-    vowels = filter(lambda x: not is_neutral(x), vowels)
-    depths = map(lambda x: DEPTH[x], vowels)
-
-    return len(set(depths)) < 2
+def min_word(word):
+    # check if the segment contains more than one vowel
+    return len(filter(is_vowel, word)) > 1
 
 
-# Sonority Sequencing ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-sonorities = {
-    # sibilant /s/
-    u's': 0,
-
-    # obstruents
-    u'p': 1,
-    u'b': 1,
-    u't': 1,
-    u'd': 1,
-    u'c': 1,  # TODO
-    u'q': 1,  # TODO
-    u'x': 1,  # TODO
-    u'k': 1,
-    u'g': 1,
-    u"'": 1,
-    u'f': 1,
-    u'v': 1,
-    u'z': 1,
-    u'h': 1,
-
-    # approximants
-    u'l': 2,
-    u'r': 2,
-    u'j': 2,
-    u'w': 2,  # TODO
-
-    # nasals
-    u'm': 3,
-    u'n': 3,
-    }
-
-
-def sonseq(word, foreign=False):
-    # check if the word has good sonority peaks
-    def is_sloping(word, rising=True):
-        slope = [sonorities.get(s, 0) for s in word]
-
-        return slope == sorted(list(set(slope)), reverse=not rising)
-
+def sonseq(word):
     parts = re.split(r'([ieAyOauo]+)', word)
     onset, coda = parts[0], parts[-1]
-
-    # if foreign:
-    #     return is_sloping(onset) and is_sloping(coda, rising=False)
 
     #  simplex onset      Finnish complex onset
     if len(onset) <= 1 or onset in onsets_inventory:
@@ -197,32 +119,47 @@ def sonseq(word, foreign=False):
     return False
 
 
-# MinWord ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-def min_word(word, _):
-    # check if the segment contains more than one vowel
-    return len(filter(is_vowel, word)) > 1
-
-
-# *VVC ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-def not_VVC(word, _):
-    # check that the word is not of the form VVC
-    if len(word) == 3:
-        return not(
-            is_vowel(word[0]) and
-            is_vowel(word[1]) and
-            is_consonant(word[2])
-            )
-
-    return True
-
-
-# Word-final ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-def word_final(seg, _):
+def word_final(word):
     # check if the word ends in a coronal consonant
-    return seg[-1] in word_final_inventory
+    return word[-1] in word_final_inventory
+
+
+def word_initial(word):
+    # check if the words begins with a sound in the Finnish phonemic inventory
+    return word[0] in phonemic_inventory
+
+
+def harmonic(word):
+    FRONT_VOWELS = [u'A', u'y', u'O']
+
+    BACK_VOWELS = [u'a', u'u', u'o']
+
+    NEUTRAL_VOWELS = [u'e', u'i']
+
+    DEPTH = {
+        'A': 'front',
+        'y': 'front',
+        'O': 'front',
+        'a': 'back',
+        'u': 'back',
+        'o': 'back',
+        }
+
+    def is_front(ch):
+        return ch in FRONT_VOWELS
+
+    def is_back(ch):
+        return ch in BACK_VOWELS
+
+    def is_neutral(ch):
+        return ch in NEUTRAL_VOWELS
+
+    # check if the vowels agree in front/back harmony
+    vowels = filter(is_vowel, [ch for ch in word])
+    vowels = filter(lambda x: not is_neutral(x), vowels)
+    depths = map(lambda x: DEPTH[x], vowels)
+
+    return len(set(depths)) < 2
 
 
 # Normalization functions -----------------------------------------------------
@@ -307,6 +244,3 @@ def _get_syllable_weight(syllable):
 
     except ValueError:
         return u'?'
-
-
-# -----------------------------------------------------------------------------

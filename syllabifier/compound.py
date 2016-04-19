@@ -49,138 +49,119 @@ class Constraint:
 
 C1 = Constraint('MnWrd', phon.min_word)
 C2 = Constraint('SonSeq', phon.sonseq)
-C3 = Constraint('*VVC', phon.not_VVC)
+C3 = Constraint('Word#', phon.word_final)
 C4 = Constraint('Harmonic', phon.harmonic)
-C5 = Constraint('Word#', phon.word_final)
 
 # boosts precision at the expense accuracy
-C6 = Constraint('#Word', phon.word_initial)
+C5 = Constraint('#Word', phon.word_initial)
 
-# CONSTRAINTS = [C1, C2, C3, C4, C5]
-# CONSTRAINTS = [C1, C2, C3, C4, C5, C6]
-# CONSTRAINTS = [C1, C2, C4, C5, C6]
-CONSTRAINTS = [C1, C2, C4, C5]
+# ranked constraints
+CONSTRAINTS = [C1, C2, C3, C4]
 
 
 # FinnSeg ---------------------------------------------------------------------
 
 class FinnSeg(object):
 
-    def __init__(self, training=TRAINING, validation=VALIDATION, Eval=True,
-                 filename='data/morfessor', smoothing='stupid', UNK=False,
-                 constraints=CONSTRAINTS, unviolable=False, weighted=False,
-                 excl_loans=True):
-        # the segmenter can take either a violable or unviolable approach
-        # (or neither)
-        if unviolable and weighted:
-            msg = 'May not select both "weighted" and "unviolable".'
-            raise ValueError(msg)
+    def __init__(self, training=TRAINING, validation=VALIDATION, constraints=CONSTRAINTS, filename='data/morfessor', Eval=True, Print=True, annotation=True, approach=None, excl_train_loans=False, excl_val_loans=False):  # noqa
+        # note the particulars
+        self.approach = approach
+        self.annotation = annotation
+        self.Print = Print
 
-        # select the ngram scoring function
-        if smoothing.lower() == 'stupid':
-            self.ngram_score = self._stupid_backoff_score
-
-        else:
-            raise ValueError('Invalid smoothing algorithm specified.')
-
-        # if unviolable is specified, use unviolable linguistic constraints
-        if unviolable:
-            # set the score-candidates function
-            self._score_candidates = self._score_candidates_unviolable
-
-            # set the description for the evaluation report
-            self.description = '%s%s** Unviolable constraints\n\n\t%s' % (
-                '** Excl. loanwords\n' if excl_loans else '',
-                '** UNK modeling\n' if UNK else '',
-                '\n\t'.join([str(c) for c in constraints]),
-                )
-
-        # if weighted is specified, use weighted linguistic constraints
-        elif weighted:
-            # set the "ngram constraint" weight to whatever weight mass is
-            # missing from the provided constraints
-            self.ngram_weight = 1.0 - sum(c.weight for c in constraints)
-
-            # including the "ngram constraint", the constraint weights must
-            # collectively sum to 1
-            if self.ngram_weight < 0:
-                msg = 'The sum of the constraint weights may not exceed 1.'
-                raise ValueError(msg)
-
-            self._score_candidates = self._score_candidates_weighted
-            self.description = '%s%s** Weighted constraints\n\n\t%s\n\t%s' % (
-                '** Excl. loanwords\n' if excl_loans else '',
-                '** UNK modeling\n' if UNK else '',
-                '\n\t'.join([str(c) for c in constraints]),
-                'Ngram=%s' % self.ngram_weight,
-                )
-
-        # if neither weighted nor unviolable is specified, use only the
-        # language model
-        else:
-            self._score_candidates = self._score_candidates_ngram
-            self.description = '%s** Language model alone%s' % (
-                '** Excl. loanwords\n' if excl_loans else '',
-                '\n** UNK modeling\n' if UNK else '',
-                )
-
-        # constraint details
-        self.weighted = weighted
-        self.unviolable = unviolable
-        self.constraints = constraints
-        self.constraint_count = len(constraints)
-        self.constraint_names = [c.name for c in constraints]
-
-        # filename of training text and morfessor model binary file
+        # filename of the training text and morfessor model binary file
         self.filename = filename
 
-        # set training and validation data
-        if excl_loans:
-            self.training_tokens = training.filter_by(is_loanword=False)
-            self.validation_tokens = validation.filter_by(is_loanword=False)
+        # configure the maxent weights
+        if approach == 'Maxent':
+            # set the NGRAM constraint weight to whatever weight mass is
+            # missing from the provided constraint weights
+            self.ngram_weight = 1.0 - sum(c.weight for c in constraints)
 
-            # revise self.filename to indicate loanwords have been excluded
-            # self.filename += '-exclLoans'
+            # including NGRAM, the constraint weights must sum to 1
+            if self.ngram_weight < 0:
+                raise ValueError('The constraints weights must sum to 1.')
 
-        else:
-            self.training_tokens = training
-            self.validation_tokens = validation
+        # set constraint details
+        self.constraints = constraints
+        self.constraint_count = len(constraints)
+        self.constraint_names = [str(c) for c in constraints]
 
-        # Morfessor model
-        self.model = None
+        # initialize a description of the segmenter
+        self.description = {
+            'OT': '** Optimality Theoretic constraints',
+            'Maxent': '** Weighted (maxent) constraints',
+            'Unviolable': '** Unviolable constraints',
+            None: '** Language model alone',
+        }[approach]
 
-        # ngram and open vocabulary containers, etc.
-        self.UNK = UNK
-        self.ngrams = {}
-        self.vocab = set()
-        self.total = 0
-        self.smoothing = smoothing
+        if not self.annotation:
+            # note in the description that annotations have been excluded from
+            # training morfessor and the language model
+            self.description += '\n** Excl. annotation in training'
 
-        # train segmenter
+            # revise self.filename to indicate that annotations have been
+            # excluded from training morfessor and the language model
+            self.filename += '-exclAnnotation'
+
+        if excl_train_loans:
+            # filter periphery words from the training data
+            training = training.filter_by(is_loanword=False)
+
+            # revise self.filename to indicate that periphery words have been
+            # excluded from training the language model
+            self.filename += '-exclTrainLoans'
+
+            # note in the description that periphery words have been excluded
+            # from training the language model
+            self.description += '\n** Excl. loans in training'
+
+        if excl_val_loans:
+            # filter periphery words from the validation data
+            validation = validation.filter_by(is_loanword=False)
+
+            # note in the description that periphery words have been excluded
+            # from validation
+            self.description += '\n** Excl. loans in validation'
+
+        try:
+
+            if approach:
+                # note in the description the constraints and, if applicable,
+                # their weights
+                self.description += '\n\nConstraints:\n\t%s' % \
+                    '\n\t'.join(self.constraint_names)
+
+                self.description += '\n\tNgram=%s' % self.ngram_weight
+
+        except AttributeError:
+            pass
+
+        # set the training and validation data
+        self.training_tokens = training
+        self.validation_tokens = validation
+
+        # set the score_candidates function based on the approach
+        self.score_candidates = {
+            'OT': self._score_candidates_OT,
+            'Maxent': self._score_candidates_maxent,
+            'Unviolable': self._score_candidates_unviolable,
+            None: self._score_candidates_ngram,
+        }[approach]
+
+        # set the ngram scoring function
+        self.ngram_score = self._stupid_backoff_score
+
+        # train the segmenter
         self.train()
 
-        # evaluation report
-        self.report = None
-
-        # boundary-level performance
-        self.b_precision = 0.0
-        self.b_recall = 0.0
-        self.b_f1 = 0.0
-        self.b_accuracy = 0.0
-
-        # word-level performance
-        self.w_precision = 0.0
-        self.w_recall = 0.0
-        self.w_f1 = 0.0
-        self.w_accuracy = 0.0
-
-        # evaluate segmenter on validation set
+        # evaluate the segmenter on the validaiton set
         if Eval:
             self.evaluate()
 
-    # Training ----------------------------------------------------------------
+    # Train -------------------------------------------------------------------
 
-    def train(self, train_coefficients=True):
+    def train(self):
         self._train_morfessor()
         self._train_ngrams()
 
@@ -188,7 +169,7 @@ class FinnSeg(object):
         io = morfessor.MorfessorIO()
         filename = self.filename + '-training'
 
-        # load model, or train and save model if it is nonexistent
+        # load the morfessor model, or train and save one if it is nonexistent
         try:
             self.model = io.read_binary_model_file(filename + '.bin')
 
@@ -200,8 +181,10 @@ class FinnSeg(object):
             except IOError:
                 print 'Creating training data...'
 
-                tokens = [t.gold_base for t in self.training_tokens]
-                tokens = ' '.join(tokens).replace('-', ' ').replace('=', ' ')
+                delimiter = ' ' if self.annotation else ''
+
+                tokens = ' '.join([t.gold_base for t in self.training_tokens])
+                tokens = tokens.replace('-', ' ').replace('=', delimiter)
                 tokens = phon.replace_umlauts(tokens, put_back=True)
                 tokens = tokens.lower().encode('utf-8')
 
@@ -214,13 +197,11 @@ class FinnSeg(object):
 
             self.model = morfessor.BaselineModel()
             self.model.load_data(train_data)
-            self.model.train_batch()
+            self.model.train_batch(finish_threshold=0.001)
             io.write_binary_model_file(filename + '.bin', self.model)
 
-    # Language modeling -------------------------------------------------------
-
     def _train_ngrams(self):
-        filename = self.filename + ('-ngrams-UNK' if self.UNK else '-ngrams')
+        filename = self.filename + '-ngrams'
 
         # load ngrams, or train and save ngrams if they are nonexistent
         try:
@@ -230,8 +211,16 @@ class FinnSeg(object):
         except IOError:
             print 'Training ngrams...'
 
+            self.ngrams = {}
+            self.vocab = set()
+            self.total = 0
+
+            base_form = (lambda t: t.gold_base) if self.annotation else \
+                (lambda t: t.base)
+
             for t in self.training_tokens:
-                stems = re.split(r'=|-| ', t.gold_base)
+                stems = re.split(r'=|-| ', base_form(t))
+
                 morphemes = filter(None, map(
                     lambda m: m.replace(' ', '').replace('-', ''),
                     self.model.viterbi_segment(t.orth.lower())[0],
@@ -254,32 +243,24 @@ class FinnSeg(object):
                     index += len(morpheme)
 
                 word.append('#')
-
-                # if self.UNK, model out of vocabulary (OOV) words with <UNK>
-                # (this is done by replacing every first instance of a morpheme
-                # with <UNK>)
-                WORD = [m if m in self.vocab else '<UNK>' for m in word] \
-                    if self.UNK else word
                 self.vocab.update(word)
 
                 # get unigram, bigram, and trigram counts
-                for i, morpheme in enumerate(WORD):
+                for i, morpheme in enumerate(word):
                     self.ngrams.setdefault(morpheme, 0)
                     self.ngrams[morpheme] += 1
                     self.total += 1
 
                     if i > 0:
-                        bigram = WORD[i-1] + ' ' + morpheme
+                        bigram = word[i-1] + ' ' + morpheme
                         self.ngrams.setdefault(bigram, 0)
                         self.ngrams[bigram] += 1
 
                     if i > 1:
-                        trigram = WORD[i-2] + ' ' + bigram
+                        trigram = word[i-2] + ' ' + bigram
                         self.ngrams.setdefault(trigram, 0)
                         self.ngrams[trigram] += 1
 
-            # remove any morphemes that were only seen once (since these were
-            # were previously converted into <UNK>)
             self.vocab = filter(lambda w: w in self.ngrams.keys(), self.vocab)
 
             # pickle ngrams to file
@@ -289,13 +270,10 @@ class FinnSeg(object):
                 protocol=pickle.HIGHEST_PROTOCOL,
                 )
 
-    # Smoothing/Scoring -------------------------------------------------------
+    # Smooth/score ------------------------------------------------------------
 
     def _stupid_backoff_score(self, candidate):
         score = 0
-
-        if self.UNK:
-            candidate = [m if m in self.vocab else '<UNK>' for m in candidate]
 
         for i, morpheme in enumerate(candidate):
             C = morpheme
@@ -328,12 +306,9 @@ class FinnSeg(object):
             score += math.log(C_count * 0.4 * 0.4)
             score -= math.log(self.total + len(self.vocab) + 1)
 
-        # score = 100.0 - (score * -1.0)
-        # score /= 100.0
-
         return score
 
-    # Segmentation ------------------------------------------------------------
+    # Segment -----------------------------------------------------------------
 
     def segment(self, word):
         token = []
@@ -356,7 +331,7 @@ class FinnSeg(object):
                     candidate = filter(None, candidate)
                     candidates.append(candidate)
 
-                candidates = self._score_candidates(comp, candidates)
+                candidates = self.score_candidates(comp, candidates)  # noqa
 
                 # if multiple candidates have the same score, select the
                 # least segmented candidate
@@ -387,7 +362,7 @@ class FinnSeg(object):
 
         return [(self.ngram_score(c1), c2) for c1, c2 in candidates]
 
-    def _score_candidates_unviolable(self, comp, candidates):
+    def _score_candidates_OT(self, comp, candidates):
         count = len(candidates)
 
         # (['#', 'm', 'X', 'm', '#', 'm', '#'], 'mm=m')
@@ -413,22 +388,21 @@ class FinnSeg(object):
                 min_violations = min(tableau[i])
                 tableau[i] = map(lambda v: v - min_violations, tableau[i])
 
+            # assume violable constraints, as in OT
             violations = {
-                c[1]: sum(tableau[r][i] for r in range(self.constraint_count))
-                for i, c in enumerate(candidates)
+                c[1]: int(''.join(
+                    [str(tableau[r][i]) for r in range(self.constraint_count)]
+                    )) for i, c in enumerate(candidates)
                 }
 
-            # filter out candidates that violate any constraints
-            candidates = filter(lambda c: not violations[c[1]], candidates)
-
-            # if every candidate violates some constraint, back off to the
-            # simplex candidate
-            if len(candidates) == 0:
-                return [(1.0, comp)]
+            # reduce the candidate set to those that tie in violating the
+            # fewest highest-ranked constraints
+            Min = min(violations.itervalues())
+            candidates = filter(lambda c: violations[c[1]] == Min, candidates)
 
         return [(self.ngram_score(c1), c2) for c1, c2 in candidates]
 
-    def _score_candidates_weighted(self, comp, candidates):
+    def _score_candidates_maxent(self, comp, candidates):
         # apply the constraint test to a set of segments
         def extend(constraint, candidate):
             return sum(not constraint.test(c) for c in candidate)
@@ -457,7 +431,50 @@ class FinnSeg(object):
 
         return scored_candidates
 
-    # Info --------------------------------------------------------------------
+    def _score_candidates_unviolable(self, comp, candidates):
+        count = len(candidates)
+
+        # (['#', 'm', 'X', 'm', '#', 'm', '#'], 'mm=m')
+        for i, cand in enumerate(candidates):
+            cand = ''.join(cand)
+            cand = cand.replace('#', '=').replace('X', '')
+            cand = phon.replace_umlauts(cand)
+            candidates[i] = (['#', ] + candidates[i] + ['#', ], cand)
+
+        if count > 1:
+            #         Cand1   Cand2
+            # C1      [0,     0]
+            # C2      [0,     0]
+            # C3      [0,     0]
+            tableau = [[0] * count for i in range(self.constraint_count)]
+
+            for i, const in enumerate(self.constraints):
+                for j, cand in enumerate(candidates):
+                    for seg in cand[1].split('='):
+                        tableau[i][j] += 0 if const.test(seg) else 1
+
+                # ignore violations when they are incurred by every candidate
+                min_violations = min(tableau[i])
+                tableau[i] = map(lambda v: v - min_violations, tableau[i])
+
+            # tally the number of violations for each candidate
+            violations = {
+                c[1]: sum(
+                    tableau[r][i] for r in range(self.constraint_count)
+                    ) for i, c in enumerate(candidates)
+                }
+
+            # filter out candidates that violate any constraints
+            candidates = filter(lambda c: not violations[c[1]], candidates)
+
+            # if every candidate violates some constraint, back off to the
+            # simplex candidate
+            if len(candidates) == 0:
+                return [(1.0, comp)]
+
+        return [(self.ngram_score(c1), c2) for c1, c2 in candidates]
+
+    # Inform ------------------------------------------------------------------
 
     def get_info(self, orth, gold=None):
         loan = ' (loan)' if phon.is_loanword(orth) else ''
@@ -469,7 +486,7 @@ class FinnSeg(object):
             ) + '}'
 
         info = '\n%s%s\nGold: %s\nWinner: %s\nMorphemes: %s%s' % (
-            orth, loan, gold, self.segment(orth), morphemes,
+            orth, loan, gold, self.segment(orth, t=None), morphemes,
             ' (Morfessor error)' if gold and gold not in inputs else '',
             )
 
@@ -513,14 +530,13 @@ class FinnSeg(object):
             else:
                 morphemes.append(comp)
 
+        # convert morphemes into string form
         if string_form:
-
-            # convert morphemes into string form
             morphemes = '{' + ', '.join(morphemes) + '}'
 
         return morphemes
 
-    def get_candidates(self, word, gold_base_form=False):
+    def get_candidates(self, word):
         candidates = []
 
         # split the word along any overt delimiters and iterate across the
@@ -556,12 +572,9 @@ class FinnSeg(object):
             c = phon.replace_umlauts(c)
             candidates[i] = (candidates[i], c)
 
-        if gold_base_form:
-            candidates = [cand[1] for cand in candidates]
-
         return candidates
 
-    # Evalutation -------------------------------------------------------------
+    # Evaluate ----------------------------------------------------------------
 
     def evaluate(self):
         # results include true positives, false positives, true negatives,
@@ -597,66 +610,63 @@ class FinnSeg(object):
         P = float(TP) / (TP + FP + bad)
         R = float(TP) / (TP + FN + bad)
         F1 = (2.0 * P * R) / (P + R)
-        F05 = (float(0.5**2) * P * R) / ((0.5**2 * P) + R)
+        F05 = (float(0.5**2 + 1) * P * R) / ((0.5**2 * P) + R)
         ACCURACY = float(TP + TN) / (TP + TN + FP + FN + bad)
 
-        # calculate precision, recall, and F-measures on a
-        # boundary-by-boundary basis
-        tn = ''.join(
-            self.get_morphemes(t.orth) for t in self.validation_tokens
-            ).count(',') - tp - fp - fn
-        p = tp / (tp + fp)
-        r = tp / (tp + fn)
-        f1 = (2.0 * p * r) / (p + r)
-        f05 = (float(0.5**2) * p * r) / ((0.5**2 * p) + r)
-        accuracy = float(tp + tn) / (tp + tn + fp + fn)
-
-        # TODO: calculate perplexity
+        # # calculate precision, recall, and F-measures on a
+        # # boundary-by-boundary basis
+        # tn = ''.join(
+        #     self.get_morphemes(t.orth) for t in self.validation_tokens
+        #     ).count(',') - tp - fp - fn
+        # p = tp / (tp + fp)
+        # r = tp / (tp + fn)
+        # f1 = (2.0 * p * r) / (p + r)
+        # f05 = (float(0.5**2 + 1) * p * r) / ((0.5**2 * p) + r)
+        # accuracy = float(tp + tn) / (tp + tn + fp + fn)
 
         self.report = (
             '\n'
             '---- Evaluation: FinnSeg ----------------------------------------'
             # '\n\nTrue negatives:\n\t%s'
             # '\n\nTrue positives:\n\t%s'
-            '\n\nFalse negatives:\n\t%s'
-            '\n\nFalse positives:\n\t%s'
-            '\n\nBad segmentations:\n\t%s'
+            # '\n\nFalse negatives:\n\t%s'
+            # '\n\nFalse positives:\n\t%s'
+            # '\n\nBad segmentations:\n\t%s'
             '\n\n%s'
             '\n\nWord-Level:'
             '\n\tTP:\t%s\n\tFP:\t%s\n\tTN:\t%s\n\tFN:\t%s\n\tBad:\t%s'
             '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s\n\tAcc.:\t%s'
-            '\n\nBoundary-Level:'
-            '\n\tTP:\t%s\n\tFP:\t%s\n\tTN:\t%s\n\tFN:\t%s'
-            '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s\n\tAcc.:\t%s\n\n'
+            # '\n\nBoundary-Level:'
+            # '\n\tTP:\t%s\n\tFP:\t%s\n\tTN:\t%s\n\tFN:\t%s'
+            # '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s\n\tAcc.:\t%s'
+            '\n\n'
             '-----------------------------------------------------------------'
             '\n'
             ) % (
                 # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['TN']]),
                 # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['TP']]),
-                '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FN']]),
-                '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FP']]),
-                '\n\t'.join(['%s (%s) %s' % t[0] for t in results['bad']]),
+                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FN']]),
+                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['FP']]),
+                # '\n\t'.join(['%s (%s) %s' % t[0] for t in results['bad']]),
                 self.description,
                 TP, FP, TN, FN, bad, P, R, F1, F05, ACCURACY,
-                int(tp), int(fp), int(tn), int(fn), p, r, f1, f05, accuracy,
+                # int(tp), int(fp), int(tn), int(fn), p, r, f1, f05, accuracy,
                 )
 
-        print self.report
+        if self.Print:
+            print self.report
 
-        # save word-level performance
+        # save word-level performance for
         self.w_precision = P
         self.w_recall = R
         self.w_f1 = F1
         self.w_accuracy = ACCURACY
 
-        # save boundary-level performance
-        self.b_precision = p
-        self.b_recall = r
-        self.b_f1 = f1
-        self.b_accuracy = accuracy
-
-        # for tup, t in results['FN']:
-        #     print self.get_info(t.orth, t.gold_base)
+        # # save boundary-level performance for
+        # self.b_precision = p
+        # self.b_recall = r
+        # self.b_f1 = f1
+        # self.b_accuracy = accuracy
 
     def _word_level_evaluate(self, word, gold, is_complex):
         # true positive or true negative
@@ -703,74 +713,51 @@ class FinnSeg(object):
 
         return tp, fp, fn
 
-
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    # FinnSeg(excl_loans=False)
-    # FinnSeg()
+    FinnSeg()
+    # FinnSeg(excl_val_loans=True)
+    # FinnSeg(annotation=False)
 
-    # FinnSeg(unviolable=True, excl_loans=False)
-    F = FinnSeg(unviolable=True)
+    FinnSeg(approach='Unviolable')
+    # FinnSeg(approach='Unviolable', excl_val_loans=True)
 
-    # with open('Bad.txt', 'r') as f:
-    #     for line in f.readlines():
-    #         line = line.replace('=', '')
-    #         print F.get_info(line.split('\n')[0].decode('utf-8'))
+    FinnSeg(approach='OT')
+    # FinnSeg(approach='OT', excl_val_loans=True)
 
-    # # maxent-t-6-exclLoans
+    # # maxent-t-4-exclLoans
     # maxent_weights = [
-    #     5.164230512231166,          # MnWord
-    #     5.193871112016945,          # SonSeq
-    #     3.0679774413613488,         # *VVC
-    #     0.6386760613084734,         # Harmonic
-    #     3.985079287014038,          # Word#
-    #     1.4700699294326818,         # #Word
-    #     1.2871216557090106,         # Ngram
+    #     9.918085228621225,          # MnWord
+    #     7.334780578539304,          # SonSeq
+    #     2.4936181148956535,         # Word#
+    #     9.010501248259635,          # Harmonic
+    #     1.5199510494680544,         # Ngram
     #     ]
 
-    # # maxent-t-5-exclLoans
-    # maxent_weights = [
-    #     5.202653588229852,          # MnWord
-    #     5.194171196294968,          # SonSeq
-    #     0.6354741342418279,         # Harmonic
-    #     3.87147713228194,           # Word#
-    #     1.551674854290667,          # #Word
-    #     1.2897806909350016,         # Ngram
-    #     ]
+    # Sum = sum(maxent_weights)
+    # weights = [w / Sum for w in maxent_weights]
+
+    # for i in xrange(len(CONSTRAINTS)):
+    #     CONSTRAINTS[i].weight = weights[i]
+
+    # FinnSeg(approach='Maxent', constraints=CONSTRAINTS)
+    # FinnSeg(approach='Maxent', constraints=CONSTRAINTS, excl_val_loans=True)
 
     # # maxent-t-4
     # maxent_weights = [
     #     1.1344166610426272,         # MnWord
     #     3.7241108876669204,         # SonSeq
-    #     0.0,                        # Harmonic
     #     4.640499891637007,          # Word#
+    #     0.0,                        # Harmonic
     #     1.5831766171600858,         # Ngram
     #     ]
 
-    # # maxent-t-4-exclLoans
-    # maxent_weights = [
-    #     5.202875604900432,          # MnWord
-    #     5.1915966881073246,         # SonSeq
-    #     0.6354641086608463,         # Harmonic
-    #     3.8669693588119367,         # Word#
-    #     1.289806640737821,          # Ngram
-    #     ]
+    # Sum = sum(maxent_weights)
+    # weights = [w / Sum for w in maxent_weights]
 
-    # maxent-t-4-exclLoans (updated is_loanword)
-    maxent_weights = [
-        9.918085228621225,          # MnWord
-        7.334780578539304,          # SonSeq
-        9.010501248259635,          # Harmonic
-        2.4936181148956535,         # Word#
-        1.5199510494680544,         # Ngram
-        ]
+    # for i in xrange(len(CONSTRAINTS)):
+    #     CONSTRAINTS[i].weight = weights[i]
 
-    Sum = sum(maxent_weights)
-    weights = [w / Sum for w in maxent_weights]
-
-    for i in xrange(len(CONSTRAINTS)):
-        CONSTRAINTS[i].weight = weights[i]
-
-    # FinnSeg(weighted=True, constraints=CONSTRAINTS, excl_loans=False)
-    FinnSeg(weighted=True, constraints=CONSTRAINTS)
+    # FinnSeg(approach='Maxent', constraints=CONSTRAINTS)
+    # FinnSeg(approach='Maxent', constraints=CONSTRAINTS, excl_val_loans=True)

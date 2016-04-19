@@ -3,72 +3,69 @@
 import csv
 import re
 
-from new_compound import FinnSeg
-from datetime import datetime
-from phonology import is_foreign
+from compound import FinnSeg, TRAINING
 from sys import argv
 
 
-F = FinnSeg(Eval=False)
-
-date = str(datetime.utcnow())
-
-
-# MaxEnt Harmonic Grammar -----------------------------------------------------
+# Maxent Grammar Tool input generator -----------------------------------------
 
 class MaxEntInput(object):
 
-    def __init__(self, ignore_foreign=False, training=True, filename=None):
-        self.ignore_foreign = ignore_foreign
-        self.tokens = F.training_tokens if training else F.validation_tokens
+    def __init__(self, excl_loans=False, filename=None, training=TRAINING):
+        # if excl_loans is specified, exclude periphery words from training the
+        # maxent weights
+        if excl_loans:
+            training = training.filter_by(is_loanword=False)
 
-        filename = date if not filename else filename.capitalize()
-        filename = ('Training' if training else 'Validation') + filename
-        self.filename = 'data/MaxEnt-' + filename + '-Input.txt'
+        self.tokens = training
+
+        # initialize FinnSeg model
+        self.F = FinnSeg(Eval=False)
+        # self.F = FinnSeg(Eval=False, excl_train_loans=True)
+
+        # compose an informative filename
+        self.filename = 'data/maxent-%s%s%s-input.txt' % (
+            filename + '-' if filename else '',
+            len(self.F.constraints),
+            '-exclLoans' if excl_loans else ''
+            )
+
+        # simplify interactions with the MaxEntGrammarTool
+        print 'Output filename: ', self.filename.replace('input', 'output')
 
         self.create_maxent_input()
-        self.tableaux = None
 
     def create_maxent_input(self):
-        try:
-            open(self.filename, 'rb')
+        print 'Generating tableaux...'
 
-        except IOError:
-            print 'Generating tableaux...'
+        # C1, C2, C3, etc.
+        abbrev = ['C%s' % n for n in range(1, self.F.constraint_count + 2)]
 
-            # C1, C2, C3, etc.
-            abbrev = ['C%s' % n for n in range(1, F.constraint_count + 2)]
+        # underlying form, candidate, frequency, and constraint columns
+        tableaux = [[''] * 3 + self.F.constraint_names + ['Ngram']]
+        tableaux += [[''] * 3 + abbrev]
 
-            # underlying form, candidate, frequency, and constraint columns
-            tableaux = [[''] * 3 + F.constraint_names + ['Ngram']]
-            tableaux += [[''] * 3 + abbrev]
+        # for each token, generate a violations tableau and append it to
+        # the master tableaux
+        for t in self.tokens:
 
-            # for each token, generate a violations tableau and append it to
-            # the master tableaux
-            for t in self.tokens:
+            try:
+                tableaux += self.create_tableau(t)
 
-                try:
-                    tableaux += self.prepare_tableau(t)
+            except TypeError:
+                continue
 
-                except TypeError:
-                    continue
+        # write tableaux to a tab-delimited text file
+        with open(self.filename, 'wb') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(tableaux)
 
-            # write tableaux to a tab-delimited text file
-            with open(self.filename, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(tableaux)
+        self.tableaux = tableaux
 
-            self.tableaux = tableaux
-
-    def prepare_tableau(self, token):
+    def create_tableau(self, token):
         Input = token.orth.lower()
         Gold = token.gold_base
-
-        # ignore foreign words in the constraint weighting
-        if self.ignore_foreign and is_foreign(Input):
-            return None
-
-        candidates = F.get_candidates(Input)
+        candidates = self.F.get_candidates(Input)
 
         # isolate the winning candidate...
         try:
@@ -90,7 +87,7 @@ class MaxEntInput(object):
 
     def accrue_violations(self, Input, candidates):
         violations = [
-            ['', c[1],  0] + [0] * (F.constraint_count + 1)
+            ['', c[1],  0] + [0] * (self.F.constraint_count + 1)
             for c in candidates
             ]
 
@@ -103,18 +100,18 @@ class MaxEntInput(object):
 
             # collect linguistic constaint violations
             for seg in re.split(r'=|-| ', row[1]):
-                for j, const in enumerate(F.constraints, start=3):
-                    violations[i][j] += 0 if const.test(seg, False) else 1
+                for j, constraint in enumerate(self.F.constraints, start=3):
+                    violations[i][j] += 0 if constraint.test(seg) else 1
 
             try:
                 # collect "ngram" violations
                 for comp in re.split(r'-| ', candidates[i][0]):
                     candidate = re.split(r'(X|#)', comp)
                     candidate = ['#'] + candidate + ['#']
-                    score = F.ngram_score(candidate)
-                    violations[i][-1] += round(100 - score * 100)
+                    score = self.F.ngram_score(candidate)
+                    violations[i][-1] += round(abs(score))
 
-            # accomodate Morfessor errors
+            # accommodate Morfessor errors
             except TypeError:
                 pass
 
@@ -130,15 +127,13 @@ class MaxEntInput(object):
 # -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    ignore_foreign = '-f' in argv
-    training = '-v' not in argv
+    excl_loans = '-f' in argv
 
     try:
         MaxEntInput(
-            ignore_foreign=ignore_foreign,
-            training=training,
-            filename=argv[1] if argv[1] not in '-f -v' else None,
+            excl_loans=excl_loans,
+            filename=argv[1] if argv[1] != '-f' else None,
             )
 
     except IndexError:
-        MaxEntInput(ignore_foreign=ignore_foreign, training=training)
+        MaxEntInput(excl_loans=excl_loans)
