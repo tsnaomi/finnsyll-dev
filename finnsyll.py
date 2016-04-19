@@ -849,6 +849,16 @@ def test_set():
     return Token.query.filter_by(data='test')
 
 
+def full_training_set():
+    '''Return training and validation tokens.'''
+    return Token.query.filter(or_(Token.data == 'train', Token.data == 'dev'))
+
+
+def all_data():
+    '''Return training, validation, and test tokens.'''
+    return Token.query.filter(Token.data.isnot(None))
+
+
 # Basic queries ---------------------------------------------------------------
 
 def get_gold_tokens(tokens=Token.query):
@@ -1702,15 +1712,8 @@ class CompoundNumbers(object):
             ('Training', training_set()),
             ('Validation', dev_set()),
             ('Test', test_set()),
-            ('Training + Validation', Token.query.filter(or_(
-                Token.data == 'train',
-                Token.data == 'dev',
-            ))),
-            ('All', Token.query.filter(or_(
-                Token.data == 'train',
-                Token.data == 'dev',
-                Token.data == 'test',
-            ))),
+            ('Training + Validation', full_training_set()),
+            ('All', all_data()),
         ]
 
         for label, data in self.data:
