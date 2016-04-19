@@ -4,7 +4,7 @@
 <div class='description container'>
     <br class='hidden-xs hidden-sm'>
     <br><b>{{ stats.gold }}</b> / <b>{{ stats.verified }}</b> word forms correctly syllabified
-    <br><b>{{ stats.accuracy }}</b>% accuracy (<b>{{ stats.simplex_accuracy }}</b>% excluding compounds)
+    <br><b>{{ stats.accuracy }}</b>% accuracy (<b>{{ stats.simplex_accuracy }}</b>% excluding compounds, <b>{{ stats.complex_accuracy }}</b>% excluding simplex)
     <br><b>{{ stats.precision }}</b> / <b>{{ stats.recall }}</b> mean precision and recall (<b>{{ stats.f1 }}</b> mean F<sub>1</sub>)
     <br>
     <br><b>{{ stats.compound_rate }}</b>% of the <b>{{ stats.annotated }}</b> annotated tokens are compounds
