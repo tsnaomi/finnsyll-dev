@@ -545,7 +545,7 @@ class FinnSeg(object):
             ) + '}'
 
         info = '\n%s%s\nGold: %s\nWinner: %s\nMorphemes: %s%s' % (
-            orth, loan, gold, self.segment(orth, t=None), morphemes,
+            orth, loan, gold, self.segment(orth), morphemes,
             ' (Morfessor error)' if gold and gold not in inputs else '',
             )
 
