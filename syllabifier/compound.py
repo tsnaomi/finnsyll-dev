@@ -67,6 +67,7 @@ class FinnSeg(object):
         # note the particulars
         self.approach = approach
         self.annotation = annotation
+        self.baseline = approach == 'Baseline'
         self.Print = Print
 
         # filename of the training text and morfessor model binary file
@@ -89,13 +90,14 @@ class FinnSeg(object):
 
         # initialize a description of the segmenter
         self.description = {
+            'Baseline': '** Baseline (zero segmentation)',
             'OT': '** Optimality Theoretic constraints',
             'Maxent': '** Weighted (maxent) constraints',
             'Unviolable': '** Unviolable constraints',
             None: '** Language model alone',
         }[approach]
 
-        if not self.annotation:
+        if not self.annotation and not self.baseline:
             # note in the description that annotations have been excluded from
             # training morfessor and the language model
             self.description += '\n** Excl. annotation in training'
@@ -104,7 +106,7 @@ class FinnSeg(object):
             # excluded from training morfessor and the language model
             self.filename += '-exclAnnotation'
 
-        if excl_train_loans:
+        if excl_train_loans and not self.baseline:
             # filter periphery words from the training data
             training = training.filter_by(is_loanword=False)
 
@@ -116,7 +118,7 @@ class FinnSeg(object):
             # from training the language model
             self.description += '\n** Excl. loans in training'
 
-        if excl_val_loans:
+        if excl_val_loans and not self.baseline:
             # filter periphery words from the validation data
             validation = validation.filter_by(is_loanword=False)
 
@@ -126,7 +128,7 @@ class FinnSeg(object):
 
         try:
 
-            if approach:
+            if approach and not self.baseline:
                 # note in the description the constraints and, if applicable,
                 # their weights
                 self.description += '\n\nConstraints:\n\t%s' % \
@@ -147,7 +149,7 @@ class FinnSeg(object):
             'Maxent': self._score_candidates_maxent,
             'Unviolable': self._score_candidates_unviolable,
             None: self._score_candidates_ngram,
-        }[approach]
+        }.get(approach)
 
         # set the ngram scoring function
         self.ngram_score = self._stupid_backoff_score
@@ -200,7 +202,7 @@ class FinnSeg(object):
             self.model.train_batch(finish_threshold=0.001)
             io.write_binary_model_file(filename + '.bin', self.model)
 
-    def _train_ngrams(self):
+    def _train_ngrams(self):  # noqa
         filename = self.filename + '-ngrams'
 
         # load ngrams, or train and save ngrams if they are nonexistent
@@ -215,8 +217,11 @@ class FinnSeg(object):
             self.vocab = set()
             self.total = 0
 
-            base_form = (lambda t: t.gold_base) if self.annotation else \
-                (lambda t: t.base)
+            if self.annotation:
+                base_form = lambda t: t.gold_base
+
+            else:
+                base_form = lambda t: t.base
 
             for t in self.training_tokens:
                 stems = re.split(r'=|-| ', base_form(t))
@@ -261,6 +266,11 @@ class FinnSeg(object):
                         self.ngrams.setdefault(trigram, 0)
                         self.ngrams[trigram] += 1
 
+                    # if i > 2:
+                    #     fourgram = word[i-3] + ' ' + trigram
+                    #     self.ngrams.setdefault(fourgram, 0)
+                    #     self.ngrams[fourgram] += 1
+
             self.vocab = filter(lambda w: w in self.ngrams.keys(), self.vocab)
 
             # pickle ngrams to file
@@ -304,6 +314,55 @@ class FinnSeg(object):
 
             C_count = self.ngrams.get(C, 1)  # Laplace smoothed unigram
             score += math.log(C_count * 0.4 * 0.4)
+            score -= math.log(self.total + len(self.vocab) + 1)
+
+        return score
+
+    def _stupid_backoff_4gram_score(self, candidate):
+        score = 0
+
+        for i, morpheme in enumerate(candidate):
+            D = morpheme
+
+            if i > 0:
+                C = candidate[i-1]
+
+                if i > 1:
+                    B = candidate[i-2]
+
+                    if i > 2:
+                        A = candidate[i-3]
+                        ABCD = A + ' ' + B + ' ' + C + ' ' + D
+                        ABCD_count = self.ngrams.get(ABCD, 0)
+
+                        if ABCD_count:
+                            ABC = A + ' ' + B + ' ' + C
+                            ABC_count = self.ngrams.get(ABC, 0)
+                            score += math.log(ABCD_count)
+                            score -= math.log(ABC_count)
+                            continue
+
+                    BCD = B + ' ' + C + ' ' + D
+                    BCD_count = self.ngrams.get(BCD, 0)
+
+                    if BCD_count:
+                        BC = B + ' ' + C
+                        BC_count = self.ngrams.get(BC, 0)
+                        score += math.log(BCD_count * 0.4)
+                        score -= math.log(BC_count)
+                        continue
+
+                CD = C + ' ' + D
+                CD_count = self.ngrams.get(CD, 0)
+
+                if CD_count:
+                    C_count = self.ngrams[C]
+                    score += math.log(CD_count * 0.4 * 0.4)
+                    score -= math.log(C_count)
+                    continue
+
+            D_count = self.ngrams.get(D, 1)  # Laplace smoothed unigram
+            score += math.log(D_count * 0.4 * 0.4 * 0.4)
             score -= math.log(self.total + len(self.vocab) + 1)
 
         return score
@@ -583,9 +642,14 @@ class FinnSeg(object):
         results = {'TP': [], 'FP': [], 'TN': [], 'FN': [], 'bad': []}
 
         for t in self.validation_tokens:
-            word = self.segment(t.orth)
-            gold = phon.replace_umlauts(t.gold_base, put_back=True)
 
+            if self.baseline:
+                # always return simplex
+                word = t.orth.lower()
+            else:
+                word = self.segment(t.orth)
+
+            gold = phon.replace_umlauts(t.gold_base, put_back=True)
             label = self._word_level_evaluate(word, gold, t.is_complex)
             results[label].append((word, gold, self.get_morphemes(t.orth)))
 
@@ -596,10 +660,15 @@ class FinnSeg(object):
         bad = len(results['bad'])
 
         # calculate precision, recall, and F-measures on a word-by-word basis
-        P = float(TP) / (TP + FP + bad)
-        R = float(TP) / (TP + FN + bad)
-        F1 = (2.0 * P * R) / (P + R)
-        F05 = (float(0.5**2 + 1) * P * R) / ((0.5**2 * P) + R)
+        try:
+            P = float(TP) / (TP + FP + bad)
+            R = float(TP) / (TP + FN + bad)
+            F1 = (2.0 * P * R) / (P + R)
+            F05 = (float(0.5**2 + 1) * P * R) / ((0.5**2 * P) + R)
+
+        except ZeroDivisionError:
+            P, R, F1, F05 = 0.0, 0.0, 0.0, 0.0
+
         ACCURACY = float(TP + TN) / (TP + TN + FP + FN + bad)
 
         self.report = (
@@ -607,9 +676,9 @@ class FinnSeg(object):
             '---- Evaluation: FinnSeg ----------------------------------------'
             # '\n\nTrue negatives:\n\t%s'
             # '\n\nTrue positives:\n\t%s'
-            '\n\nFalse negatives:\n\t%s'
-            '\n\nFalse positives:\n\t%s'
-            '\n\nBad segmentations:\n\t%s'
+            # '\n\nFalse negatives:\n\t%s'
+            # '\n\nFalse positives:\n\t%s'
+            # '\n\nBad segmentations:\n\t%s'
             '\n\n%s'
             '\n\nWord-Level:'
             '\n\tTP:\t%s\n\tFP:\t%s\n\tTN:\t%s\n\tFN:\t%s\n\tBad:\t%s'
@@ -620,9 +689,9 @@ class FinnSeg(object):
             ) % (
                 # '\n\t'.join(['%s (%s) %s' % t for t in results['TN']]),
                 # '\n\t'.join(['%s (%s) %s' % t for t in results['TP']]),
-                '\n\t'.join(['%s (%s) %s' % t for t in results['FN']]),
-                '\n\t'.join(['%s (%s) %s' % t for t in results['FP']]),
-                '\n\t'.join(['%s (%s) %s' % t for t in results['bad']]),
+                # '\n\t'.join(['%s (%s) %s' % t for t in results['FN']]),
+                # '\n\t'.join(['%s (%s) %s' % t for t in results['FP']]),
+                # '\n\t'.join(['%s (%s) %s' % t for t in results['bad']]),
                 self.description,
                 TP, FP, TN, FN, bad, P, R, F1, F05, ACCURACY,
                 )
@@ -654,6 +723,8 @@ class FinnSeg(object):
 # ----------------------------------------------------------------------------------
 
 if __name__ == '__main__':
+    # FinnSeg(approach='Baseline')
+
     # FinnSeg()
     # FinnSeg(excl_val_loans=True)
     # FinnSeg(annotation=False)
