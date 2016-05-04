@@ -49,6 +49,6 @@ class CrossValidation:
         print self.description
 
 if __name__ == '__main__':
-    CrossValidation()
-    CrossValidation(approach='Unviolable')
+    # CrossValidation()
+    # CrossValidation(approach='Unviolable')
     CrossValidation(approach='OT')
