@@ -55,7 +55,7 @@ C4 = Constraint('Harmonic', phon.harmonic)
 # boosts precision at the expense accuracy
 C5 = Constraint('#Word', phon.word_initial)
 
-# ranked constraints
+# unranked constraints
 CONSTRAINTS = [C1, C2, C3, C4]
 
 
@@ -318,55 +318,6 @@ class FinnSeg(object):
 
         return score
 
-    def _stupid_backoff_4gram_score(self, candidate):
-        score = 0
-
-        for i, morpheme in enumerate(candidate):
-            D = morpheme
-
-            if i > 0:
-                C = candidate[i-1]
-
-                if i > 1:
-                    B = candidate[i-2]
-
-                    if i > 2:
-                        A = candidate[i-3]
-                        ABCD = A + ' ' + B + ' ' + C + ' ' + D
-                        ABCD_count = self.ngrams.get(ABCD, 0)
-
-                        if ABCD_count:
-                            ABC = A + ' ' + B + ' ' + C
-                            ABC_count = self.ngrams.get(ABC, 0)
-                            score += math.log(ABCD_count)
-                            score -= math.log(ABC_count)
-                            continue
-
-                    BCD = B + ' ' + C + ' ' + D
-                    BCD_count = self.ngrams.get(BCD, 0)
-
-                    if BCD_count:
-                        BC = B + ' ' + C
-                        BC_count = self.ngrams.get(BC, 0)
-                        score += math.log(BCD_count * 0.4)
-                        score -= math.log(BC_count)
-                        continue
-
-                CD = C + ' ' + D
-                CD_count = self.ngrams.get(CD, 0)
-
-                if CD_count:
-                    C_count = self.ngrams[C]
-                    score += math.log(CD_count * 0.4 * 0.4)
-                    score -= math.log(C_count)
-                    continue
-
-            D_count = self.ngrams.get(D, 1)  # Laplace smoothed unigram
-            score += math.log(D_count * 0.4 * 0.4 * 0.4)
-            score -= math.log(self.total + len(self.vocab) + 1)
-
-        return score
-
     # Segment -----------------------------------------------------------------
 
     def segment(self, word):
@@ -392,11 +343,11 @@ class FinnSeg(object):
 
                 candidates = self.score_candidates(comp, candidates)  # noqa
 
-                # if multiple candidates have the same score, select the
-                # least segmented candidate
                 best = max(candidates)[0]
                 candidates = filter(lambda c: c[0] == best, candidates)
 
+                # if multiple candidates have the same score, select the
+                # least segmented candidate
                 if len(candidates) > 1:
                     candidates.sort(key=lambda c: c[1].count('='))
                     comp = candidates[0][1]
@@ -421,7 +372,33 @@ class FinnSeg(object):
 
         return [(self.ngram_score(c1), c2) for c1, c2 in candidates]
 
-    def _score_candidates_OT(self, comp, candidates):
+    def _score_candidates_OT(self, comp, candidates):  # noqa
+
+        def ranked(violation_vector):
+            # [1, 2, 3, 4] > 1234
+            return int(''.join(str(v) for v in violation_vector))
+
+        def partial(violation_vector):
+            # assuming MinWrd > Everything:
+            # [1, 2, 3, 4] > 19
+            return int(''.join(
+                [str(violation_vector[0]), str(sum(violation_vector[1:]))]
+                ))
+
+            # unranked = sum(violation_vector[1:])
+
+            # if unranked > 9:
+            #     ranked = violation_vector[0]
+            #     print 'UH-OH'
+            # else:
+            #     ranked = violation_vector[0] * 10
+
+            # return int(''.join([str(ranked), str(unranked)]))
+
+        def unranked(violation_vector):
+            # [1, 2, 3, 4] > 10
+            return sum(violation_vector)
+
         count = len(candidates)
 
         # (['#', 'm', 'X', 'm', '#', 'm', '#'], 'mm=m')
@@ -441,18 +418,28 @@ class FinnSeg(object):
             for i, const in enumerate(self.constraints):
                 for j, cand in enumerate(candidates):
                     for seg in cand[1].split('='):
-                        tableau[i][j] += 0 if const.test(seg) else 1
+                        tableau[i][j] += not const.test(seg)
 
                 # ignore violations when they are incurred by every candidate
                 min_violations = min(tableau[i])
                 tableau[i] = map(lambda v: v - min_violations, tableau[i])
 
-            # assume violable constraints, as in OT
+            # create a violations vector for each candidate:
+            # {c1: [0, 1, 2, 4], }
             violations = {
-                c[1]: int(''.join(
-                    [str(tableau[r][i]) for r in range(self.constraint_count)]
-                    )) for i, c in enumerate(candidates)
+                c[1]:
+                    [tableau[r][i] for r in range(self.constraint_count)]
+                    for i, c in enumerate(candidates)
                 }
+
+            # # violable ranked constraints
+            # violations = {k: ranked(v) for k, v in violations.iteritems()}
+
+            # violable partially-ranked constraints
+            violations = {k: partial(v) for k, v in violations.iteritems()}
+
+            # # violable unranked constraints
+            # violations = {k: unranked(v) for k, v in violations.iteritems()}
 
             # reduce the candidate set to those that tie in violating the
             # fewest highest-ranked constraints
@@ -636,23 +623,36 @@ class FinnSeg(object):
     # Evaluate ----------------------------------------------------------------
 
     def evaluate(self):
+        results = self._curate_results()
+        self._evaluate(results)
+
+    def _curate_results(self):
         # results include true positives, false positives, true negatives,
         # false negatives, and accurately identified compounds with 'bad'
         # segmentations
         results = {'TP': [], 'FP': [], 'TN': [], 'FN': [], 'bad': []}
 
+        if self.baseline:
+            # always return simplex
+            get_word = lambda t: t.orth.lower()
+        else:
+            get_word = lambda t: self.segment(t.orth)
+
         for t in self.validation_tokens:
-
-            if self.baseline:
-                # always return simplex
-                word = t.orth.lower()
-            else:
-                word = self.segment(t.orth)
-
+            word = get_word(t)
             gold = phon.replace_umlauts(t.gold_base, put_back=True)
-            label = self._word_level_evaluate(word, gold, t.is_complex)
+            label = self._label(word, gold, t.is_complex)
             results[label].append((word, gold, self.get_morphemes(t.orth)))
 
+            # # if phon.violates_constraint(t.gold_base):
+            # if label == 'FP' or label == 'FN':
+            #     print label
+            #     print self.get_info(t.orth, gold=t.gold_base)
+            #     print
+
+        return results
+
+    def _evaluate(self, results):
         TP = len(results['TP'])
         FP = len(results['FP'])
         TN = len(results['TN'])
@@ -676,9 +676,9 @@ class FinnSeg(object):
             '---- Evaluation: FinnSeg ----------------------------------------'
             # '\n\nTrue negatives:\n\t%s'
             # '\n\nTrue positives:\n\t%s'
-            # '\n\nFalse negatives:\n\t%s'
-            # '\n\nFalse positives:\n\t%s'
-            # '\n\nBad segmentations:\n\t%s'
+            '\n\nFalse negatives:\n\t%s'
+            '\n\nFalse positives:\n\t%s'
+            '\n\nBad segmentations:\n\t%s'
             '\n\n%s'
             '\n\nWord-Level:'
             '\n\tTP:\t%s\n\tFP:\t%s\n\tTN:\t%s\n\tFN:\t%s\n\tBad:\t%s'
@@ -689,9 +689,9 @@ class FinnSeg(object):
             ) % (
                 # '\n\t'.join(['%s (%s) %s' % t for t in results['TN']]),
                 # '\n\t'.join(['%s (%s) %s' % t for t in results['TP']]),
-                # '\n\t'.join(['%s (%s) %s' % t for t in results['FN']]),
-                # '\n\t'.join(['%s (%s) %s' % t for t in results['FP']]),
-                # '\n\t'.join(['%s (%s) %s' % t for t in results['bad']]),
+                '\n\t'.join(['%s (%s) %s' % t for t in results['FN']]),
+                '\n\t'.join(['%s (%s) %s' % t for t in results['FP']]),
+                '\n\t'.join(['%s (%s) %s' % t for t in results['bad']]),
                 self.description,
                 TP, FP, TN, FN, bad, P, R, F1, F05, ACCURACY,
                 )
@@ -700,12 +700,12 @@ class FinnSeg(object):
             print self.report
 
         # save word-level performance
-        self.w_precision = P
-        self.w_recall = R
-        self.w_f1 = F1
-        self.w_accuracy = ACCURACY
+        self.precision = P
+        self.recall = R
+        self.f1 = F1
+        self.accuracy = ACCURACY
 
-    def _word_level_evaluate(self, word, gold, is_complex):
+    def _label(self, word, gold, is_complex):
         # true positive or true negative
         if word == gold:
             label = 'TP' if is_complex and '=' in gold else 'TN'
@@ -735,7 +735,7 @@ if __name__ == '__main__':
     # FinnSeg(approach='OT')
     # FinnSeg(approach='OT', excl_val_loans=True)
 
-    # maxent-4-exclLoans
+    # # maxent-4-exclLoans
     # maxent_weights = [
     #     9.836141130279886,          # MnWord
     #     10.228120047000191,         # SonSeq
@@ -753,20 +753,9 @@ if __name__ == '__main__':
     # FinnSeg(approach='Maxent', constraints=CONSTRAINTS)
     # FinnSeg(approach='Maxent', constraints=CONSTRAINTS, excl_val_loans=True)
 
-    # maxent-4
-    # maxent_weights = [
-    #     1.44670171294681,           # MnWord
-    #     4.2840695236354795,         # SonSeq
-    #     2.8222276280581564,         # Word#
-    #     0.0,                        # Harmonic
-    #     1.77894448249793,           # Ngram
-    #     ]
-
-    # Sum = sum(maxent_weights)
-    # weights = [w / Sum for w in maxent_weights]
-
-    # for i in xrange(len(CONSTRAINTS)):
-    #     CONSTRAINTS[i].weight = weights[i]
-
-    # FinnSeg(approach='Maxent', constraints=CONSTRAINTS)
-    # FinnSeg(approach='Maxent', constraints=CONSTRAINTS, excl_val_loans=True)
+    # TRAINING_SUBSET = TRAINING[:14290]
+    # FinnSeg(
+    #     training=TRAINING_SUBSET,
+    #     approach='Unviolable',
+    #     filename='data/morfessor-14290Subset',
+    #     )
