@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import phonology as phon
 
 from compound import FinnSeg, finn
