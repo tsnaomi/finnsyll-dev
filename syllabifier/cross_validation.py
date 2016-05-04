@@ -27,10 +27,10 @@ class CrossValidation:
                 approach=approach,
                 )
 
-            self.precision += F.w_precision * weight
-            self.recall += F.w_recall * weight
-            self.f1 += F.w_f1 * weight
-            self.accuracy += F.w_accuracy * weight
+            self.precision += F.precision * weight
+            self.recall += F.recall * weight
+            self.f1 += F.f1 * weight
+            self.accuracy += F.accuracy * weight
 
         self.description = (
             '\n'
