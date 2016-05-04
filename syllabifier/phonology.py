@@ -62,12 +62,7 @@ def is_long(chars):
 
 # Loanwords -------------------------------------------------------------------
 
-def is_loanword(word):  # token.gold_base
-    for constituent in re.split(r'-| |=', word):
-        for costraint in [min_word, sonseq, word_final, harmonic]:
-            if not costraint(constituent):
-                return True
-
+def contains_loan_characters(word):  # token.gold_base
     foreign_chars = set([c for c in word if c not in phonemic_inventory])
 
     # the letter 'g' indicates a foreign word unless it is preceded by an 'n',
@@ -85,6 +80,19 @@ def is_loanword(word):  # token.gold_base
     return bool(foreign_chars)
 
 
+def violates_constraint(word):  # token.gold_base
+    for constituent in re.split(r'-| |=', word):
+        for costraint in [min_word, sonseq, word_final, harmonic]:
+            if not costraint(constituent):
+                return True
+
+    return False
+
+
+def is_loanword(word):  # token.gold_base
+    return contains_loan_characters(word) or violates_constraint(word)
+
+
 # Linguistic constraints ------------------------------------------------------
 
 phonemic_inventory = [
@@ -97,7 +105,7 @@ word_final_inventory = [
 
 onsets_inventory = [
     u'pl', u'pr', u'tr', u'kl', u'kr', u'sp', u'st', u'sk', u'ps', u'ts',
-    u'sn', u'dr', u'spr', u'str']
+    u'sn', u'dr', u'spr', u'str']  # + CLUSTERS
 
 codas_inventory = [u'ps', u'ts', u'ks']
 
