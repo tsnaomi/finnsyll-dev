@@ -871,7 +871,8 @@ def get_fold(fold):
 
 def exclude_fold(fold):
     '''Return all of the data except the tokens in the designated fold.'''
-    return all_data().filter_by(Token.fold != fold)
+    return all_data().filter(Token.fold != fold)
+
 
 # Basic queries ---------------------------------------------------------------
 

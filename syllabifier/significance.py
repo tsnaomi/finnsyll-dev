@@ -14,7 +14,7 @@ from maxent import MaxentInput
 from numpy import mean
 from os import sys, path
 from scipy.spatial import KDTree
-from scipy.stats import ttest_ind
+from scipy.stats import ttest_ind, ttest_rel, wilcoxon
 
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
@@ -99,8 +99,9 @@ class SignificancePartOne:
 
 class SignificancePartTwo:
 
-    def __init__(self):
-        ttests_filename = 'data/test/sig/ttest-f10.txt'
+    def __init__(self, test=ttest_ind):
+        self.test = test
+        ttests_filename = 'data/test/sig/%s-f10.txt' % test.__name__
         results_filename = 'data/test/sig/results-f10.pickle'
 
         # load the ttest results, or generate them if they are nonexistent
@@ -121,12 +122,14 @@ class SignificancePartTwo:
             # finish curating the evaluation results
             if self.results['Maxent']['Acc-T'] == []:
                 self.run_maxent_segmenters(results_filename)
-            self.do_ttests(ttests_filename)
+
+            # do significance tests
+            self.do_tests(ttests_filename)
 
         # Maxent segmenters
     def run_maxent_segmenters(self, results_filename):
         for fold in range(1, 11):
-            print 'Fold 1.%s' % fold
+            print 'Fold 2.%s' % fold
 
             TRAINING = finn.exclude_fold(fold)
             VALIDATION = finn.get_fold(fold)
@@ -185,10 +188,10 @@ class SignificancePartTwo:
             protocol=pickle.HIGHEST_PROTOCOL,
             )
 
-    def do_ttests(self, n, ttests_filename):
+    def do_tests(self, ttests_filename):
         titles = {None: 'LMA', }
         means = []
-        ttests = []
+        tests = []
 
         # get the mean performance of each segmenter on each metric
         for a in SEGMENTERS:
@@ -203,34 +206,39 @@ class SignificancePartTwo:
 
         # compare each segmenter against every other segmenter on each metric
         for (a1, a2) in combinations(SEGMENTERS, 2):
-            ttest = titles.get(a1, a1) + ' ~ ' + titles.get(a2, a2) + '\n'
+            sig_test = titles.get(a1, a1) + ' ~ ' + titles.get(a2, a2) + '\n'
 
             # Welch’s t-tests
             for m in METRICS:
                 m1 = self.results[a1][m]
                 m2 = self.results[a2][m]
-                ttest += '\t%s:\t\t' % m
-                ttest += 't = %6.4f\t\tp = %6.6f\n' % \
-                    ttest_ind(m1, m2, equal_var=False)
+                sig_test += '\t%s:\t\t' % m
 
-            ttest += '\n'
+                try:
+                    sig_test += 't = %6.4f\t\tp = %6.6f\n' % \
+                        self.test(m1, m2, equal_var=False)
 
-            ttests.append(ttest)
+                except TypeError:
+                    sig_test += 't = %6.4f\t\tp = %6.6f\n' % self.test(m1, m2)
+
+            sig_test += '\n'
+
+            tests.append(sig_test)
 
         # alphabetize t-tests
-        ttests.sort()
+        tests.sort()
 
         # compose ttests text file
-        header = '---- t-tests n%s ' % str(n) + '-' * 40
-        self.ttests = header + '\n\n'
-        self.ttests += ''.join(means)
-        self.ttests += ''.join(ttests)
-        self.ttests += '-' * len(header)
+        header = '---- %s f10 ' % self.test.__name__ + '-' * 40
+        self.tests = header + '\n\n'
+        self.tests += ''.join(means)
+        self.tests += ''.join(tests)
+        self.tests += '-' * len(header)
 
         with open(ttests_filename, 'w') as f:
-            f.write(self.ttests)
+            f.write(self.tests)
 
-        print self.ttests
+        print self.tests
 
 
 def find_vector_nearest_to_mean(filename='data/test/sig/results-n50.pickle'):
@@ -303,8 +311,10 @@ def load_nearest_to_mean_segmenters():
 
 
 if __name__ == '__main__':
-    SignificancePartOne()
-    # SignificancePartTwo()
+    # SignificancePartOne()
+    SignificancePartTwo()
+    SignificancePartTwo(test=ttest_rel)
+    SignificancePartTwo(test=wilcoxon)
 
     # find_vector_nearest_to_mean()
     # load_nearest_to_mean_segmenters()
