@@ -14,19 +14,7 @@ import phonology as phon
 import re
 
 from itertools import izip_longest as izip, product
-from os import sys, path
 from tabulate import tabulate
-
-sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))  # UH OH
-
-import finnsyll as finn
-
-
-# Data ------------------------------------------------------------------------
-
-TRAINING = finn.training_set()
-VALIDATION = finn.dev_set()
-TEST = finn.test_set()
 
 
 # Linguistic constraints ------------------------------------------------------
@@ -63,7 +51,7 @@ CONSTRAINTS = [C1, C2, C3, C4]
 
 class FinnSeg(object):
 
-    def __init__(self, training=TRAINING, validation=VALIDATION, constraints=CONSTRAINTS, filename='data/morfessor', Eval=True, Print=True, annotation=True, approach=None, excl_train_loans=False, excl_val_loans=False):  # noqa
+    def __init__(self, training, validation, constraints=CONSTRAINTS, filename='data/dev/morfessor', Eval=True, Print=True, annotation=True, approach=None, excl_train_loans=False, excl_val_loans=False):  # noqa
         # note the particulars
         self.approach = approach
         self.annotation = annotation
@@ -199,7 +187,7 @@ class FinnSeg(object):
 
             self.model = morfessor.BaselineModel()
             self.model.load_data(train_data)
-            self.model.train_batch(finish_threshold=0.001)
+            self.model.train_batch(finish_threshold=0.0001)
             io.write_binary_model_file(filename + '.bin', self.model)
 
     def _train_ngrams(self):  # noqa
@@ -266,11 +254,6 @@ class FinnSeg(object):
                         self.ngrams.setdefault(trigram, 0)
                         self.ngrams[trigram] += 1
 
-                    # if i > 2:
-                    #     fourgram = word[i-3] + ' ' + trigram
-                    #     self.ngrams.setdefault(fourgram, 0)
-                    #     self.ngrams[fourgram] += 1
-
             self.vocab = filter(lambda w: w in self.ngrams.keys(), self.vocab)
 
             # pickle ngrams to file
@@ -307,16 +290,16 @@ class FinnSeg(object):
                 BC_count = self.ngrams.get(BC, 0)
 
                 if BC_count:
-                    B_count = self.ngrams[B]
-                    score += math.log(BC_count * 0.4)
-                    score -= math.log(B_count)
-                    continue
+                        B_count = self.ngrams[B]
+                        score += math.log(BC_count * 0.4)
+                        score -= math.log(B_count)
+                        continue
 
             C_count = self.ngrams.get(C, 1)  # Laplace smoothed unigram
             score += math.log(C_count * 0.4 * 0.4)
             score -= math.log(self.total + len(self.vocab) + 1)
 
-        return score
+        return round(score, 4)
 
     # Segment -----------------------------------------------------------------
 
@@ -643,6 +626,10 @@ class FinnSeg(object):
             gold = phon.replace_umlauts(t.gold_base, put_back=True)
             label = self._label(word, gold, t.is_complex)
             results[label].append((word, gold, self.get_morphemes(t.orth)))
+            t.test_base = phon.replace_umlauts(word)
+
+            # if label == 'FP':
+            #     import pdb; pdb.set_trace()
 
             # # if phon.violates_constraint(t.gold_base):
             # if label == 'FP' or label == 'FN':
@@ -671,29 +658,33 @@ class FinnSeg(object):
 
         ACCURACY = float(TP + TN) / (TP + TN + FP + FN + bad)
 
+        syllabifier_impact = self._evaluate_syllabifier_impact()
+
         self.report = (
             '\n'
             '---- Evaluation: FinnSeg ----------------------------------------'
             # '\n\nTrue negatives:\n\t%s'
             # '\n\nTrue positives:\n\t%s'
-            '\n\nFalse negatives:\n\t%s'
-            '\n\nFalse positives:\n\t%s'
-            '\n\nBad segmentations:\n\t%s'
+            # '\n\nFalse negatives:\n\t%s'
+            # '\n\nFalse positives:\n\t%s'
+            # '\n\nBad segmentations:\n\t%s'
             '\n\n%s'
             '\n\nWord-Level:'
             '\n\tTP:\t%s\n\tFP:\t%s\n\tTN:\t%s\n\tFN:\t%s\n\tBad:\t%s'
             '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s\n\tAcc.:\t%s'
+            '\n\n%s'
             '\n\n'
             '-----------------------------------------------------------------'
             '\n'
             ) % (
                 # '\n\t'.join(['%s (%s) %s' % t for t in results['TN']]),
                 # '\n\t'.join(['%s (%s) %s' % t for t in results['TP']]),
-                '\n\t'.join(['%s (%s) %s' % t for t in results['FN']]),
-                '\n\t'.join(['%s (%s) %s' % t for t in results['FP']]),
-                '\n\t'.join(['%s (%s) %s' % t for t in results['bad']]),
+                # '\n\t'.join(['%s (%s) %s' % t for t in results['FN']]),
+                # '\n\t'.join(['%s (%s) %s' % t for t in results['FP']]),
+                # '\n\t'.join(['%s (%s) %s' % t for t in results['bad']]),
                 self.description,
                 TP, FP, TN, FN, bad, P, R, F1, F05, ACCURACY,
+                syllabifier_impact,
                 )
 
         if self.Print:
@@ -720,20 +711,95 @@ class FinnSeg(object):
 
         return label
 
-# ----------------------------------------------------------------------------------
+    def _evaluate_syllabifier_impact(self):
+        report = 'Syllabifier:'
+
+        def evaluate(tokens, test=False):
+            count = tokens.count()
+            gold = tokens.filter_by(is_gold=True)
+
+            # calculate average precision and recall
+            P = round(float(sum([t.precision for t in tokens])) / count, 4)
+            R = round(float(sum([t.recall for t in tokens])) / count, 4)
+            F1 = round(float(sum([t.f1 for t in tokens])) / count, 4)
+
+            # simplex accuracy
+            simplex_accuracy = (
+                float(gold.filter_by(is_complex=False).count()) /
+                tokens.filter_by(is_complex=False).count()
+                )
+
+            # complex accuracy
+            complex_accuracy = (
+                float(gold.filter_by(is_complex=True).count()) /
+                tokens.filter_by(is_complex=True).count()
+                )
+
+            # overall accuracy
+            accuracy = float(gold.count()) / count
+
+            report = '\n\t\tP/R:\t%s / %s\n\t\tF1:\t%s' % (P, R, F1)
+            report += '\n\t\tSim.:\t%s' % str(simplex_accuracy)
+            report += '\n\t\tCom.:\t%s' % str(complex_accuracy)
+            report += '\n\t\tAll:\t%s' % str(accuracy)
+
+            if test:
+                self.syll_precision = P
+                self.syll_recall = R
+                self.syll_f1 = F1
+                self.syll_simplex_acc = simplex_accuracy
+                self.syll_complex_acc = complex_accuracy
+                self.syll_acc = accuracy
+
+            return report
+
+        # base
+        for t in self.validation_tokens:
+            t.syllabify()
+
+        report += '\n\tBase:' + evaluate(self.validation_tokens)
+
+        # test
+        for t in self.validation_tokens:
+            t.syllabify(test_base=True)
+
+        report += '\n\tTest:' + evaluate(self.validation_tokens, test=True)
+
+        # gold
+        for t in self.validation_tokens:
+            t.syllabify(gold_base=True)
+
+        report += '\n\tGold:' + evaluate(self.validation_tokens)
+
+        return report
+
+# -----------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    # FinnSeg(approach='Baseline')
 
-    # FinnSeg()
-    # FinnSeg(excl_val_loans=True)
-    # FinnSeg(annotation=False)
+    from os import sys, path
 
-    FinnSeg(approach='Unviolable')
-    # FinnSeg(approach='Unviolable', excl_val_loans=True)
+    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
-    # FinnSeg(approach='OT')
-    # FinnSeg(approach='OT', excl_val_loans=True)
+    import finnsyll as finn
+
+    # Dev ---------------------------------------------------------------------
+
+    TRAINING = finn.training_set()
+    VALIDATION = finn.dev_set()
+
+    # # baseline
+    # FinnSeg(training=TRAINING, validation=VALIDATION, approach='Baseline')
+
+    # # language modeling alone
+    # FinnSeg(training=TRAINING, validation=VALIDATION)
+    # FinnSeg(training=TRAINING, validation=VALIDATION, annotation=False)
+
+    # unviolable
+    # FinnSeg(training=TRAINING, validation=VALIDATION, approach='Unviolable')
+
+    # # optimality theory
+    # FinnSeg(training=TRAINING, validation=VALIDATION, approach='OT')
 
     # # maxent-4-exclLoans
     # maxent_weights = [
@@ -750,12 +816,98 @@ if __name__ == '__main__':
     # for i in xrange(len(CONSTRAINTS)):
     #     CONSTRAINTS[i].weight = weights[i]
 
-    # FinnSeg(approach='Maxent', constraints=CONSTRAINTS)
-    # FinnSeg(approach='Maxent', constraints=CONSTRAINTS, excl_val_loans=True)
-
-    # TRAINING_SUBSET = TRAINING[:14290]
     # FinnSeg(
-    #     training=TRAINING_SUBSET,
-    #     approach='Unviolable',
-    #     filename='data/morfessor-14290Subset',
+    #     training=TRAINING,
+    #     validation=VALIDATION,
+    #     approach='Maxent',
+    #     constraints=CONSTRAINTS,
     #     )
+
+    # Test --------------------------------------------------------------------
+
+    FULL_TRAINING = finn.full_training_set()
+    TEST = finn.test_set()
+
+    filename = 'data/test/morfessor'
+
+    # baseline
+    FinnSeg(
+        filename=filename,
+        approach='Baseline',
+        training=FULL_TRAINING,
+        validation=TEST,
+        )
+
+    # # language modeling alone
+    # FinnSeg(
+    #     filename=filename,
+    #     approach=None,
+    #     training=FULL_TRAINING,
+    #     validation=TEST,
+    #     )
+
+    # # unviolable
+    # F = FinnSeg(
+    #     filename=filename,
+    #     approach='Unviolable',
+    #     training=FULL_TRAINING,
+    #     validation=TEST,
+    #     )
+
+    # # optimality thoery
+    # FinnSeg(
+    #     filename=filename,
+    #     approach='OT',
+    #     training=FULL_TRAINING,
+    #     validation=TEST,
+    #     )
+
+    # # maxent-4-exclLoans
+    # maxent_weights = [
+    #     13.472908216125848,         # MnWord
+    #     11.507541315386057,         # SonSeq
+    #     10.709446176663299,         # Word#
+    #     12.567904852337515,         # Harmonic
+    #     1.1601076093722666,         # Ngram
+    #     ]
+
+    # Sum = sum(maxent_weights)
+    # weights = [w / Sum for w in maxent_weights]
+
+    # for i in xrange(len(CONSTRAINTS)):
+    #     CONSTRAINTS[i].weight = weights[i]
+
+    # FinnSeg(
+    #     filename=filename,
+    #     approach='Maxent',
+    #     training=FULL_TRAINING,
+    #     validation=TEST,
+    #     constraints=CONSTRAINTS,
+    #     )
+
+    # # maxent-4
+    # maxent_weights = [
+    #     4.791193581686333,          # MnWord
+    #     2.2376224028481935,         # SonSeq
+    #     6.542630288749698,          # Word#
+    #     2.927900945141139,          # Harmonic
+    #     1.1298043495647907,         # Ngram
+    #     ]
+
+    # Sum = sum(maxent_weights)
+    # weights = [w / Sum for w in maxent_weights]
+
+    # for i in xrange(len(CONSTRAINTS)):
+    #     CONSTRAINTS[i].weight = weights[i]
+
+    # FinnSeg(
+    #     filename=filename,
+    #     approach='Maxent',
+    #     training=FULL_TRAINING,
+    #     validation=TEST,
+    #     constraints=CONSTRAINTS,
+    #     )
+
+    # -------------------------------------------------------------------------
+
+    finn.db.session.rollback()

@@ -1,6 +1,12 @@
 # coding=utf-8
 
-from compound import FinnSeg, finn
+from compound import FinnSeg
+
+from os import sys, path
+
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+
+import finnsyll as finn
 
 
 class CrossValidation:
@@ -22,7 +28,7 @@ class CrossValidation:
             F = FinnSeg(
                 training=TRAINING,
                 validation=VALIDATION,
-                filename='data/morfessor-fold' + str(fold),
+                filename='data/dev/morfessor-fold' + str(fold),
                 Print=False,
                 approach=approach,
                 )

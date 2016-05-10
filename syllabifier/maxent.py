@@ -3,15 +3,26 @@
 import csv
 import re
 
-from compound import FinnSeg, TRAINING
+from compound import FinnSeg
+from os import sys, path
 from sys import argv
+
+
+sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
+
+import finnsyll as finn
+
+TRAINING = finn.training_set()
+VALIDATION = finn.dev_set()
+FULL_TRAINING = finn.full_training_set()
+TEST = finn.test_set()
 
 
 # Maxent Grammar Tool input generator -----------------------------------------
 
-class MaxEntInput(object):
+class MaxentInput(object):
 
-    def __init__(self, excl_loans=False, filename=None, training=TRAINING):
+    def __init__(self, training, validation, excl_loans=False, filename=None):
         # if excl_loans is specified, exclude periphery words from training the
         # maxent weights
         if excl_loans:
@@ -20,20 +31,23 @@ class MaxEntInput(object):
         self.tokens = training
 
         # initialize FinnSeg model
-        self.F = FinnSeg(Eval=False)
-        # self.F = FinnSeg(Eval=False, excl_train_loans=True)
+        self.F = FinnSeg(
+            training=training,
+            validation=validation,
+            Eval=False)
 
         # compose an informative filename
-        self.filename = 'data/maxent-%s%s%s-input.txt' % (
+        self.filename = 'data/test/sig/maxent-%s%s%s-input.txt' % (
             filename + '-' if filename else '',
             len(self.F.constraints),
             '-exclLoans' if excl_loans else ''
             )
 
-        # simplify interactions with the MaxEntGrammarTool
-        print 'Output filename: ', self.filename.replace('input', 'output')
+        if not path.isfile(self.filename):
+            # simplify interactions with the MaxEntGrammarTool
+            print 'Output filename: ', self.filename.replace('input', 'output')
 
-        self.create_maxent_input()
+            self.create_maxent_input()
 
     def create_maxent_input(self):
         print 'Generating tableaux...'
@@ -129,10 +143,20 @@ if __name__ == '__main__':
     excl_loans = '-f' in argv
 
     try:
-        MaxEntInput(
+        MaxentInput(
+            # training=TRAINING,
+            # validation=VALIDATION,
+            training=FULL_TRAINING,
+            validation=TEST,
             excl_loans=excl_loans,
             filename=argv[1] if argv[1] != '-f' else None,
             )
 
     except IndexError:
-        MaxEntInput(excl_loans=excl_loans)
+        MaxentInput(
+            # training=TRAINING,
+            # validation=VALIDATION,
+            training=FULL_TRAINING,
+            validation=TEST,
+            excl_loans=excl_loans,
+            )

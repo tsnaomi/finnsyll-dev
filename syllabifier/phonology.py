@@ -105,13 +105,13 @@ word_final_inventory = [
 
 onsets_inventory = [
     u'pl', u'pr', u'tr', u'kl', u'kr', u'sp', u'st', u'sk', u'ps', u'ts',
-    u'sn', u'dr', u'spr', u'str']  # + CLUSTERS
+    u'sn', u'dr', u'spr', u'str']
 
 codas_inventory = [u'ps', u'ts', u'ks']
 
 
 def min_word(word):
-    # check if the segment contains more than one vowel
+    # check if the segment contains more than one vowel to allow binary footing
     return len(filter(is_vowel, word)) > 1
 
 
