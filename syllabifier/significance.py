@@ -20,9 +20,6 @@ sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
 import finnsyll as finn
 
-FULL_TRAINING = finn.full_training_set()
-TEST = finn.test_set()
-
 SEGMENTERS = [
     None,
     'OT',
@@ -39,8 +36,8 @@ METRICS = [
 
 class SignificancePartOne:
 
-    def __init__(self, n=1):
-        filename = 'data/test/sig/results-n%s.pickle' % n
+    def __init__(self):
+        filename = 'data/test/sig/results-f10.pickle'
 
         # load results, or run the segmenters if the results are nonexistent
         try:
@@ -48,7 +45,7 @@ class SignificancePartOne:
 
         except IOError:
             self.results = {a: {m: [] for m in METRICS} for a in SEGMENTERS}
-            self.run_segmenters(n)
+            self.run_segmenters()
 
             # pickle the results to file
             pickle.dump(
@@ -58,16 +55,19 @@ class SignificancePartOne:
                 )
 
     # Language modeling alone, Optimality Theory, and unviolable segmenters
-    def run_segmenters(self, n):
-        for n in range(1, n + 1):
-            print 'Run 1.%s' % n
+    def run_segmenters(self):
+        for fold in range(1, 11):
+            print 'Fold 1.%s' % fold
 
-            filename = 'data/test/sig/morfessor-n' + str(n)
+            TRAINING = finn.exclude_fold(fold)
+            VALIDATION = finn.get_fold(fold)
+
+            filename = 'data/test/sig/morfessor-f' + str(fold)
 
             for approach in SEGMENTERS[:3]:
                 F = FinnSeg(
-                    training=FULL_TRAINING,
-                    validation=TEST,
+                    training=TRAINING,
+                    validation=VALIDATION,
                     filename=filename,
                     Print=False,
                     approach=approach,
@@ -90,18 +90,18 @@ class SignificancePartOne:
             # Maxent inputs
             for excl_loans in [True, False]:
                 MaxentInput(
-                    training=FULL_TRAINING,
+                    training=TRAINING,
                     validation=None,
                     excl_loans=excl_loans,
-                    filename='n' + str(n),
+                    filename='f' + str(fold),
                     )
 
 
 class SignificancePartTwo:
 
-    def __init__(self, n=1):
-        ttests_filename = 'data/test/sig/ttest-n%s.txt' % n
-        results_filename = 'data/test/sig/results-n%s.pickle' % n
+    def __init__(self):
+        ttests_filename = 'data/test/sig/ttest-f10.txt'
+        results_filename = 'data/test/sig/results-f10.pickle'
 
         # load the ttest results, or generate them if they are nonexistent
         try:
@@ -120,18 +120,21 @@ class SignificancePartTwo:
 
             # finish curating the evaluation results
             if self.results['Maxent']['Acc-T'] == []:
-                self.run_maxent_segmenters(n, results_filename)
-            self.do_ttests(n, ttests_filename)
+                self.run_maxent_segmenters(results_filename)
+            self.do_ttests(ttests_filename)
 
-    # Maxent segmenters
-    def run_maxent_segmenters(self, n, results_filename):
-        for n in range(1, n + 1):
-            print 'Run 2.%s' % n
+        # Maxent segmenters
+    def run_maxent_segmenters(self, results_filename):
+        for fold in range(1, 11):
+            print 'Fold 1.%s' % fold
 
-            filename = 'data/test/sig/morfessor-n' + str(n)
+            TRAINING = finn.exclude_fold(fold)
+            VALIDATION = finn.get_fold(fold)
+
+            filename = 'data/test/sig/morfessor-f' + str(fold)
 
             for excl_loans in [True, False]:
-                output = 'data/test/sig/maxent-n%s-4' % str(n)
+                output = 'data/test/sig/maxent-f%s-4' % str(fold)
                 output += '-exclLoans' if excl_loans else ''
                 output += '-output.txt'
 
@@ -151,8 +154,8 @@ class SignificancePartTwo:
                     CONSTRAINTS[i].weight = weights[i]
 
                 F = FinnSeg(
-                    training=FULL_TRAINING,
-                    validation=TEST,
+                    training=TRAINING,
+                    validation=VALIDATION,
                     filename=filename,
                     Print=False,
                     approach='Maxent',
@@ -207,11 +210,8 @@ class SignificancePartTwo:
                 m1 = self.results[a1][m]
                 m2 = self.results[a2][m]
                 ttest += '\t%s:\t\t' % m
-                ttest += 't = %6.4f\t\tp = %6.6f\n' % ttest_ind(
-                    m1,
-                    m2,
-                    equal_var=False,
-                    )
+                ttest += 't = %6.4f\t\tp = %6.6f\n' % \
+                    ttest_ind(m1, m2, equal_var=False)
 
             ttest += '\n'
 
@@ -249,6 +249,9 @@ def find_vector_nearest_to_mean(filename='data/test/sig/results-n50.pickle'):
 def load_nearest_to_mean_segmenters():
     iteration = find_vector_nearest_to_mean()
     filename = 'data/test/sig/morfessor-n' + str(iteration)
+
+    FULL_TRAINING = finn.full_training_set()
+    TEST = finn.test_set()
 
     # language modeling alone
     FinnSeg(training=FULL_TRAINING, validation=TEST, filename=filename)
@@ -298,11 +301,12 @@ def load_nearest_to_mean_segmenters():
             constraints=CONSTRAINTS,
             )
 
+
 if __name__ == '__main__':
-    # SignificancePartOne(n=50)
-    # SignificancePartTwo(n=50)
+    SignificancePartOne()
+    # SignificancePartTwo()
 
     # find_vector_nearest_to_mean()
-    load_nearest_to_mean_segmenters()
+    # load_nearest_to_mean_segmenters()
 
     finn.db.session.rollback()
