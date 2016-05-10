@@ -56,7 +56,7 @@ class SignificancePartOne:
 
     # Language modeling alone, Optimality Theory, and unviolable segmenters
     def run_segmenters(self):
-        for fold in range(1, 11):
+        for fold in range(10):
             print 'Fold 1.%s' % fold
 
             TRAINING = finn.exclude_fold(fold)
@@ -128,7 +128,7 @@ class SignificancePartTwo:
 
         # Maxent segmenters
     def run_maxent_segmenters(self, results_filename):
-        for fold in range(1, 11):
+        for fold in range(10):
             print 'Fold 2.%s' % fold
 
             TRAINING = finn.exclude_fold(fold)
@@ -311,10 +311,10 @@ def load_nearest_to_mean_segmenters():
 
 
 if __name__ == '__main__':
-    # SignificancePartOne()
-    SignificancePartTwo()
-    SignificancePartTwo(test=ttest_rel)
-    SignificancePartTwo(test=wilcoxon)
+    SignificancePartOne()
+    # SignificancePartTwo()
+    # SignificancePartTwo(test=ttest_rel)
+    # SignificancePartTwo(test=wilcoxon)
 
     # find_vector_nearest_to_mean()
     # load_nearest_to_mean_segmenters()

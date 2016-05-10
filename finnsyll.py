@@ -864,13 +864,18 @@ def all_data():
     return Token.query.filter(Token.data.isnot(None))
 
 
+def train_test_data():
+    '''Returning training and test tokens.'''
+    return Token.query.filter(or_(Token.data == 'train', Token.data == 'test'))
+
+
 def get_fold(fold):
-    '''Return all of the data in the designated fold.'''
+    '''Return all of the training/test tokens in the designated fold.'''
     return all_data().filter_by(fold=fold)
 
 
 def exclude_fold(fold):
-    '''Return all of the data except the tokens in the designated fold.'''
+    '''Return all training/test tokens except those in the designated fold.'''
     return all_data().filter(Token.fold != fold)
 
 
