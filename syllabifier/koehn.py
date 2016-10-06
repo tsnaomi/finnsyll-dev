@@ -24,18 +24,9 @@ FS = FinnishStemmer()
 
 class Koehn:
 
-    def __init__(self, validation=None, evaluate=True, stem=False):
-        self.stem = stem
+    def __init__(self, validation=None, evaluate=True):
         self.validation_tokens = validation
-        self.filename = './data/koehn/corpus'
-
-        if stem:
-            self.filename += '-stemmed.pickle'
-            self.preprocess = lambda t: FS.stem(t)
-
-        else:
-            self.filename += '.pickle'
-            self.preprocess = lambda t: t
+        self.filename = './data/koehn/corpus.pickle'
 
         # gather corpus frequencies
         print 'Gathering corpus frequencies... ' + dt.utcnow().strftime('%I:%M')  # noqa
@@ -62,13 +53,13 @@ class Koehn:
             while start + x < count:
 
                 for t in finn.Token.query.order_by(finn.Token.id).slice(start, end):  # noqa
-                    corpus[self.preprocess(t.orth.lower())] += t.freq
+                    corpus[t.orth.lower()] += t.freq
 
                 start = end
                 end += x
 
             for t in finn.Token.query.order_by(finn.Token.id).slice(start, count):  # noqa
-                corpus[self.preprocess(t.orth.lower())] += t.freq
+                corpus[t.orth.lower()] += t.freq
 
             with open(self.filename, 'wb') as f:
                 pickle.dump(corpus, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -110,7 +101,7 @@ class Koehn:
         score = 1
 
         for cand in constituents:
-            freq = self.corpus[self.preprocess(cand)]
+            freq = self.corpus[cand]
 
             if freq == 0:
                 score = 0
@@ -170,7 +161,7 @@ class Koehn:
             '\n\nFalse negatives:\n\t%s'
             '\n\nFalse positives:\n\t%s'
             '\n\nBad segmentations:\n\t%s'
-            '\n%s\n'
+            '\n\n'
             '\n\tTP:\t%s\n\tFP:\t%s\n\tTN:\t%s\n\tFN:\t%s\n\tBad:\t%s'
             '\n\tP/R:\t%s / %s\n\tF1:\t%s\n\tF0.5:\t%s\n\tAcc.:\t%s'
             '\n\n'
@@ -180,7 +171,6 @@ class Koehn:
                 '\n\t'.join(['%s (%s)' % t for t in results['FN']]),
                 '\n\t'.join(['%s (%s)' % t for t in results['FP']]),
                 '\n\t'.join(['%s (%s)' % t for t in results['bad']]),
-                '\nStemmed.' if self.stem else '',
                 TP, FP, TN, FN, bad, P, R, F1, F05, ACCURACY,
                 )
 
