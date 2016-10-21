@@ -32,7 +32,7 @@ from syllabifier.phonology import replace_umlauts
 from werkzeug.exceptions import BadRequestKeyError
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
-app.config.from_pyfile('finnsyll_config.py')
+app.config.from_pyfile('config.py')
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -40,8 +40,8 @@ manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
 # To mirate database:
-#     python finnsyll.py db migrate
-#     python finnsyll.py db upgrade
+#     python app.py db migrate
+#     python app.py db upgrade
 
 csrf = SeaSurf(app)
 flask_bcrypt = Bcrypt(app)

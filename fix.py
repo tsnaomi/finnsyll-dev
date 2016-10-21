@@ -2,7 +2,7 @@
 
 import re
 
-from finnsyll import db, Poem, replace_umlauts, Sequence
+from app import db, Poem, replace_umlauts, Sequence
 from gutenberg import u_y_final_diphthongs
 
 # This file is set aside for fixing the many bugs that plague the poetry

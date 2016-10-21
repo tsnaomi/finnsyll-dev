@@ -1,7 +1,7 @@
 # coding=utf-8
 
 from datetime import datetime
-from finnsyll import db, Token
+from app import db, Token
 from random import sample
 
 # ADJUST() allows you to apply changes to all of the tokens in the database

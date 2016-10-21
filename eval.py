@@ -1,6 +1,6 @@
 # coding=utf-8
 
-import finnsyll as finn
+import app as finn
 import sys
 
 from datetime import datetime
