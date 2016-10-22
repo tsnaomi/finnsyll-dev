@@ -1,6 +1,7 @@
 *.pyc
 
 nohup.out
+TODO.txt
 
 _latex/
 _syllabifier/
