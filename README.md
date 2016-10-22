@@ -1,4 +1,4 @@
-FinnSyll
-========
+FinnSyll-Dev
+============
 
-Adding to a project by Arto Anttila and Josh Falk.
+FinnSyll's development playground and other phonotactic/metric shenanigans.
