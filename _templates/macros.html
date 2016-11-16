@@ -122,8 +122,8 @@
     {% for t in tokens %}
     <div class='row'>
         <span class='col-xs-12 col-md-3'>
-            <a class='{{ t|goldclass }}' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" title='{{ title(t) }}'>{{ t.orth }}</a>
-            {% if t.is_complex != None %}<div><i>&nbsp;{{t.gold_base}}&nbsp;</i></div>{% endif %}
+            <a class='{{ t|goldclass }}' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" title='{{ title(t) }}'>{{ t.gold_base or t.orth }}</a>
+            {% if t.gold_base and t.gold_base != t.test_base %}<div>&nbsp;<i>{{ t.test_base }}</i>&nbsp;</div>{% endif %}
         </span>
         <div class='visible-xs visible-sm col-xs-12 height'>
         </div>

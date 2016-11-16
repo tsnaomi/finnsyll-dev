@@ -3,18 +3,18 @@
 {% block body %}
 <div class='description container'>
     <br class='hidden-xs hidden-sm'>
-    <br><b>{{ stats.gold }}</b> / <b>{{ stats.verified }}</b> word forms correctly syllabified
-    <br><b>{{ stats.accuracy }}</b>% accuracy (<b>{{ stats.simplex_accuracy }}</b>% excluding compounds, <b>{{ stats.complex_accuracy }}</b>% excluding simplex)
-    <br><b>{{ stats.precision }}</b> / <b>{{ stats.recall }}</b> mean precision and recall (<b>{{ stats.f1 }}</b> mean F<sub>1</sub>)
+    <br><b>{{ P2.verified | stat }}</b> / <b>{{ P1.total | stat }}</b> word forms verified from the Aamulehti corpus
     <br>
-    <br><b>{{ stats.compound_rate }}</b>% of the <b>{{ stats.annotated }}</b> annotated tokens are compounds
+    <br><b>{{ P2.correct | stat }}</b> / <b>{{ P2.verified | stat }}</b> word forms correctly syllabified
+    <br><b>{{ P2.acc | stat }}</b>% accuracy (<b>{{ P2.simplex_acc | stat }}</b>% excl. compounds)
+    <br><b>{{ P1.acc | stat }}</b>% accuracy excl. loanwords (<b>{{ P1.simplex_acc | stat }}</b>% excl. compounds)
+    <br><b>{{ P2.p | stat }}</b> / <b>{{ P2.r | stat }}</b> mean precision and recall (<b>{{ P2.f1 | stat }}</b> mean F<sub>1</sub>)
     <br>
-    <br><b>{{ stats.verified }}</b> / <b>{{ stats.token_count }}</b> word forms verified from the Aamulehti corpus
-    <br><b>{{ stats.sequences_verified }}</b> / <b>{{ stats.sequences }}</b> sequences verified from the Gutenberg corpus
+    <br><b>3,348</b> / <b>3,679</b> closed compounds correctly split (<b>91.00</b>%)
     <br>
     <br><b>15,712</b> vowel sequences have been pulled from Project Gutenberg.
     <br class='hidden-xs'>These vowel sequences appear across <b>15,470</b> word instances.
     <br class='hidden-xs'>These 15,470 word instances reduce to <b>4,797</b> unique word forms,
     <br class='hidden-xs'><b>2,078</b> of which also appear in the Aamulehti corpus.
 </div>
-{% endblock %}
+{% endblock %}3

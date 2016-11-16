@@ -8,20 +8,8 @@
 <div class='container'>
     {% if description %}
     <div class='description'>
-        {% if kw == 'variation' %}
-        This page lists all of the words that display variation, whether in their <i>test</i> syllabifications, <i>gold</i> syllabifications, or both.
-        {% elif kw == 'bad' %}
-        This page lists all of the words that fail to have perfect <i>precision</i> and <i>recall</i>.
-        {% elif kw == 'compounds' %}
-        This page lists all of the <i>hand-annotated</i> compounds.
-        {% elif kw == 'false-negative-compounds' %}
-        This page lists all of the <i>hand-annotated compounds</i> that the syllabifier fails to predict are compounds (i.e., <i>false negatives</i>).
-        {% elif kw == 'false-positive-compounds' %}
-        This page lists all <i>syllabifier-predicted compounds</i> that are not true compounds (i.e., <i>false positives</i>).
-        {% elif kw == 'simplex' %}
-        This page lists all of the <i>hand-annotated</i> simplex words.
-        {% elif kw == 'disagreement' %}
-        This page lists all of the words that display annotator disagreement.
+        {% if kw == 'bad' %}
+        This page lists words that fail to have perfect <i>precision</i> and <i>recall</i>, excluding non-nativized words and compound errors. 
         {% endif %}
         <br>
         <i>{{ count }} matches</i>
@@ -86,25 +74,8 @@
                 <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');" value='OK!'>
             </div>
         </form>
-        {% else %}
-        {% if kw == 'notes' %} <!-- notes -->
-        <div class='row hidden-xs hidden-sm'>
-            <span class='attr-label col-md-3'>orth</span>
-            <span class='attr-label col-md-3'>note</span>
-        </div>
-        <br class='hidden-xs hidden-sm'>
-        {% for t in tokens %}
-        <div class='row'>
-            <span class='col-xs-12 col-md-3'>
-                <span class='{{ t|goldclass }}' title='{{ title(t) }}' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}">{{ t.orth }}</span>
-            </span>
-            <span class='col-xs-12 col-md-9' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}">{{ t.note }}</span>
-        </div>
-        <br>
-        {% endfor %}
         {% else %} <!-- bad, all variation, hidden -->
         {{ tokenify(tokens) }}
-        {% endif %}
         {% endif %}
     </div>
 </div>
@@ -138,18 +109,18 @@
             $('#syll2').val(syll2);
             $('#syll3').val(syll3);
             $('#syll4').val(syll4);
-        };
+        }
         $('#note').text(note.replace(/&#13;&#10;/g, '\r\n').replace(/&#40;/g, '(').replace(/&#41;/g, ')').replace(/&#34;/g, '"').replace(/&#39;/g, "'"));
         $('#id').val(id);
         if (compound == 'True') {
             $('#compound').prop('checked', true);
-        };
+        }
         if (stopword == 'True') {
             $('#stopword').prop('checked', true);
-        };
+        }
         if (foreign == 'True') {
             $('#foreign').prop('checked', true);
-        };
+        }
     }
 </script>
 {% endblock %}

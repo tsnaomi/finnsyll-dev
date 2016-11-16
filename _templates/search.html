@@ -148,18 +148,18 @@
             $('#syll2').val(syll2);
             $('#syll3').val(syll3);
             $('#syll4').val(syll4);
-        };
+        }
         $('#note').text(note.replace(/&#13;&#10;/g, '\r\n').replace(/&#40;/g, '(').replace(/&#41;/g, ')').replace(/&#34;/g, '"').replace(/&#39;/g, "'"));
         $('#id').val(id);
         if (compound == 'True') {
             $('#compound').prop('checked', true);
-        };
+        }
         if (stopword == 'True') {
             $('#stopword').prop('checked', true);
-        };
+        }
         if (foreign == 'True') {
             $('#foreign').prop('checked', true);
-        };
+        }
     }
 </script>
 {% endblock %}
