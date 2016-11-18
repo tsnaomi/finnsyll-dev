@@ -1100,6 +1100,63 @@ def apply_sequence_form(http_form):
     db.session.commit()
 
 
+def perform_search(find, search_type):
+    '''Perform query from search box.'''
+    try:
+        # extract query
+        query = re.match(
+            r'^([a-zäöÄÖ=]*)(?:$|[^\w]+)',
+            find.encode('utf-8'),
+            re.IGNORECASE,
+            ).group(1)
+
+    except AttributeError:
+        query = ''
+
+    # extract rules
+    rules = re.findall(r'(T[abcde0-9]+)', find)
+
+    if query or rules:
+        # if an asterisk is present, only search amongst gold tokens
+        if '*' in find:
+            results = Token.query.filter(Token.is_gold.isnot(None))
+
+        # otherwise, still limit search to Aamulehti tokens
+        else:
+            results = Token.query.filter_by(is_aamulehti=True)
+
+        # case-insensitive word-boundary search
+        if search_type == 'contains' and re.match(r'(^=.*|.*=$)', query):
+            query = query.decode('utf-8').lower()
+
+            if query.startswith('=') and len(query) > 1:
+                pattern = r'(^|.*=)' + query[1:] + r'.*'
+                results = results.filter(Token.gold_base.op('~')(pattern))
+
+            else:
+                results = results.filter(Token.gold_base.contains(query))
+
+        # case-insensitive search
+        else:
+
+            if search_type == 'contains':
+                query = '%' + query + '%'
+
+            results = results.filter(Token.orth.ilike(query))
+
+    else:
+        # don't return anything if it is an invalid search
+        results = Token.query.filter(0 == 1)
+
+    # filter results by rules
+    for r in rules:
+        results = results.filter(or_(
+            getattr(Token, 'rules%s' % n).contains(r) for n in range(1, 17)
+        ))
+
+    return results
+
+
 # Views -----------------------------------------------------------------------
 
 @app.route('/', methods=['GET', 'POST'])
@@ -1167,14 +1224,14 @@ def approve_doc_view(id):
     return redirect(url_for('doc_view', id=id))
 
 
-@app.route('/search', methods=['GET', 'POST'])  # noqa
+@app.route('/search', methods=['GET', 'POST'])
 @login_required
 def search_view():
     '''Search for tokens by word and/or citation form.'''
     results, find, count, search = None, None, None, None
 
     if request.method == 'POST':
-        search = request.form.get('search')
+        search_type = request.form.get('search')
 
         # save any revisions to search result tokens
         if request.form.get('syll1'):
@@ -1184,45 +1241,8 @@ def search_view():
         find = request.form.get('query')
 
         if find:
-
-            # extract query and rules
-            try:
-                query = re.match(
-                    r'^([a-zäöÄÖ]*)(?:$|[^\w]+)',
-                    find.encode('utf-8'),
-                    re.IGNORECASE,
-                    ).group(1)
-
-                if search == 'contains' and query:
-                    query = '%' + query + '%'
-
-            except AttributeError:
-                query = ''
-
-            rules = re.findall(r'(T[abcde0-9]+)', find)
-
-            if query or rules:
-                # if an asterisk is present, only search amongst gold tokens
-                if '*' in find:
-                    results = Token.query.filter(Token.is_gold.isnot(None))
-
-                # otherwise, still limit search to Aamulehti tokens
-                else:
-                    results = Token.query.filter_by(is_aamulehti=True)
-
-                # case-insensitive search
-                results = results.filter(Token.orth.ilike(query))
-
-            else:
-                # don't return anything if it is a bad search
-                results = Token.query.filter(0 == 1)
-
-            # filter results by rules
-            for r in rules:
-                results = results.filter(or_(
-                    getattr(Token, 'rules%s' % n).contains(r) for n in range(1, 17)  # noqa
-                ))
-
+            # collect search results
+            results = perform_search(find, search_type)
             count = results.count()
             results = results.slice(0, 200) if results else None
 
@@ -1246,10 +1266,9 @@ def token_view(kw, page):
 
     if kw == 'bad':
         # excludes non-nativized words and errors caused by the
-        # compound segmenter
+        # compound segmenter, /k/-deletions, etc.
         tokens = (
-            get_bad_tokens()
-            .filter_by(is_loanword=False)
+            Token.query.filter_by(is_gold=False, is_loanword=False, note='')
             .filter(Token.test_base == Token.gold_base)
             )
 
