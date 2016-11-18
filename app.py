@@ -1181,39 +1181,41 @@ def search_view():
             apply_form(request.form)
 
         # extract search phrase
-        find = request.form.get('query') or request.form.get('syll1')
+        find = request.form.get('query')
 
         if find:
 
             # extract query and rules
             try:
-                query = re.match(r'^([a-zA-Z]*)(?:$|[^\w]+)', find).group(1)
+                query = re.match(
+                    r'^([a-zäöÄÖ]*)(?:$|[^\w]+)',
+                    find.encode('utf-8'),
+                    re.IGNORECASE,
+                    ).group(1)
+
+                if search == 'contains' and query:
+                    query = '%' + query + '%'
 
             except AttributeError:
                 query = ''
 
             rules = re.findall(r'(T[abcde0-9]+)', find)
-            gold = '*' in find
 
-            # if an asterisk is present, only search amongst gold tokens
-            if gold:
-                results = Token.query.filter(Token.is_gold.isnot(None))
+            if query or rules:
+                # if an asterisk is present, only search amongst gold tokens
+                if '*' in find:
+                    results = Token.query.filter(Token.is_gold.isnot(None))
 
-            # otherwise, still limit search to Aamulehti tokens
-            elif query or rules:
-                results = Token.query.filter_by(is_aamulehti=True)
+                # otherwise, still limit search to Aamulehti tokens
+                else:
+                    results = Token.query.filter_by(is_aamulehti=True)
 
-            # don't return anything if it is a bad search
-            else:
-                results = Token.query.filter(0 == 1)
-
-            # if it is a 'contains' request...
-            if search == 'contains':
-                results = results.filter(Token.orth.contains(query))
-
-            # if it is a 'find' request...
-            else:
+                # case-insensitive search
                 results = results.filter(Token.orth.ilike(query))
+
+            else:
+                # don't return anything if it is a bad search
+                results = Token.query.filter(0 == 1)
 
             # filter results by rules
             for r in rules:
@@ -1227,9 +1229,9 @@ def search_view():
     return render_template(
         'search.html',
         kw='search',
+        find=find,
         search=search,
         results=results,
-        find=find,
         count=count,
         )
 

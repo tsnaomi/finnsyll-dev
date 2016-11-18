@@ -12,7 +12,7 @@
 <div>
     <form class='search center' method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-        <input type='text' name='query' class='search clear' placeholder="type a word, sequence, rule..." {% if find %}value='{{ find }}'{% endif %}> 
+        <input type='text' id='{{ search }}' name='query' class='search clear' placeholder="type a word, sequence, rule..." {% if find %}value='{{ find }}'{% endif %}> 
         <div class='visible-xs visible-sm height'></div>
         <input type='submit' name='search' class='search clear' value='contains'>
         <input type='submit' name='search' class='search clear' value='find'>
@@ -25,9 +25,10 @@
 <br>
 {% if results != none %}
 {% if results %}
-<div class='tokens container'>
+<div class='tokens container'">
     <div class='contains'>
-        <div class='description'><i>{{ count | stat }} matches</i> </div>        {{ tokenify(results) }}
+        <div class='description'><i>{{ count | stat }} matches</i></div>        
+        {{ tokenify(results) }}
         {% if count > 200 %}
         <div class='description'><i>Showing 200 out of {{ count | stat }} matches.</i> </div> 
         {% endif %}        
@@ -42,6 +43,10 @@
 
 {% block footer %}
 <script>
+    function addQueryToModal(find) {
+        $('#query').val(find);
+    }
+
     function populatemodal(id, orth, lemma, gold, freq, pos, msd, rules1, rules2, rules3, rules4, test1, test2, test3, test4, syll1, syll2, syll3, syll4, precision, recall, note) {
         $('#orth').text(orth);
         $('#orth').attr('class', 'attr-orth ' + gold);
@@ -72,6 +77,15 @@
         }
         $('#note').text(note.replace(/&#13;&#10;/g, '\r\n').replace(/&#40;/g, '(').replace(/&#41;/g, ')').replace(/&#34;/g, '"').replace(/&#39;/g, "'"));
         $('#id').val(id);
+
+        // preserve query string and search type
+        if ($('#contains').val()) {
+            $search = $('#contains');
+        } else {
+            $search = $('#find');
+        }
+        $('#query').val($search.val());
+        $('#search').val($search.attr('id'));
     }
 </script>
 {% endblock %}

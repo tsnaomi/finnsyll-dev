@@ -10,10 +10,12 @@
                             <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
                             <input type='hidden' name='id' id='id' value=''>
                             {% if kw == 'doc' %}
-                            <input type='hidden' name='scroll' id='scroll' value=''>
-                            {% elif kw == 'contains' or kw == 'find' %}
-                            <input type='hidden' name='search' id='search' value='{% if find %}{{ find }}{% endif %}'>
+                            <input type='hidden' name='scroll' id='scroll' value=''> <!-- does this work? -->                       
                             {% endif %}
+                            <!-- search (begin) -->
+                            <input type='hidden' name='query' id='query' value=''>
+                            <input type='hidden' name='search' id='search' value=''>
+                            <!-- search (end) -->
                             <div class='row'>
                                 <div class='col-xs-12'>
                                     <span id='orth' class='attr-orth'></span>
