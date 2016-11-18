@@ -303,11 +303,15 @@
         width: 300px;
     }
 
-    input.search[value='FIND'] {
+    input.search[type='submit'] {
+        text-transform: uppercase;
+    }
+
+    input.search[value='find'] {
         width: 80px;
     }
 
-    input.search[value='CONTAINS'] {
+    input.search[value='contains'] {
         width: 120px;
     }
 

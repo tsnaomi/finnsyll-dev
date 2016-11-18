@@ -12,9 +12,13 @@
 <div>
     <form class='search center' method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-        <input type='text' name='search' class='search clear' placeholder="type in a {% if kw == 'find' %}word{% else %}sequence{% endif %}..." {% if find %}value={{ find }}{% endif %}> 
+        <input type='text' name='query' class='search clear' placeholder="type a word, sequence, rule..." {% if find %}value='{{ find }}'{% endif %}> 
         <div class='visible-xs visible-sm height'></div>
-        <input type='submit' class='search clear' value={% if kw == 'find' %}'FIND'{% else %}'CONTAINS'{% endif %}>
+        <input type='submit' name='search' class='search clear' value='contains'>
+        <input type='submit' name='search' class='search clear' value='find'>
+        <br>
+        <br>
+        <i>Tip</i>: Type an asterisk (*) to return only gold standard results!
     </form>
 </div>
 <br>
@@ -23,94 +27,10 @@
 {% if results %}
 <div class='tokens container'>
     <div class='contains'>
-        {% if kw == 'contains' %}
-        <div class='description'>Words containing <i>{{ find }}</i> sequences ({{ count }} matches).</div>
-        {{ tokenify(results) }}
-        {% else %}
-        {% for t in results %}
-        <div class='row'>
-            <span class='col-xs-12'>
-                <a data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" class='attr-orth {{ t|goldclass }}'>{{ t.orth }}</a>
-                {% if t.gold_base %}
-                <div style='padding: 10px 0 0 10px; font-style: italic;'>{{ t.gold_base }}</div>
-                {% endif %}
-            </span>
-        </div>
-        <div class='height'></div>
-        <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'>rules</span>
-            <span class='col-xs-10 col-md-2'>{{ t.rules1 }}</span>
-            <span class='hidden-xs hidden-sm col-md-1 attr-label'>test</span>
-            <span class='hidden-xs hidden-sm col-md-8'>{{ t.test_syll1 }}</span>
-        </div>
-        {% if t.test_syll2 %}
-        <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'></span>
-            <span class='col-xs-10 col-md-2'>{{ t.rules2 }}</span>
-            <span class='hidden-xs hidden-sm col-md-1 attr-label'></span>
-            <span class='hidden-xs hidden-sm col-md-8'>{{ t.test_syll2 }}</span>
-        </div>
-        {% if t.test_syll3 %}
-        <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'></span>
-            <span class='col-xs-10 col-md-2'>{{ t.rules3 }}</span>
-            <span class='hidden-xs hidden-sm col-md-1 attr-label'></span>
-            <span class='hidden-xs hidden-sm col-md-8'>{{ t.test_syll3 }}</span>
-        </div>
-        {% if t.test_syll4 %}
-        <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'></span>
-            <span class='col-xs-10 col-md-3'>{{ t.rules4 }}</span>
-            <span class='hidden-xs hidden-sm col-md-1 attr-label'></span>
-            <span class='hidden-xs hidden-sm col-md-7'>{{ t.test_syll4 }}</span>
-        </div>
-        {% endif %}
-        {% endif %}
-        {% endif %}
-        <div class='row visible-xs visible-sm'>
-            <span class='col-xs-2 attr-label'>test</span>
-            <span class='col-xs-10'>{{ t.test_syll1 }}</span>
-            {% if t.test_syll2 %}</div><div class='row visible-xs visible-sm'><span class='col-xs-2'></span><span class='col-xs-10'>{{ t.test_syll2 }}</span>
-            {% if t.test_syll3 %}</div><div class='row visible-xs visible-sm'><span class='col-xs-2'></span><span class='col-xs-10'>{{ t.test_syll3 }}</span>
-            {% if t.test_syll4 %}</div><div class='row visible-xs visible-sm'><span class='col-xs-2'></span><span class='col-xs-10'>{{ t.test_syll4 }}</span>{% endif %}{% endif %}{% endif %}
-        </div>
-        <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'>gold</span>
-            <span class='col-xs-10 col-md-11'>{{ t.syll1 }}</span>
-            {% if t.syll2 %}</div><div class='row'><span class='col-xs-2 col-md-1'></span><span class='col-xs-10 col-md-10'>{{ t.syll2 }}</span>
-            {% if t.syll3 %}</div><div class='row'><span class='col-xs-2 col-md-1'></span><span class='col-xs-10 col-md-10'>{{ t.syll3 }}</span>
-            {% if t.syll4 %}</div><div class='row'><span class='col-xs-2 col-md-1'></span><span class='col-xs-10 col-md-10'>{{ t.syll4 }}</span>{% endif %}{% endif %}{% endif %}
-        </div>
-        <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'>p / r</span>
-            <span class='col-xs-10 col-md-2'>{{ t.precision }} / {{ t.recall }}</span>
-        </div>
-        <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'>freq</span>
-            <span class='col-xs-10 col-md-2'>{{ t.freq }}</span>
-        </div>
-        <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'>pos</span>
-            <span class='col-xs-10 col-md-2'>{{ t.pos }}</span>
-        </div>
-        <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'>msd</span>
-            <span class='col-xs-10 col-md-2'>{{ t.msd }}</span>
-        </div>
-        <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'>lemma</span>
-            <span class='col-xs-10 col-md-2'>{{ t.lemma }}</span>
-        </div>
-        {% if t.note %}
-        <div class='row'>
-            <span class='col-xs-2 col-md-1 attr-label'>note</span>
-            <span class='col-xs-10 col-md-7'>{{ t.note }}</span>
-        </div>
-        {% endif %}
-        <br>
-        <br>
-        {% endfor %}
-        {% endif %}
+        <div class='description'><i>{{ count | stat }} matches</i> </div>        {{ tokenify(results) }}
+        {% if count > 200 %}
+        <div class='description'><i>Showing 200 out of {{ count | stat }} matches.</i> </div> 
+        {% endif %}        
     </div>
 </div>
 <br>
@@ -122,9 +42,10 @@
 
 {% block footer %}
 <script>
-    function populatemodal(id, orth, gold, freq, pos, msd, rules1, rules2, rules3, rules4, test1, test2, test3, test4, syll1, syll2, syll3, syll4, precision, recall, compound, stopword, foreign, note) {
+    function populatemodal(id, orth, lemma, gold, freq, pos, msd, rules1, rules2, rules3, rules4, test1, test2, test3, test4, syll1, syll2, syll3, syll4, precision, recall, note) {
         $('#orth').text(orth);
         $('#orth').attr('class', 'attr-orth ' + gold);
+        $('#lemma').text(lemma);
         $('#freq').text(freq);
         $('#pos').text(pos);
         $('#msd').text(msd);
@@ -151,15 +72,6 @@
         }
         $('#note').text(note.replace(/&#13;&#10;/g, '\r\n').replace(/&#40;/g, '(').replace(/&#41;/g, ')').replace(/&#34;/g, '"').replace(/&#39;/g, "'"));
         $('#id').val(id);
-        if (compound == 'True') {
-            $('#compound').prop('checked', true);
-        }
-        if (stopword == 'True') {
-            $('#stopword').prop('checked', true);
-        }
-        if (foreign == 'True') {
-            $('#foreign').prop('checked', true);
-        }
     }
 </script>
 {% endblock %}

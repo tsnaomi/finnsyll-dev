@@ -1167,69 +1167,70 @@ def approve_doc_view(id):
     return redirect(url_for('doc_view', id=id))
 
 
-@app.route('/contains', methods=['GET', 'POST'])
+@app.route('/search', methods=['GET', 'POST'])  # noqa
 @login_required
-def contains_view():
+def search_view():
     '''Search for tokens by word and/or citation form.'''
-    results, find, count = None, None, None
+    results, find, count, search = None, None, None, None
 
     if request.method == 'POST':
-        find = request.form.get('search')
+        search = request.form.get('search')
 
+        # save any revisions to search result tokens
         if request.form.get('syll1'):
             apply_form(request.form)
 
-        if '.' in find:
-            results = Token.query.filter_by(is_aamulehti=True).filter(or_(
-                Token.test_syll1.contains(find),
-                Token.test_syll2.contains(find),
-                Token.test_syll3.contains(find),
-                Token.test_syll4.contains(find),
+        # extract search phrase
+        find = request.form.get('query') or request.form.get('syll1')
+
+        if find:
+
+            # extract query and rules
+            try:
+                query = re.match(r'^([a-zA-Z]*)(?:$|[^\w]+)', find).group(1)
+
+            except AttributeError:
+                query = ''
+
+            rules = re.findall(r'(T[abcde0-9]+)', find)
+            gold = '*' in find
+
+            # if an asterisk is present, only search amongst gold tokens
+            if gold:
+                results = Token.query.filter(Token.is_gold.isnot(None))
+
+            # otherwise, still limit search to Aamulehti tokens
+            elif query or rules:
+                results = Token.query.filter_by(is_aamulehti=True)
+
+            # don't return anything if it is a bad search
+            else:
+                results = Token.query.filter(0 == 1)
+
+            # if it is a 'contains' request...
+            if search == 'contains':
+                results = results.filter(Token.orth.contains(query))
+
+            # if it is a 'find' request...
+            else:
+                results = results.filter(Token.orth.ilike(query))
+
+            # filter results by rules
+            for r in rules:
+                results = results.filter(or_(
+                    getattr(Token, 'rules%s' % n).contains(r) for n in range(1, 17)  # noqa
                 ))
 
-        else:
-            results = Token.query.filter(Token.orth.contains(find))
-
-        count = format(results.count(), ',d')
-
-        try:
-            results = results[:500]
-
-        except IndexError:
-            pass
+        count = results.count()
+        results = results.slice(0, 200) if results else None
 
     return render_template(
         'search.html',
-        kw='contains',
+        kw='search',
+        search=search,
         results=results,
         find=find,
         count=count,
-        )
-
-
-@app.route('/find', methods=['GET', 'POST'])
-@login_required
-def find_view():
-    '''Search for tokens by word and/or citation form.'''
-    results, find = None, None
-
-    if request.method == 'POST':
-
-        if request.form.get('syll1'):
-            apply_form(request.form)
-
-        find = request.form.get('search') or request.form['syll1']
-        FIND = find.strip().translate({ord('.'): None, })  # strip periods
-        # FIND = find.strip().translate(None, '.')  # strip periods
-        results = Token.query.filter(Token.orth.ilike(FIND))
-        results = results.filter_by(is_aamulehti=True)
-        results = results if results.count() > 0 else None
-
-    return render_template(
-        'search.html',
-        kw='find',
-        results=results,
-        find=find,
         )
 
 

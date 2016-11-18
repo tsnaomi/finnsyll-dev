@@ -21,35 +21,39 @@
                             </div>
                             <br>
                             <div class='row'>
-                                <span class='attr-label col-xs-3'>rules</span>
-                                <span class='attr-label col-xs-9'>test</span>
+                                <span class='attr-label col-xs-12'>lemma</span>
                             </div>
                             <div class='row'>
-                                <span class='col-xs-3' id='rules1'></span>
-                                <span class='col-xs-9' id='test1'></span>
-                            </div>
-                            <div class='row'>
-                                <span class='col-xs-3' id='rules2'></span>
-                                <span class='col-xs-9' id='test2'></span>
-                            </div>
-                            <div class='row'>
-                                <span class='col-xs-3' id='rules3'></span>
-                                <span class='col-xs-9' id='test3'></span>
-                            </div>
-                            <div class='row'>
-                                <span class='col-xs-3' id='rules4'></span>
-                                <span class='col-xs-9' id='test4'></span>
+                                <span id='lemma' class='col-xs-12'></span>
                             </div>
                             <br>
                             <div class='row'>
-                                <span class='attr-label col-xs-3'>note</span>
-                                <span class='attr-label col-xs-9'>gold</span>
+                                <span class='attr-label col-xs-8'>test</span>
+                                <span class='attr-label col-xs-4'>rules</span>
                             </div>
                             <div class='row'>
-                                <span class='col-xs-3'>
-                                    <textarea id='note' name='note' class='gray'></textarea>
-                                </span>
-                                <span class='col-xs-9'>
+                                <span class='col-xs-8' id='test1'></span>
+                                <span class='col-xs-4' id='rules1'></span>
+                            </div>
+                            <div class='row'>
+                                <span class='col-xs-8' id='test2'></span>
+                                <span class='col-xs-4' id='rules2'></span>
+                            </div>
+                            <div class='row'>
+                                <span class='col-xs-8' id='test3'></span>
+                                <span class='col-xs-4' id='rules3'></span>
+                            </div>
+                            <div class='row'>
+                                <span class='col-xs-8' id='test4'></span>
+                                <span class='col-xs-4' id='rules4'></span>
+                            </div>
+                            <br>
+                            <div class='row'>
+                                <span class='attr-label col-xs-8'>gold</span>
+                                <span class='attr-label col-xs-4'>note</span>
+                            </div>
+                            <div class='row'>
+                                <span class='col-xs-8'>
                                     <div>
                                         <input id='syll1' name='syll1' class='gray' value=''></input>
                                     </div>
@@ -62,6 +66,9 @@
                                     <div>
                                         <input id='syll4' name='syll4' class='gray' value=''></input>
                                     </div>
+                                </span>
+                                <span class='col-xs-4'>
+                                    <textarea id='note' name='note' class='gray'></textarea>
                                 </span>
                             </div>
                             <br>
@@ -78,15 +85,6 @@
                                 <span id='msd' class='col-xs-3'></span>
                             </div>
                             <br>
-                            <div class='row'>
-                                <span class='attr-label col-xs-3'>compound</span>
-                                <span class='attr-label col-xs-3'>stopword</span>
-                            </div>
-                            <div class='row'>
-                                <input type='checkbox' id='compound' name='is_compound' class='col-xs-3' style="left: 12px; bottom: -1px;" value=1>
-                                <input type='checkbox' id='stopword' name='is_stopword' class='col-xs-3' style="left: 12px; bottom: -1px;" value=1 disabled>
-                            </div>
-                            <br>
                             <div class='center'>
                                 <input type='submit' class='OK' value='OK!'>
                             </div>
@@ -100,7 +98,7 @@
 {%- endmacro %}
 
 {% macro populate(t) -%}
-    populatemodal('{{ t.id }}', '{{ t.orth }}', '{{ t|goldclass }}', '{{ t.freq }}', '{{ t.pos }}', '{{ t.msd }}', '{{ t.rules1 }}', '{{ t.rules2 }}', '{{ t.rules3 }}', '{{ t.rules4 }}', '{{ t.test_syll1 }}', '{{ t.test_syll2 }}', '{{ t.test_syll3 }}', '{{ t.test_syll4 }}', '{{ t.syll1 }}', '{{ t.syll2 }}', '{{ t.syll3 }}', '{{ t.syll4 }}', '{{ t.precision }}', '{{ t.recall }}', '{{ t.is_compound }}', '{{ t.is_stopword }}', '{{ t.is_foreign }}', '{{ t.note|js_safe }}');
+    populatemodal('{{ t.id }}', '{{ t.gold_base }}', '{{ t.lemma}}', '{{ t|goldclass }}', '{{ t.freq }}', '{{ t.pos }}', '{{ t.msd }}', '{{ t.rules1 }}', '{{ t.rules2 }}', '{{ t.rules3 }}', '{{ t.rules4 }}', '{{ t.test_syll1 }}', '{{ t.test_syll2 }}', '{{ t.test_syll3 }}', '{{ t.test_syll4 }}', '{{ t.syll1 }}', '{{ t.syll2 }}', '{{ t.syll3 }}', '{{ t.syll4 }}', '{{ t.precision }}', '{{ t.recall }}', '{{ t.note|js_safe }}');
 {%- endmacro %}
 
 {% macro title(t) -%}
@@ -123,7 +121,7 @@
     <div class='row'>
         <span class='col-xs-12 col-md-3'>
             <a class='{{ t|goldclass }}' data-toggle='modal' data-target='#modal' onclick="{{ populate(t) }}" title='{{ title(t) }}'>{{ t.gold_base or t.orth }}</a>
-            {% if t.gold_base and t.gold_base != t.test_base %}<div>&nbsp;<i>{{ t.test_base }}</i>&nbsp;</div>{% endif %}
+            {% if t.gold_base and t.gold_base != t.test_base %}<div>*<i>{{ t.test_base }}</i>&nbsp;</div>{% endif %}
         </span>
         <div class='visible-xs visible-sm col-xs-12 height'>
         </div>

@@ -83,9 +83,10 @@
 
 {% block footer %}
 <script>
-    function populatemodal(id, orth, gold, freq, pos, msd, rules1, rules2, rules3, rules4, test1, test2, test3, test4, syll1, syll2, syll3, syll4, precision, recall, compound, stopword, foreign, note) {
+    function populatemodal(id, orth, lemma, gold, freq, pos, msd, rules1, rules2, rules3, rules4, test1, test2, test3, test4, syll1, syll2, syll3, syll4, precision, recall, note) {
         $('#orth').text(orth);
         $('#orth').attr('class', 'attr-orth ' + gold);
+        $('#lemma').text(lemma);
         $('#freq').text(freq);
         $('#pos').text(pos);
         $('#msd').text(msd);
@@ -112,15 +113,6 @@
         }
         $('#note').text(note.replace(/&#13;&#10;/g, '\r\n').replace(/&#40;/g, '(').replace(/&#41;/g, ')').replace(/&#34;/g, '"').replace(/&#39;/g, "'"));
         $('#id').val(id);
-        if (compound == 'True') {
-            $('#compound').prop('checked', true);
-        }
-        if (stopword == 'True') {
-            $('#stopword').prop('checked', true);
-        }
-        if (foreign == 'True') {
-            $('#foreign').prop('checked', true);
-        }
     }
 </script>
 {% endblock %}
