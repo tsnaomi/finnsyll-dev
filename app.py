@@ -1221,8 +1221,8 @@ def search_view():
                     getattr(Token, 'rules%s' % n).contains(r) for n in range(1, 17)  # noqa
                 ))
 
-        count = results.count()
-        results = results.slice(0, 200) if results else None
+            count = results.count()
+            results = results.slice(0, 200) if results else None
 
     return render_template(
         'search.html',
