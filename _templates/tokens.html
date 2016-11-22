@@ -9,27 +9,27 @@
     {% if description %}
     <div class='description'>
         {% if kw == 'bad' %}
-        This page lists words that fail to have perfect <i>precision</i> and <i>recall</i>, excluding non-nativized words and compound errors. 
+        This page lists words that fail to have perfect <i>precision</i> and <i>recall</i>.<br>
+        This list excludes errors from foreign words, bad compounds, /k/-deletions, and colloquialisms. 
         {% endif %}
         <br>
         <i>{{ count }} matches</i>
     </div>
     {% endif %}
     <div class='tokens'>
-        {% if kw == 'unverified' %} <!-- unverified -->
+        {% if kw == 'variation' %} <!-- variation -->
         <form method='POST'>
             <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
             <div class='row hidden-xs hidden-sm'>
                 <span class='attr-label col-md-1'>freq</span>
-                <span class='attr-label col-md-2'>orth</span>
+                <span class='attr-label col-md-3'>orth</span>
                 <span class='col-md-5'>
                     <div class='row'>
                         <span class='attr-label col-md-5'>rules</span>
                         <span class='attr-label col-md-7'>test</span>
                     </div>
                 </span>
-                <span class='attr-label col-md-3'>syll</span>
-                <span class='attr-label col-md-1'>compound</span>
+                <span class='attr-label col-md-3'>gold</span>
             </div>
             <br class='hidden-xs hidden-sm'>
             {% for t in tokens %}
@@ -38,7 +38,7 @@
                 <span class='col-xs-12 col-md-1'>
                     <span class='freq'>{{ t.freq }}</span>
                 </span>
-                <span class='col-xs-12 col-md-2'>
+                <span class='col-xs-12 col-md-3'>
                     <span class='{{ t|goldclass }}' title='{{ title(t) }}'>{{ t.orth }}</span>
                 </span>
                 <span class='col-xs-12 col-md-5'>
@@ -56,14 +56,10 @@
                     <input type='text' class='gray' name='syll3_{{ loop.index }}' placeholder='alternative syll' value='{{ t.test_syll3 }}'><br>
                     <input type='text' class='gray' name='syll4_{{ loop.index }}' placeholder='alternative syll' value='{{ t.test_syll4 }}'>
                 </span>
-                <span class='col-xs-12 col-md-1'>
-                    <input type='checkbox' id='compound' name='is_compound_{{ loop.index }}' value=1 {% if t.is_compound %} checked{% endif %}>
-                    <span class='attr-label visible-xs visible-sm float-left'>compound&nbsp;&nbsp;</span>
-                </span>
             </div>
             <div class='row'>
-                <span class='hidden-xs hidden-sm col-md-3'></span>
-                <span class='col-xs-12 col-md-9'>
+                <span class='hidden-xs hidden-sm col-md-4'></span>
+                <span class='col-xs-12 col-md-8'>
                     <textarea class='gray note' name='note_{{ loop.index }}' placeholder='Note...' >{{ t.note }}</textarea>
                 </span>
             </div>
@@ -74,7 +70,7 @@
                 <input type='submit' class='BIG OK' onclick="return confirm('Are you positive you want to approve these syllabifications?');" value='OK!'>
             </div>
         </form>
-        {% else %} <!-- bad, all variation, hidden -->
+        {% else %} <!-- bad -->
         {{ tokenify(tokens) }}
         {% endif %}
     </div>

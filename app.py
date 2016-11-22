@@ -302,10 +302,10 @@ class Token(db.Model):
         '''Programmatically split Token.orth into constituent words.'''
         self.test_base = FinnSyll.split(self.orth.encode('utf-8'))
 
-    def syllabify(self):  # 98.7048
+    def syllabify(self):
         '''Programmatically syllabify Token.orth.'''
         word = self.orth.encode('utf-8')
-        syllabifications = list(set(FinnSyll.syllabify(word)))  # fix set/rules
+        syllabifications = list(FinnSyll.syllabify(word))
 
         n = 16 - len(syllabifications)
         syllabifications += [('', '') for i in range(n)]
@@ -340,8 +340,7 @@ class Token(db.Model):
     def correct(self, **kwargs):
         '''Save new attributes to the Token and update its gold status.'''
         for attr, value in kwargs.iteritems():
-            if hasattr(self, attr):
-                setattr(self, attr, value)
+            setattr(self, attr, value)
 
         self.update_gold()
 
@@ -361,13 +360,13 @@ class Token(db.Model):
 
     @hybrid_property
     def is_ambiguous(self):
-        '''A boolean indicating if the Token perhaps exhibits variation.'''
-        return bool(self.test_syll2 or self.syll2)
+        '''A boolean indicating if the Token exhibits T4 variation.'''
+        return bool(self.test_syll2)
 
     @is_ambiguous.expression
     def is_ambiguous(cls):
-        '''A boolean indicating if the Token perhaps exhibits variation.'''
-        return or_(cls.test_syll2 != '', cls.syll2 != '')
+        '''A boolean indicating if the Token exhibits T4 variation.'''
+        return cls.test_syll2 != ''
 
     # Evaluation properties ---------------------------------------------------
 
@@ -1020,33 +1019,14 @@ def apply_form(http_form, commit=True):
         syll2 = http_form.get('syll2', '')
         syll3 = http_form.get('syll3', '')
         syll4 = http_form.get('syll4', '')
-        # syll5 = http_form.get('syll5', '')
-        # syll6 = http_form.get('syll6', '')
-        # syll7 = http_form.get('syll7', '')
-        # syll8 = http_form.get('syll8', '')
         note = http_form.get('note', '')
-
-        try:
-            is_compound = bool(http_form.getlist('is_compound'))
-            # is_stopword = bool(http_form.getlist('is_stopword'))
-
-        except AttributeError:
-            is_compound = bool(http_form.get('is_compound'))
-            # is_stopword = bool(http_form.get('is_stopword'))
 
         token.correct(
             syll1=syll1,
             syll2=syll2,
             syll3=syll3,
             syll4=syll4,
-            # syll5=syll5,
-            # syll6=syll6,
-            # syll7=syll7,
-            # syll8=syll8,
-            is_compound=is_compound,
-            # is_stopword=is_stopword,
             note=note,
-            verified_again=True,
             )
 
         if commit:
@@ -1059,10 +1039,9 @@ def apply_form(http_form, commit=True):
 def apply_bulk_form(http_form):
     # Apply changes to multiple Token instances based on POST request
     forms = {k: {} for k in range(1, 41)}
-    attrs = ['id', 'syll1', 'syll2', 'syll3', 'syll4', 'is_compound', 'note']
 
     for i in range(1, 41):
-        for attr in attrs:
+        for attr in ['id', 'syll1', 'syll2', 'syll3', 'syll4', 'note']:
             try:
                 forms[i][attr] = http_form['%s_%s' % (attr, i)]
 
@@ -1262,7 +1241,12 @@ def search_view():
 def token_view(kw, page):
     '''List all keyword-relevant Tokens and process corrections.'''
     if request.method == 'POST':
-        apply_form(request.form)
+
+        if kw == 'bad':
+            apply_form(request.form)
+
+        elif kw == 'variation':
+            apply_bulk_form(request.form)
 
     if kw == 'bad':
         # excludes non-nativized words and errors caused by the
@@ -1272,8 +1256,9 @@ def token_view(kw, page):
             .filter(Token.test_base == Token.gold_base)
             )
 
-    elif kw == 'unverified':
-        tokens = get_unverified_tokens(),
+    elif kw == 'variation':
+        # retrieve bad tokens that exhibit variation
+        tokens = get_variation().filter_by(is_gold=False)
 
     else:
         abort(404)
@@ -1288,25 +1273,6 @@ def token_view(kw, page):
         pagination=pagination,
         count=count,
         description=True,
-        )
-
-
-@app.route('/unverified', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/unverified/page/<int:page>', methods=['GET', 'POST'])
-@login_required
-def unverified_view(page):
-    '''List all unverified Tokens and process corrections.'''
-    if request.method == 'POST':
-        apply_bulk_form(request.form)
-
-    tokens = get_unverified_tokens().slice(0, 200)
-    tokens, pagination = paginate(page, tokens, per_page=10)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='unverified',
-        pagination=pagination,
         )
 
 
@@ -1362,7 +1328,7 @@ def logout_view():
     return redirect(url_for('main_view'))
 
 
-# Annotation ------------------------------------------------------------------
+# Annotation ---------------------------------------------------------- DELETE?
 
 def get_needs_context():
     '''Return tokens that require context.'''
@@ -1734,7 +1700,7 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
 # Compound statistics ---------------------------------------------------------
 
-class CompoundNumbers(object):
+class CompoundNumbers(object):  # DELETE?
 
     def __init__(self):
         self.table = []
