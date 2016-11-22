@@ -73,7 +73,7 @@ class Test(Table):
 
             # save previous results
             for attr in ['test_syll', 'rules']:
-                for n in range(1, 5):
+                for n in range(1, 17):
                     setattr(t, '_' + attr + str(n), getattr(t, attr + str(n)))
 
             for attr in ['is_gold', 'p_r']:
@@ -139,7 +139,7 @@ class Test(Table):
 
         for i in range(2):
             # test 1, rules 1, test 2, rules 2, test 3, rules 3, etc...
-            columns = [['test %s' % n, 'rules %s' % n] for n in range(1, 5)]
+            columns = [['test %s' % n, 'rules %s' % n] for n in range(1, 17)]
             headers.extend(reduce(lambda x, y: x + y, columns) + ['p / r', ])
 
         headers.insert(9, '>')
@@ -153,14 +153,14 @@ class Test(Table):
         row = []
 
         for onset in ['_', '']:
-            for n in range(1, 5):
+            for n in range(1, 17):
                 attrs = ['test_syll', 'rules']
                 row.extend([getattr(token, onset + a + str(n)) for a in attrs])
 
             row.append(getattr(token, onset + 'p_r'))
 
         row.insert(9, '>')
-        row.append(token.gold_base.decode('utf-8') if token.is_complex else '')
+        row.append(token.gold_base if token.is_complex else '')
         row.append(token.test_base.decode('utf-8') if token.is_split else '')
 
         return row
@@ -192,10 +192,10 @@ class Query(Table):
     @staticmethod
     def get_table_headers():
         '''Create headers for a query table.'''
-        columns = [['test %s' % n, 'rules %s' % n] for n in range(1, 5)]
+        columns = [['test %s' % n, 'rules %s' % n] for n in range(1, 17)]
         headers = ['orth', 'freq']
         headers += reduce(lambda x, y: x + y, columns) + ['>', ]
-        headers += ['gold %s' % n for n in range(1, 5)]
+        headers += ['gold %s' % n for n in range(1, 17)]
         headers += ['status', 'compound', 'split']
 
         return headers
@@ -213,11 +213,11 @@ class Query(Table):
 
         row = [token.orth, token.freq]
 
-        for n in range(1, 5):
+        for n in range(1, 17):
             for attr in ['test_syll', 'rules']:
                 row.append(getattr(token, attr + str(n)))
 
-        for n in range(1, 5):
+        for n in range(1, 17):
             row.append(getattr(token, 'syll' + str(n)))
 
         row.insert(10, '>')
@@ -231,7 +231,7 @@ class Query(Table):
 if __name__ == '__main__':
     Test(pdf='--pdf' in sys.argv)
 
-    # tokens = Token.query.filter_by(is_gold=False).order_by(Token.base)
+    # tokens = get_gold_tokens()
 
     # try:
     #     Query(tokens, filename=sys.argv[1])
