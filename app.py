@@ -31,7 +31,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.exceptions import BadRequestKeyError
 
 # local
-from syllabifier import FinnSyll, phon
+from syllabifier import FinnSyll
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
 app.config.from_pyfile('config.py')
@@ -950,31 +950,6 @@ def get_variation():
     return Token.query.filter_by(is_aamulehti=True).filter(Token.is_ambiguous)
 
 
-# Compound queries ------------------------------------------------------------
-
-def get_test_compounds():
-    '''Return tokens predicted to be compounds.'''
-    return Token.query.filter(Token.is_split)
-
-
-def get_gold_compounds():
-    '''Return known compounds.'''
-    return Token.query.filter_by(is_complex=True)
-
-
-def get_FN_compounds():  # TODO
-    '''Return hand-verified compounds that are not predicted compounds.'''
-    tokens = Token.query.filter_by(is_complex=True)
-    tokens = tokens.filter(Token.is_split.isnot(False))
-
-    return tokens
-
-
-def get_FP_compounds():  # TODO
-    '''Return predicted compounds that are not true compounds.'''
-    return Token.query.filter_by(is_complex=False).filter(Token.is_split)
-
-
 # View helpers ----------------------------------------------------------------
 
 @app.before_request
@@ -1140,7 +1115,7 @@ def perform_search(find, search_type):
 
 @app.route('/', methods=['GET', 'POST'])
 @login_required
-def main_view():  # TODO
+def main_view():
     '''List statistics on the syllabifier's performance.'''
     P1 = Performance.query.filter_by(with_loanwords=False).first()
     P2 = Performance.query.filter_by(with_loanwords=True).first()
