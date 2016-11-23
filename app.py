@@ -1057,6 +1057,9 @@ def apply_sequence_form(http_form):
 def perform_search(find, search_type):
     '''Perform query from search box.'''
     try:
+        # strip periods
+        find = find.strip().translate({ord('.'): None, })
+
         # extract query
         query = re.match(
             r'^([a-zäöÄÖ=]*)(?:$|[^\w]+)',
