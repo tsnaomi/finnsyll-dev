@@ -11,7 +11,7 @@
 # Syllabification rules
 
 **T0**:
-Indicates that no syllabification rules have applied.
+No syllabification rules have applied.
 
 <!-- **T1b**: If there is a consonant cluster word-initially, the entire cluster forms the onset of the first syllable. -->
 
@@ -28,25 +28,25 @@ Indicates that no syllabification rules have applied.
 **T1**: Insert a syllable boundary in front of every CV sequence.
 
 **T2**:
-Split any VV sequence that does not form a genuine diphthong or long vowel.
+Split any VV sequence that does not form a long vowel or genuine diphthong (i.e., /ai, äi, oi, öi, ei, ui, yi, au, ou, eu, iu, äy, öy, ey, iy/). <!-- These sequences may appear within VVV+ sequences. -->
 
 **T8**:
-Split /ie/, /uo/, and /yö/ sequences in syllables that do not take primary stress.
+*Join* /ie/, /uo/, and /yö/ sequences in syllables that take primary stress.
 
 **T4**:
-*Optionally* split /u, y/-final diphthongs that do not take primary stress. *Produces variation.*
+Optionally split /u, y/-final diphthongs that do not take primary stress. *Produces variation.*
 
 **T6**:
 If a VVV sequence contains a long vowel, insert a syllable boundary between it and the third vowel.
 
 **T11**:
-If a VVV sequence contains a /u, y/-final diphthong and /i/, insert a syllable boundary between the diphthong and /i/.
+If a VVV sequence contains a /u,y/-final diphthong, insert a syllable boundary between the diphthong and the third vowel.
 
-**T5**:
+<!-- **T5**:
 If a VVV+ sequence contains an /i/-final diphthong, there is a syllable boundary between it and the third vowel.
 
 **T7**:
-Insert a syllable boundary between the second and third vowels of any VVV sequence.
+Insert a syllable boundary between the second and third vowels of any VVV sequence. -->
 
 {% endfilter %}
 </div>
