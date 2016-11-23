@@ -9,8 +9,12 @@
     {% if description %}
     <div class='description'>
         {% if kw == 'bad' %}
-        This page lists words that fail to have perfect <i>precision</i> and <i>recall</i>.<br>
-        This list excludes errors from foreign words, bad compounds, /k/-deletions, and colloquialisms. 
+        This page lists words that have <i>imperfect</i> precision and recall.<br>
+        This list excludes errors from variation, foreign words, bad compounds, /k/-deletions, and colloquialisms. 
+        {% elif kw == 'variation' %}
+        This pages lists words with <i>ambigious</i> test syllabifications that are not matched in the gold standard.
+        {% elif kw == 'consonant-gradation' %}
+        This pages lists words that exhibit <i>consonant gradation</i> (hand-verified).
         {% endif %}
         <br>
         <i>{{ count }} matches</i>

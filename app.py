@@ -1252,13 +1252,22 @@ def token_view(kw, page):
         # excludes non-nativized words and errors caused by the
         # compound segmenter, /k/-deletions, etc.
         tokens = (
-            Token.query.filter_by(is_gold=False, is_loanword=False, note='')
+            Token.query.filter_by(
+                is_gold=False,
+                is_loanword=False,
+                is_ambiguous=False,
+                )
+            .filter(~(Token.note.contains('[')))  # e.g., '[k-deletion]'
             .filter(Token.test_base == Token.gold_base)
             )
 
     elif kw == 'variation':
         # retrieve bad tokens that exhibit variation
         tokens = get_variation().filter_by(is_gold=False)
+
+    elif kw == 'consonant-gradation':
+        # retrieve tokens that exhibit consonant gradation
+        tokens = get_gold_tokens().filter(Token.note.contains('k-deletion'))
 
     else:
         abort(404)
