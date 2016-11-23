@@ -1239,13 +1239,17 @@ def token_view(kw, page):
             .filter(Token.test_base == Token.gold_base)
             )
 
-    elif kw == 'variation':
-        # retrieve bad tokens that exhibit variation
-        tokens = get_variation().filter_by(is_gold=False)
+    elif kw == 'foreign':
+        # retrieve non-nativized loanwords
+        tokens = Token.query.filter_by(is_loanword=True)
 
     elif kw == 'consonant-gradation':
         # retrieve tokens that exhibit consonant gradation
         tokens = get_gold_tokens().filter(Token.note.contains('k-deletion'))
+
+    elif kw == 'variation':
+        # retrieve bad tokens that exhibit variation
+        tokens = get_variation().filter_by(is_gold=False)
 
     else:
         abort(404)

@@ -18,9 +18,10 @@
                 <li><a href="{{ url_for('search_view') }}"><span class="{% if kw == 'search' %}highlight{% endif %}">Search</span></a></li>
                 <!-- tokens -->
                 <li class='dropdown'>
-                    <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw in 'bad unverified consonant-gradation' %}highlight{% endif %}">Tokens</span> &#8623;</a>
+                    <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw in 'bad unverified consonant-gradation foreign' %}highlight{% endif %}">Tokens</span> &#8623;</a>
                     <ul class='dropdown-menu'>
                         <li><a href="{{ url_for('token_view', kw='bad') }}"><span class="{% if kw == 'bad' %}highlight{% endif %}">Bad</span></a></li>
+                        <li><a href="{{ url_for('token_view', kw='foreign') }}"><span class="{% if kw == 'foreign' %}highlight{% endif %}">Foreign</span></a></li>
                         <li><a href="{{ url_for('token_view', kw='consonant-gradation') }}"><span class="{% if kw == 'consonant-gradation' %}highlight{% endif %}">C Gradation</span></a></li>
                         <li><a href="{{ url_for('token_view', kw='variation') }}"><span class="{% if kw == 'variation' %}highlight{% endif %}">Variation</span></a></li>
                     </ul>
