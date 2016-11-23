@@ -143,7 +143,7 @@ class Test(Table):
             headers.extend(reduce(lambda x, y: x + y, columns) + ['p / r', ])
 
         headers.insert(9, '>')
-        headers.extend(['compound', 'split'])
+        headers.extend(['lemma', 'compound', 'split'])
 
         return headers
 
@@ -160,6 +160,7 @@ class Test(Table):
             row.append(getattr(token, onset + 'p_r'))
 
         row.insert(9, '>')
+        row.append(token.lemma)
         row.append(token.gold_base if token.is_complex else '')
         row.append(token.test_base.decode('utf-8') if token.is_split else '')
 
@@ -193,7 +194,7 @@ class Query(Table):
     def get_table_headers():
         '''Create headers for a query table.'''
         columns = [['test %s' % n, 'rules %s' % n] for n in range(1, 17)]
-        headers = ['orth', 'freq']
+        headers = ['orth', 'lemma', 'freq']
         headers += reduce(lambda x, y: x + y, columns) + ['>', ]
         headers += ['gold %s' % n for n in range(1, 17)]
         headers += ['status', 'compound', 'split']
@@ -211,7 +212,7 @@ class Query(Table):
             elif token.is_gold is False:
                 return 'bad'
 
-        row = [token.orth, token.freq]
+        row = [token.orth, token.lemma, token.freq]
 
         for n in range(1, 17):
             for attr in ['test_syll', 'rules']:
