@@ -12,7 +12,7 @@
 <div>
     <form class='search center' method='POST'>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-        <input type='text' id='{{ search }}' name='query' class='search clear' placeholder="type a word, sequence, rule..." {% if find %}value='{{ find }}'{% endif %}> 
+        <input type='text' id='{{ search_type }}' name='query' class='search clear' placeholder="type a word, sequence, rule..." {% if find %}value='{{ find }}'{% endif %}> 
         <div class='visible-xs visible-sm height'></div>
         <input type='submit' name='search' class='search clear' value='contains'>
         <input type='submit' name='search' class='search clear' value='find'>

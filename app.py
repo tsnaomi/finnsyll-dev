@@ -1182,7 +1182,7 @@ def approve_doc_view(id):
 @login_required
 def search_view():
     '''Search for tokens by word and/or citation form.'''
-    results, find, count, search = None, None, None, None
+    results, find, count, search_type = None, None, None, None
 
     if request.method == 'POST':
         search_type = request.form.get('search')
@@ -1204,7 +1204,7 @@ def search_view():
         'search.html',
         kw='search',
         find=find,
-        search=search,
+        search_type=search_type,
         results=results,
         count=count,
         )
