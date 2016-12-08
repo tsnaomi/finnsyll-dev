@@ -27,13 +27,7 @@
                     </ul>
                 </li>
                 <!-- poetry -->
-                <li class='dropdown'>
-                    <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw == 'poems' or kw =='poem' or kw == 'poem-numbers' %}highlight{% endif %}">Poetry</span> &#8623;</a>
-                    <ul class='dropdown-menu'>
-                        <li><a href="{{ url_for('poems_view') }}"><span class="{% if kw == 'poems' or kw == 'poem' %}highlight{% endif %}">Poems</span></a></li>
-                        <li><a href="{{ url_for('poem_numbers_view') }}"><span class="{% if kw == 'poem-numbers' %}highlight{% endif %}">Numbers</span></a></li>
-                    </ul>
-                </li>
+                <li><a href="{{ url_for('poems_view') }}"><span class="{% if kw == 'poems' or kw == 'poem' %}highlight{% endif %}">Poems</span></a></li>
                 <li><a href="{{ url_for('logout_view') }}"><span>Sign Out</span></a></li>
             </ul>
         </div>

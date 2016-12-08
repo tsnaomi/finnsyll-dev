@@ -1,92 +1,132 @@
 # coding=utf-8
 
-import app as finn
+import app
 import os
 import re
 
 from datetime import datetime
+from sqlalchemy.exc import IntegrityError
 
-characters = u'abcdefghijklmnopqrstuvwxyz -äö'
-punctuation = r'!"#\$%&\'()\*\+,\./:;<=>\?@\[\\\]\^_`{\|}~'
+VOWELS = u'ieäyöauo'
+CHARACTERS = u'abcdefghijklmnopqrstuvwxyz-äö'
+PUNCTUATION = r'!"#\$%&\'()\*\+,\./:;<=>\?@\[\\\]\^_`{\|}~'
 
 
-# Poems -----------------------------------------------------------------------
+def extract_gutenberg():
+    '''Extract poetry from Project Gutenberg.'''
+    # wipe existing Gutenberg tokens prior to extractions
+    wipe_gutenberg_tokens()
 
-def peruse_gutenberg():
+    # extract Gutenberg poetry
     for dirpath, dirname, filenames in os.walk('gutenberg/gutenberg'):
 
-        for f in filenames[1:]:
-            filepath = dirpath + '/' + f
-            poem, body = create_poem(f, filepath)
-            curate_poem(poem, body)
+        for fn in filenames[1:]:
+            fp = dirpath + '/' + fn
+            Book, text = add_poet_and_book(fn, fp)
+            add_sections(Book, text)
 
 
-def create_poem(filename, filepath):
-    with open(filepath, 'r') as f:
+def wipe_gutenberg_tokens():
+    '''Delete all non-Aamulehti tokens.'''
+    app.Token.query.filter_by(is_aamulehti=False).delete()
+    app.db.session.commit()
+
+
+def add_poet_and_book(fn, fp):
+    '''Add (or retrieve) Poet and Book objects.'''
+    with open(fp, 'r') as f:
         f = list(f)
 
-    header, body = f[:4], f[4:]
-    body = re.split(  # too many blank lines...
+    header, text = f[:4], f[4:]
+    header = ''.join(header).replace('\r', '')
+    text = '\n'.join(re.split(  # too many blank lines...
         r'\r\n',
-        re.sub(r'[^A-Z]\r\n\r\n\r\n', '\r\n\r\n', ''.join(body)),
-        )
-    ebook_num = filename[2:-4]  # pg7000.txt > 7000
-    header = [line.split(': ', 1)[1].strip('\r\n') for line in header]
-    title, poet, released, updated = header
-    poet = poet.split(' ')[-1]
+        re.sub(r'[^A-Z]\r\n\r\n\r\n', '\r\n\r\n', ''.join(text)),
+        ))
 
-    # create and save Poem object
+    # add or get Poet
+    surname = re.search(r'Author:.* ([A-Za-zÄÖäö]+)\n', header).group(1)
     try:
-        poem = finn.Poem(
-            ebook_number=ebook_num,
-            title=title,
-            poet=poet,
-            date_released=datetime.strptime(released, '%B %d, %Y'),
-            )
-    except ValueError:
-        poem = finn.Poem(
-            ebook_number=ebook_num,
-            title=title,
-            poet=poet,
-            date_released=datetime.strptime(released, '%B, %Y'),
-            last_updated=datetime.strptime(updated, '%B %d, %Y'),
-            )
+        Poet = app.Poet(surname=surname)
+        app.db.session.add(Poet)
+        app.db.session.commit()
+    except IntegrityError:
+        app.db.session.rollback()
+        Poet = app.Poet.query.filter_by(surname=surname).one()
 
-    finn.db.session.add(poem)
-    finn.db.session.commit()
+    # add Book
+    title = re.search(r'Title: (.+)\n', header).group(1)
+    Book = app.Book(title=title, poet_id=Poet.id)
+    app.db.session.add(Book)
+    app.db.session.commit()
 
-    return poem, body
+    print '%s (%s)' % (Book.title, Poet.surname)
+
+    return Book, text
 
 
-def curate_poem(poem, body):
-    tokenized_poem = []
-    text = ''
-    portion = 1
+def add_sections(Book, text):
+    '''Add Section objects for Book.sections.'''
+    def divide_text(text, n=500):
+        '''Divide the book of poetry into sections of ~n lines.'''
+        new_poem = r'(\n[A-ZÄÖ0-9\. ]+\n)'
+        poems = re.split(new_poem, text)
 
-    for line in body:
+        if len(poems) == 1:
+            new_poem = r'(\n\n)'
+            poems = re.split(new_poem, text)
 
-        # if the line is a blank line, insert an HTML breakpoint
+        sections = []
+        section = ''
+        x = 0
+
+        for poem in poems:
+            if x > n and re.match(new_poem, poem):
+                sections.append(section)
+                section = ''
+                x = 0
+
+            x += poem.count('\n')
+            section += poem
+
+        sections.append(section)
+
+        return sections
+
+    # divide the book into sections
+    sections = divide_text(text)
+
+    for i, section_text in enumerate(sections, start=1):
+
+        # add Section
+        Section = app.Section(section=i, book_id=Book.id)
+        app.db.session.add(Section)
+        app.db.session.commit()
+
+        # tokenize text
+        Section.text = _tokenize_text(section_text, Section)
+        app.db.session.commit()
+
+
+def _tokenize_text(section_text, Section):
+    '''Tokenize text for Section.text'''
+    tokenized_text = []
+    string = ''
+
+    for line in section_text.split('\n'):
+
+        # if the line is blank, insert an HTML breakpoint
         if not line:
-            text += '<br>'
+            string += '<br>'
             continue
 
-        # if the line marks a NEW PAGE, create a new poem (this serves to split
-        # each book of poems across several pages)
-        if line == '<NEW PAGE>':
-            tokenized_poem.append(text)
-            portion += 1
-            poem = duplicate_poem(poem, tokenized_poem, portion)
-            tokenized_poem = []
-            text = ''
-            continue
-
-        text += '<div>'
+        string += '<div>'
 
         # split line by punctuation, spaces, and newline characters:
         # 'päälle pään on taivosehen;' >
         # ['päälle', ' ', 'pään', ' ', 'on', ' ', 'taivosehen', ';']
         line = filter(None, re.split(
-            r'(\r\n|[ ]+|[%s]|--)' % punctuation,
+            r'(\r\n|[ ]+|[%s]|--)' % PUNCTUATION,
             line,
             ))
 
@@ -96,131 +136,172 @@ def curate_poem(poem, body):
             # if the word is a series of spaces, insert HTML non-breaking
             # spaces of an equivalent length
             if len(word) > 1 and word == len(word) * ' ':
-                text += '&nbsp;' * len(word)
+                string += '&nbsp;' * len(word)
                 continue
 
             # ignore any words that appear in all uppercase (e.g., acronyms)
             if word == word.upper():
-                text += word
+                string += word
                 continue
 
             word = word.lower()
 
             # find all u- and y-final diphthongs in word
-            sequences = u_y_final_diphthongs(word.encode('utf-8'))
-            sequences = filter(lambda seq: seq.group(1) is not None, sequences)
+            sequences = _get_u_y_final_diphthongs(word.encode('utf-8'))
 
-            # if the word contains any u- and y-final diphthongs and is only
-            # composed of acceptable characters...
-            if sequences and all(1 if i in characters else 0 for i in word):
+            # if the word contains a u- and y-final diphthong and is composed
+            # of acceptable characters...
+            if sequences and all(1 if i in CHARACTERS else 0 for i in word):
+                tokenized_text.append(string)
+                string = ''
 
-                tokenized_poem.append(text)
-                text = ''
+                # add Variant to db and tokenized_text
+                Variant = add_variant(word, Section)
+                tokenized_text.append(Variant.id)
 
-                # find existing Token, or create a new Token object if one does
-                # not already exist
-                token = get_token(word)
-
-                # create Variation object
-                variation = finn.Variation(token=token.id, poem=poem.id)
-                finn.db.session.add(variation)
-                finn.db.session.commit()
-                tokenized_poem.append(variation.id)
-
-                # create Sequence objects
-                curate_sequences(word, sequences, variation)
+                # add Sequences
+                add_sequences(sequences, word, Variant)
 
             else:
-                text += word
+                string += word
 
-        text += '</div>'
+        tokenized_text.append(string)  # I ARE DUMBASS
+        string += '</div>'
 
-    tokenized_poem.append(text)
-    poem.tokenized_poem = tokenized_poem
-    finn.db.session.commit()
-
-    print 'Poem!'
+    return tokenized_text
 
 
-def duplicate_poem(poem, tokenized_poem, portion):
-    poem.tokenized_poem = tokenized_poem
+def _get_u_y_final_diphthongs(word):
+    '''Extract u- and y-final diphthongs from word.'''
+    pattern = r'(?=([^aäoöieuy]{1}|^)(au|eu|ou|iu|iy|ey|äy|öy)([^aäoöieuy]{1}|$))'  # noqa
+    sequences = list(re.finditer(pattern, word))
 
-    new_poem = finn.Poem(
-        ebook_number=poem.ebook_number,
-        title=poem.title,
-        poet=poem.poet,
-        date_released=poem.date_released,
-        last_updated=poem.last_updated,
-        portion=portion,
-        )
-
-    finn.db.session.add(new_poem)
-    finn.db.session.commit()
-
-    print 'Semi-poem!'
-
-    return new_poem
+    return sequences
 
 
-def u_y_final_diphthongs(word, strict=True):
-    if strict:
-        # this pattern searchs for VV sequences that ends in /u/ or /y/ that do
-        # not appear within larger vowel sequences
-        return list(re.finditer(
-            r'(?<![ieäyöauo])(au|eu|ou|iu|iy|ey|äy|öy)(?:[^ieäyöauo]{1}|$)',
-            # add |Au|Eu|Ou|Iu|Iy|Ey|Äy|Öy for manual search in Sublime
-            word,
-            ))
+def add_variant(word, Section):
+    '''Add Variant object for Section.variants.'''
+    # find existing Token
+    Token = app.find_token(word)
 
-    # this pattern searchs for VV sequences that ends in /u/ or /y/, regardless
-    # of their environments
-    return list(re.finditer(
-        r'(au|eu|ou|iu|iy|ey|äy|öy)',
-        word,
-        ))
+    # create a new Token if one does not already exist
+    if not Token:
+        Token = app.Token(orth=word)
+        app.db.session.add(Token)
 
+    Token.is_gutenberg = True
+    app.db.session.commit()
 
-def get_token(word):
-    token = finn.find_token(word)
+    # add Variant
+    Variant = app.Variant(token_id=Token.id, section_id=Section.id)
+    app.db.session.add(Variant)
+    app.db.session.commit()
 
-    if not token:
-        token = finn.Token(orth=word)
-        finn.db.session.add(token)
-
-    token.is_gutenberg = True
-    finn.db.session.commit()
-
-    return token
+    return Variant
 
 
-def curate_sequences(word, sequences, variation):  # TOTES BROKEN
-    previous = []
-
+def add_sequences(sequences, word, Variant):
+    '''Add VV objects for Variant.sequences.'''
     for seq in sequences:
-        i = seq.start(1)
-        j = i + 2
+        i = seq.start(2)
+        is_heavy, is_stressed, split = _get_phonotactics(seq, i, word)
 
-        # eliminate duplicate matches
-        if i not in previous:
-            vv = seq.group(1).decode('utf-8')
-            html = '%s<strong>%s</strong>%s' % (word[:i], vv, word[j:])
+        # add VV
+        VV = app.VV(
+            poet_id=Variant._section._book._poet.id,
+            book_id=Variant._section._book.id,
+            variant_id=Variant.id,
+            sequence=seq.group(2),
+            index=i,
+            html=_get_html(seq, word),
+            is_heavy=is_heavy,
+            is_stressed=is_stressed,
+            split=split,
+            )
+        app.db.session.add(VV)
 
-            # create Sequence object
-            sequence = finn.Sequence(
-                variation=variation.id,
-                sequence=vv,
-                html=html,
-                )
-            finn.db.session.add(sequence)
-
-            previous.append(i)
-
-    # commit sequences
-    finn.db.session.commit()
+    app.db.session.commit()
 
 
-# -----------------------------------------------------------------------------
+def _get_html(sequence, word):
+    '''Create the html representation for word, emboldening sequence.'''
+    vv = sequence.group(2).decode('utf-8')
+    i = sequence.start(2)
+    j = i + len(vv)
+    html = '%s<strong>%s</strong>%s' % (word[:i], vv, word[j:])
+
+    return html
+
+
+def _get_phonotactics(sequence, i, word):
+    '''Determine the weight and primary stress of the sequence's syllable.'''
+    is_stressed = not any(v in VOWELS for v in word[:i])
+    split = 'join' if is_stressed else None
+
+    try:
+        is_heavy = word[sequence.end(2) + 1] not in VOWELS
+    except IndexError:
+        is_heavy = word[-1] not in VOWELS
+
+    return is_heavy, is_stressed, split
+
+
+def populate_line():
+    '''Populate VV.line for each VV sequence.'''
+    sequences = app.VV.query.all()
+
+    for VV in sequences:
+        text = VV._variant._section.text
+        index = text.index(VV._variant.id)
+        try:
+            pre = re.split(r'\n|</div>|<div>|<br>', text[index - 1])[-1]
+        except IndexError:
+            pre = ''
+        try:
+            post = re.split(r'\n|</div>|<div>|<br>', text[index + 1])[0]
+        except IndexError:
+            post = ''
+        line = '%s%s%s' % (pre, VV.orth.upper(), post)
+        line = line.replace('&nbsp;', ' ').replace('</strong></span>', '')
+        line = line.replace("<span style='font-size:30px;'><strong><span style='font-size:1px;'>@</span>", '')  # noqa
+        VV.line = line
+
+    app.db.session.commit()
+
+
+def fix_html_umlaut_bug():
+    '''Fix VV.html for words where an umlaut precedes VV.sequence.'''
+    def replace_umlauts(word, put_back=False):
+        '''Temporarily replace umlauts with easier-to-read characters.'''
+        if put_back:
+            word = word.replace('A', u'ä').replace('A', u'\xc3\xa4')
+            word = word.replace('O', u'ö').replace('O', u'\xc3\xb6')
+
+        else:
+            word = word.replace(u'ä', 'A').replace(u'\xc3\xa4', 'A')
+            word = word.replace(u'ö', 'O').replace(u'\xc3\xb6', 'O')
+
+        return word
+
+    for vv in app.VV.query.all():
+
+        if vv.html.replace('<strong>', '').replace('</strong>', '') != vv.orth:
+            orth = replace_umlauts(vv.orth)
+            html = replace_umlauts(vv.html)
+            seq = re.search(r'<strong>(.{2})</strong>', html).groups()[0]
+            i = html.index('<')
+            i = i - orth[:i].count('A') - orth[:i].count('O')
+            i += 1 if seq[0] in 'AO' else 0
+            html = orth[:i] + '<strong>' + seq + '</strong>' + orth[i + 2:]
+            vv.html = replace_umlauts(html, put_back=True)
+            vv.index = vv.html.find('<')
+
+    app.db.session.commit()
+
 
 if __name__ == '__main__':
-    # peruse_gutenberg()
-    pass
+    print datetime.utcnow()
+    # extract_gutenberg()
+    # populate_line()
+    # fix_html_umlaut_bug()
+    print datetime.utcnow()

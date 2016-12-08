@@ -563,7 +563,9 @@ alle hangen hautoavat.
 
 Susi ulvoo, koski kuohuu.--
 Aamulla auringon kimallus.
-<NEW PAGE>
+
+
+
 KALEVA.
 
 Kaleva kuuluisa kuningas
@@ -1027,7 +1029,9 @@ askar autuas inehmon
 maan kovalla kannikalla;
 seisoi hetken, katsoi kaksi,
 metsän korpehen katosi.
-<NEW PAGE>
+
+
+
 TYYRIN TYTTI.
 
 Tuo oli tyhjä Tyyrin tytti,
@@ -1548,7 +1552,9 @@ pois kulki kultainen elämä,
 muuttui mieli miehen nuoren.
 Neito lentohon lehahti
 noustessa kesäisen päivän.
-<NEW PAGE>
+
+
+
 IMPI JA PAJARIN POIKA.
 
 Istui impi lähtehellä,
@@ -2013,7 +2019,9 @@ kutsun Kimmon kiukahasta,
 Kammon kuolon porstuasta.
 voimat vangitut vapautan,
 alan uuden aikakauden."
-<NEW PAGE>
+
+
+
 MARJATAN POIKA.
 
 Juhlivat jumalat Suomen
@@ -2483,7 +2491,9 @@ kertoi kansan kohtalosta
 vain tuuli lumisen tundran,
 lauloi Ukrin yöstä yksin
 Salliman ikuiset immet.
-<NEW PAGE>
+
+
+
 SYVÄRIN IMPI.
 
 Tuo ihala Syvärin impi
@@ -3099,7 +3109,9 @@ joka kattoi maammon kummun,
 missä lintunen levähti,
 kukahti käkösen kulta,
 huomentuulonen humahti.
-<NEW PAGE>
+
+
+
 MENNYT MANNER.
 
 Tuo oli tarina maasta

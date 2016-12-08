@@ -81,7 +81,8 @@
 
     .word:hover,
     .variation,
-    .in-progress {
+    .in-progress,  /* ? */
+    .section-in-progress {
         color: #000;
         background-color: #80FFBF; /* light green */
     }
@@ -133,7 +134,8 @@
     }
 
     .good,
-    .variation-verified {
+    .variation-verified,
+    .section-complete {
         background: #D1EDFF; /* blue */
     }
 

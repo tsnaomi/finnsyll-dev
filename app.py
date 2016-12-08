@@ -8,7 +8,6 @@ from functools import wraps
 from math import ceil
 
 # installed
-from tabulate import tabulate
 from flask import (
     abort,
     flash,
@@ -26,7 +25,6 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
 from sqlalchemy import or_, and_
-from sqlalchemy.exc import DataError
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.exceptions import BadRequestKeyError
 
@@ -50,7 +48,7 @@ flask_bcrypt = Bcrypt(app)
 markdown = Markdown(app)
 
 
-# Models ----------------------------------------------------------------------
+# FinnSyll Models -------------------------------------------------------------
 
 class Linguist(db.Model):
     __tablename__ = 'Linguist'
@@ -111,7 +109,7 @@ class Token(db.Model):
     # an integer indicating to which fold the word belongs in cross-validation
     fold = db.Column(db.Integer, default=0)
 
-# rules applied in test syllabifications ----------------------------------
+    # rules applied in test syllabifications ----------------------------------
 
     rules1 = db.Column(db.String(80, convert_unicode=True), default='')
 
@@ -145,7 +143,7 @@ class Token(db.Model):
 
     rules16 = db.Column(db.String(80, convert_unicode=True), default='')
 
-# test syllabifications ---------------------------------------------------
+    # test syllabifications ---------------------------------------------------
 
     test_syll1 = db.Column(db.String(80, convert_unicode=True), default='')
 
@@ -179,7 +177,7 @@ class Token(db.Model):
 
     test_syll16 = db.Column(db.String(80, convert_unicode=True), default='')
 
-# correct syllabifications (hand-verified) --------------------------------
+    # correct syllabifications (hand-verified) --------------------------------
 
     syll1 = db.Column(db.String(80, convert_unicode=True), default='')
 
@@ -213,7 +211,7 @@ class Token(db.Model):
 
     syll16 = db.Column(db.String(80, convert_unicode=True), default='')
 
-# -------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
     # the word's part-of-speech
     pos = db.Column(db.String(80, convert_unicode=True), default='')
@@ -249,11 +247,20 @@ class Token(db.Model):
     # (this is likely safe to delete now)
     verified = db.Column(db.Boolean, default=False)
 
-    # a one-to-many relationship with the Variation table (many Variations per
-    # one Token)
-    variations = db.relationship(
-        'Variation',
-        backref='t_variation',
+    # # DELETE!
+    # # a one-to-many relationship with the Variation table (many Variations per
+    # # one Token)
+    # variations = db.relationship(
+    #     'Variation',
+    #     backref='t_variation',
+    #     lazy='dynamic',
+    #     )
+
+    # a one-to-many relationship with the Variant table (many Variants per
+    # Token)
+    variants = db.relationship(
+        'Variant',
+        backref='_token',
         lazy='dynamic',
         )
 
@@ -278,8 +285,7 @@ class Token(db.Model):
             if hasattr(self, attr):
                 setattr(self, attr, value)
 
-        self.inform_base()
-        self.detect_is_compound()
+        self.split()
         self.syllabify()
 
     def __repr__(self):
@@ -412,256 +418,6 @@ class Token(db.Model):
             return 0.0
 
 
-class Poem(db.Model):
-    __tablename__ = 'Poem'
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    # the title of the poem
-    title = db.Column(db.String(80, convert_unicode=True), default='')
-
-    # the name of the poet
-    poet = db.Column(db.Enum(
-        u'Erkko',        # J. H. Erkko
-        u'Hellaakoski',  # Aaro Hellaakoski
-        u'Kaatra',       # Kössi Kaatra
-        u'Kailas',       # Uuno Kailas
-        u'Koskenniemi',  # V. A. Koskenniemi
-        u'Kramsu',       # Kaarlo Kramsu
-        u'Leino',        # Eino Leino
-        u'Lönnrot',      # Elias Lönnrot
-        u'Siljo',        # Juhani Siljo
-        name='POET',
-        convert_unicode=True,
-        ))
-
-    # each book of poetry is split into portions of roughly 1600 lines,
-    # manually spread across several Poem objects
-    portion = db.Column(db.Integer, default=1)
-
-    # the poem's Gutenberg ebook number
-    ebook_number = db.Column(db.Integer)
-
-    # the poem's release date
-    date_released = db.Column(db.DateTime)
-
-    # the date the poem was last updated on Gutenberg, if different from the
-    # the relase date
-    last_updated = db.Column(db.DateTime)
-
-    # the poem as a tokenized lists, incl. Variation IDs and strings of words
-    tokenized_poem = db.Column(db.PickleType)
-
-    # a boolean indicating if all of the poem's variations have been reviewed
-    reviewed = db.Column(db.Boolean, default=False)
-
-    # a one-to-many relationship with the Variation table (many Variations per
-    # Poem)
-    variations = db.relationship(
-        'Variation',
-        backref='p_variation',
-        lazy='dynamic',
-        )
-
-    # the number of sequences associated with this poetry ebook
-    sequence_count = db.Column(db.Integer)
-
-    # a boolean indicating if review has begun for this poem
-    review_begun = db.Column(db.Boolean, default=False)
-
-    def __init__(self, **kwargs):
-        for attr, value in kwargs.iteritems():
-            if hasattr(self, attr):
-                setattr(self, attr, value)
-
-    def __repr__(self):
-        return '%s by %s' % (self.title, self.poet)
-
-    def __unicode__(self):
-        return self.__repr__()
-
-    @property
-    def ebook(self):
-        '''The poem/book of poems' Gutenberg identifier.'''
-        return 'EBook #%s' % self.ebook_number
-
-    @property
-    def poet_surname(self):
-        '''Return the poet's surname.'''
-        return self.poet.split()[-1]
-
-    def query_poem(self):
-        '''Return a list of Variations and words as they appear in the poem.'''
-        variations = {v.id: v for v in self.variations}
-        poem = [variations.get(w, w) for w in self.tokenized_poem]
-
-        return poem
-
-    def update_review(self):
-        '''Set reviewed to True if all of the variations have been verified.'''
-        reviewed = all(variation.verified for variation in self.variations)
-        self.reviewed = reviewed
-
-    def get_sequence_count(self):
-        '''Return a formatted sequence count.'''
-        return format(self.sequence_count, ',d')
-
-    def get_sequences(self):
-        ''' '''
-        return [s for v in self.variations for s in v.sequences]
-
-
-class Variation(db.Model):
-    __tablename__ = 'Variation'
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    # a one-to-many relationship with the Token table (many Variations per
-    # Token)
-    token_id = db.Column(db.Integer, db.ForeignKey('Token.id'))
-
-    # a one-to-many relationship with the Poem table (many Variations per
-    # Poem)
-    poem_id = db.Column(db.Integer, db.ForeignKey('Poem.id'))
-
-    # a one-to-many relationship with the Sequence table (many Sequences per
-    # Variation)
-    sequences = db.relationship(
-        'Sequence',
-        backref='v_sequence',
-        lazy='dynamic',
-        )
-
-    def __init__(self, token, poem):
-        self.token_id = token
-        self.poem_id = poem
-
-    def __repr__(self):
-        return 'Variation %s' % self.id
-
-    def __unicode__(self):
-        return self.__repr__()
-
-    @property
-    def verified(self):
-        '''A boolean indicating if this Variation has been hand-verified.'''
-        return all(seq.verified for seq in self.sequences)
-
-    def display(self):
-        '''A string represenation of this Variation.'''
-        return self.t_variation.orth.lower()
-
-    def get_sequences(self):
-        '''Return a list of related Sequence objects.'''
-        return [seq for seq in self.sequences]
-
-
-class Sequence(db.Model):
-    __tablename__ = 'Sequence'
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    # a one-to-many relationship with the Variation table (many Sequences per
-    # one Variation)
-    variation_id = db.Column(db.Integer, db.ForeignKey('Variation.id'))
-
-    # the sequence of vowels under consideration
-    sequence = db.Column(db.String(10, convert_unicode=True), default='')
-
-    # the html representation of the related token, highlighting the sequence
-    html = db.Column(db.String(80, convert_unicode=True), default='')
-
-    # # the starting index of the vowel sequence in the token
-    # index = db.Column(db.Integer)
-
-    # # the right environment of the vowel sequence
-    # right = db.Column(db.Enum(
-    #     '#', 'V', 'CV', 'CC+V', 'C+#',
-    #     name='RIGHT',
-    #     ))
-
-    # an enum indicating if this sequence splits or joins
-    split = db.Column(db.Enum('split', 'join', 'unknown', name='SPLIT'))
-
-    # the scansion or metric precision of this sequence:
-    # S - strong, W - weak, UNK - unknown
-    scansion = db.Column(db.Enum(
-        'S', 'W', 'SW', 'WS', 'SS', 'WW', 'UNK',
-        name='SCANSION',
-        ))
-
-    # a boolean indicating if the sequence begins in an odd syllable
-    is_odd = db.Column(db.Boolean, default=None)
-
-    # a note field to jot down notes about this sequence
-    note = db.Column(db.Text, default='')
-
-    def __init__(self, variation, sequence, **kwargs):
-        self.variation_id = variation
-        self.sequence = sequence
-
-        for attr, value in kwargs.iteritems():
-            if hasattr(self, attr):
-                setattr(self, attr, value)
-
-    def __repr__(self):
-        return self.html.replace('<br>', '{').replace('</br>', '}')
-
-    def __unicode__(self):
-        return self.__repr__()
-
-    @hybrid_property
-    def verified(self):
-        '''A boolean indicating if this Sequence has been hand-verified.'''
-        return bool(self.split and self.scansion)
-
-    @verified.expression
-    def verified(cls):
-        '''A boolean indicating if this Sequence has been hand-verified.'''
-        return and_(cls.split.isnot(None), cls.scansion.isnot(None))
-
-    def correct(self, split=None, scansion=None, note=''):
-        '''Save new attributes to the Sequence.'''
-        self.split = split
-        self.scansion = scansion
-        self.note = note
-
-    def update_is_odd(self):
-        '''Populate Sequence.is_odd.'''
-        test_syll = self.v_sequence.t_variation.test_syll1
-        start = self.html.find('<')
-        dots = [1 for i, j in enumerate(test_syll) if i <= start and j == '.']
-        is_odd = sum(dots) % 2 == 0
-
-        self.is_odd = is_odd
-
-    def is_word_initial(self):
-        ''''''
-        vowels = [u'i', u'e', u'ä', u'y', u'ö', u'a', u'u', u'o']
-        i = self.html.find('<')
-        is_word_initial = not any(v in vowels for v in self.html[:i])
-
-        return is_word_initial
-
-    def is_word_final(self):
-        ''''''
-        vowels = [u'i', u'e', u'ä', u'y', u'ö', u'a', u'u', u'o']
-        i = self.html.rfind('>')
-        is_word_final = not any(v in vowels for v in self.html[i:])
-
-        return is_word_final
-
-    def is_heavy(self):
-        ''''''
-        vowels = [u'i', u'e', u'ä', u'y', u'ö', u'a', u'u', u'o']
-        i = self.html.rfind('>')
-
-        if self.is_word_final():
-            return i != len(self.html) - 1
-
-        return self.html[i + 2] not in vowels
-
-
 class Document(db.Model):
     __tablename__ = 'Document'
 
@@ -778,6 +534,544 @@ class Performance(db.Model):
     def complex_acc(self):
         '''Return complex accuracy.'''
         return (float(self.comp_correct) / self.comp_verified) * 100
+
+
+# Poetry Models ---------------------------------------------------------------
+
+class Poet(db.Model):
+    __tablename__ = 'Poet'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # an enum indicating the poet's surname
+    surname = db.Column(
+        db.Enum(
+            u'Erkko',        # J. H. Erkko
+            u'Hellaakoski',  # Aaro Hellaakoski
+            u'Kaatra',       # Kössi Kaatra
+            u'Kailas',       # Uuno Kailas
+            u'Koskenniemi',  # V. A. Koskenniemi
+            u'Kramsu',       # Kaarlo Kramsu
+            u'Leino',        # Eino Leino
+            u'Lönnrot',      # Elias Lönnrot
+            u'Siljo',        # Juhani Siljo
+            u'Homeros',        # Homer
+            name='surname',
+            convert_unicode=True,
+            ),
+        unique=True,
+        )
+
+    # a one-to-many relationship with Book: many Books per Poet
+    books = db.relationship(
+        'Book',
+        backref='_poet',
+        lazy='dynamic',
+        )
+
+    # a one-to-many relationship with VV: many VV sequences per Poet
+    sequences = db.relationship(
+        'VV',
+        backref='_poet',  # RENAME?
+        lazy='dynamic',
+        )
+
+    def __init__(self, **kwargs):
+        for attr, value in kwargs.iteritems():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
+
+    def __repr__(self):
+        return self.surname
+
+    def __unicode__(self):
+        return self.__repr__()
+
+
+class Book(db.Model):
+    __tablename__ = 'Book'  # Book of Poetry
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # the title of the book of poetry
+    title = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # a one-to-many relationship with Poet: many Books per Poet
+    poet_id = db.Column(db.Integer, db.ForeignKey('Poet.id'))
+
+    # a one-to-many relationship with Section: many Sections per Book
+    sections = db.relationship(
+        'Section',
+        backref='_book',
+        lazy='dynamic',
+        )
+
+    # a one-to-many relationship with Poet: many VV sequences per Book
+    sequences = db.relationship(
+        'VV',
+        backref='_book',
+        lazy='dynamic',
+        )
+
+    def __init__(self, **kwargs):
+        for attr, value in kwargs.iteritems():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
+
+    def __repr__(self):
+        return '%s by %s' % (self.title, self._poet.surname)
+
+    def __unicode__(self):
+        return self.__repr__()
+
+
+class Section(db.Model):
+    __tablename__ = 'Section'  # Book of Poetry
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # a one-to-many relationship with Section: many sections per book
+    book_id = db.Column(db.Integer, db.ForeignKey('Book.id'))
+
+    # a number indicating the section of the book of poetry
+    section = db.Column(db.Integer, default=1)
+
+    # the poem as a tokenized lists, incl. Variant IDs and strings of words
+    text = db.Column(db.PickleType)
+
+    # the status of the section's review
+    status = db.Column(db.Enum(
+        u'in-progress',
+        u'complete',
+        name='status',
+        convert_unicode=True,
+        ))
+
+    # a one-to-many relationship with Variant: many Variants per Section
+    variants = db.relationship(
+        'Variant',
+        backref='_section',
+        lazy='dynamic',
+        )
+
+    def __init__(self, **kwargs):
+        for attr, value in kwargs.iteritems():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
+
+    def __repr__(self):
+        return '%s by %s (Section %s)' % (
+            self._book.title,
+            self._book.VV._variant._section.text_poet.surname,
+            self.section,
+            )
+
+    def __unicode__(self):
+        return self.__repr__()
+
+    def update_status(self):
+        '''Update the section's review status.'''
+        verified = (v.verified for v in self.variants)
+
+        if any(verified):
+            self.status = 'complete' if all(verified) else 'in-progress'
+
+    def compose(self):
+        '''Return Variants and words in the section's text (for frontend).'''
+        variants = {v.id: v for v in self.variants}
+        text = [variants.get(w, w) for w in self.text]
+
+        return text
+
+
+class Variant(db.Model):
+    __tablename__ = 'Variant'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # a one-to-many relationship: many Variants per Token
+    token_id = db.Column(db.Integer, db.ForeignKey('Token.id'))
+
+    # a one-to-many relationship: many Variants per Section
+    section_id = db.Column(db.Integer, db.ForeignKey('Section.id'))
+
+    # a one-to-many relationship: many VV sequences per Variant
+    sequences = db.relationship(
+        'VV',
+        backref='_variant',
+        lazy='dynamic',
+        )
+
+    def __init__(self, **kwargs):
+        for attr, value in kwargs.iteritems():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
+
+    def __repr__(self):
+        return 'Variant %s' % self.id
+
+    def __unicode__(self):
+        return self.__repr__()
+
+    @property
+    def orth(self):
+        '''Return the lowercase orth of the variant.'''
+        return self._token.orth.lower()
+
+    @property
+    def verified(self):
+        '''A boolean indicating if this Variation has been hand-verified.'''
+        return all(seq.verified for seq in self.sequences)
+
+
+class VV(db.Model):
+    __tablename__ = 'VV'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    # a one-to-many relationship with Poet: many VV sequences per Poet
+    poet_id = db.Column(db.Integer, db.ForeignKey('Poet.id'))
+
+    # a one-to-many relationship with Poet: many VV sequences per Book
+    book_id = db.Column(db.Integer, db.ForeignKey('Book.id'))
+
+    # a one-to-many relationship with Variant: many VV sequences per Variant
+    variant_id = db.Column(db.Integer, db.ForeignKey('Variant.id'))
+
+    # the u- or y-final VV sequence
+    sequence = db.Column(db.String(10, convert_unicode=True), default='')
+
+    # the starting index of the VV sequence
+    index = db.Column(db.Integer, default=0)
+
+    # the line in which the VV sequence appears
+    line = db.Column(db.String(140, convert_unicode=True), default='')
+
+    # the html representation of the related token, emboldening the sequence
+    html = db.Column(db.String(80, convert_unicode=True), default='')
+
+    # a note field to jot down notes about the sequence
+    note = db.Column(db.Text, default='')
+
+    # a boolean indicating if the sequence's split and scansion have been
+    # hand-verified
+    verified = db.Column(db.Boolean, default=False)
+
+    # a boolean indicating if the sequence appears in a heavy syllable
+    is_heavy = db.Column(db.Boolean, default=False)
+
+    # a boolean indicating if the sequence receives primary stress
+    is_stressed = db.Column(db.Boolean, default=False)
+
+    # an enum indicating if this sequence splits or joins
+    split = db.Column(db.Enum(
+        'split',
+        'join',
+        'unknown',
+        name='split',
+        ))
+
+    # an enum indicating the scansion of this sequence
+    scansion = db.Column(db.Enum(
+        'S',        # strong
+        'W',        # weak
+        'SW',       # strong-weak
+        'WS',       # weak-strong
+        'SS',       # strong-strong
+        'WW',       # weak-weak
+        'unknown',
+        name='scansion',
+        ))
+
+    def __init__(self, **kwargs):
+        for attr, value in kwargs.iteritems():
+            if hasattr(self, attr):
+                setattr(self, attr, value)
+
+    def __repr__(self):
+        return self.sequence
+
+    def __unicode__(self):
+        return self.__repr__()
+
+    @property
+    def orth(self):
+        '''Return the lowercase orth of the Sequence's variant.'''
+        return self._variant.orth
+
+    def correct(self, split=None, scansion=None, note=''):
+        '''Save new attributes to the Sequence.'''
+        self.split = split
+        self.scansion = scansion
+        self.note = note
+
+        if split and scansion:
+            self.verified = True
+
+        self._variant._section.update_status()
+
+
+# # DELETE!
+# class Poem(db.Model):
+#     __tablename__ = 'Poem'
+
+#     id = db.Column(db.Integer, primary_key=True)
+
+#     # the title of the poem
+#     title = db.Column(db.String(80, convert_unicode=True), default='')
+
+#     # the name of the poet
+#     poet = db.Column(db.Enum(
+#         u'Erkko',        # J. H. Erkko
+#         u'Hellaakoski',  # Aaro Hellaakoski
+#         u'Kaatra',       # Kössi Kaatra
+#         u'Kailas',       # Uuno Kailas
+#         u'Koskenniemi',  # V. A. Koskenniemi
+#         u'Kramsu',       # Kaarlo Kramsu
+#         u'Leino',        # Eino Leino
+#         u'Lönnrot',      # Elias Lönnrot
+#         u'Siljo',        # Juhani Siljo
+#         name='POET',
+#         convert_unicode=True,
+#         ))
+
+#     # each book of poetry is split into portions of roughly 1600 lines,
+#     # manually spread across several Poem objects
+#     portion = db.Column(db.Integer, default=1)
+
+#     # the poem's Gutenberg ebook number
+#     ebook_number = db.Column(db.Integer)
+
+#     # the poem's release date
+#     date_released = db.Column(db.DateTime)
+
+#     # the date the poem was last updated on Gutenberg, if different from the
+#     # the relase date
+#     last_updated = db.Column(db.DateTime)
+
+#     # the poem as a tokenized lists, incl. Variation IDs and strings of words
+#     tokenized_poem = db.Column(db.PickleType)
+
+#     # a boolean indicating if all of the poem's variations have been reviewed
+#     reviewed = db.Column(db.Boolean, default=False)
+
+#     # a one-to-many relationship with the Variation table (many Variations per
+#     # Poem)
+#     variations = db.relationship(
+#         'Variation',
+#         backref='p_variation',
+#         lazy='dynamic',
+#         )
+
+#     # the number of sequences associated with this poetry ebook
+#     sequence_count = db.Column(db.Integer)
+
+#     # a boolean indicating if review has begun for this poem
+#     review_begun = db.Column(db.Boolean, default=False)
+
+#     def __init__(self, **kwargs):
+#         for attr, value in kwargs.iteritems():
+#             if hasattr(self, attr):
+#                 setattr(self, attr, value)
+
+#     def __repr__(self):
+#         return '%s by %s' % (self.title, self.poet)
+
+#     def __unicode__(self):
+#         return self.__repr__()
+
+#     @property
+#     def ebook(self):
+#         '''The poem/book of poems' Gutenberg identifier.'''
+#         return 'EBook #%s' % self.ebook_number
+
+#     @property
+#     def poet_surname(self):
+#         '''Return the poet's surname.'''
+#         return self.poet.split()[-1]
+
+#     def query_poem(self):
+#         '''Return a list of Variations and words as they appear in the poem.'''
+#         variations = {v.id: v for v in self.variations}
+#         poem = [variations.get(w, w) for w in self.tokenized_poem]
+
+#         return poem
+
+#     def update_review(self):
+#         '''Set reviewed to True if all of the variations have been verified.'''
+#         reviewed = all(variation.verified for variation in self.variations)
+#         self.reviewed = reviewed
+
+#     def get_sequence_count(self):
+#         '''Return a formatted sequence count.'''
+#         return format(self.sequence_count, ',d')
+
+#     def get_sequences(self):
+#         ''' '''
+#         return [s for v in self.variations for s in v.sequences]
+
+
+# # DELETE!
+# class Variation(db.Model):
+#     __tablename__ = 'Variation'
+
+#     id = db.Column(db.Integer, primary_key=True)
+
+#     # a one-to-many relationship with the Token table (many Variations per
+#     # Token)
+#     token_id = db.Column(db.Integer, db.ForeignKey('Token.id'))
+
+#     # a one-to-many relationship with the Poem table (many Variations per
+#     # Poem)
+#     poem_id = db.Column(db.Integer, db.ForeignKey('Poem.id'))
+
+#     # a one-to-many relationship with the Sequence table (many Sequences per
+#     # Variation)
+#     sequences = db.relationship(
+#         'Sequence',
+#         backref='v_sequence',
+#         lazy='dynamic',
+#         )
+
+#     def __init__(self, token, poem):
+#         self.token_id = token
+#         self.poem_id = poem
+
+#     def __repr__(self):
+#         return 'Variation %s' % self.id
+
+#     def __unicode__(self):
+#         return self.__repr__()
+
+#     @property
+#     def verified(self):
+#         '''A boolean indicating if this Variation has been hand-verified.'''
+#         return all(seq.verified for seq in self.sequences)
+
+#     def display(self):
+#         '''A string represenation of this Variation.'''
+#         return self.t_variation.orth.lower()
+
+#     def get_sequences(self):
+#         '''Return a list of related Sequence objects.'''
+#         return [seq for seq in self.sequences]
+
+#     @property
+#     def orth(self):
+#         '''Return the lowercase orth of the variant.'''
+#         return self.t_variation.orth.lower()
+
+
+# # DELETE!
+# class Sequence(db.Model):
+#     __tablename__ = 'Sequence'
+
+#     id = db.Column(db.Integer, primary_key=True)
+
+#     # a one-to-many relationship with the Variation table (many Sequences per
+#     # one Variation)
+#     variation_id = db.Column(db.Integer, db.ForeignKey('Variation.id'))
+
+#     # the sequence of vowels under consideration
+#     sequence = db.Column(db.String(10, convert_unicode=True), default='')
+
+#     # the html representation of the related token, highlighting the sequence
+#     html = db.Column(db.String(80, convert_unicode=True), default='')
+
+#     # # the starting index of the vowel sequence in the token
+#     # index = db.Column(db.Integer)
+
+#     # # the right environment of the vowel sequence
+#     # right = db.Column(db.Enum(
+#     #     '#', 'V', 'CV', 'CC+V', 'C+#',
+#     #     name='RIGHT',
+#     #     ))
+
+#     # an enum indicating if this sequence splits or joins
+#     split = db.Column(db.Enum('split', 'join', 'unknown', name='SPLIT'))
+
+#     # the scansion or metric precision of this sequence:
+#     # S - strong, W - weak, UNK - unknown
+#     scansion = db.Column(db.Enum(
+#         'S', 'W', 'SW', 'WS', 'SS', 'WW', 'UNK',
+#         name='SCANSION',
+#         ))
+
+#     # a boolean indicating if the sequence begins in an odd syllable
+#     is_odd = db.Column(db.Boolean, default=None)
+
+#     # a note field to jot down notes about this sequence
+#     note = db.Column(db.Text, default='')
+
+#     def __init__(self, variation, sequence, **kwargs):
+#         self.variation_id = variation
+#         self.sequence = sequence
+
+#         for attr, value in kwargs.iteritems():
+#             if hasattr(self, attr):
+#                 setattr(self, attr, value)
+
+#     def __repr__(self):
+#         return self.html.replace('<br>', '{').replace('</br>', '}')
+
+#     def __unicode__(self):
+#         return self.__repr__()
+
+#     @hybrid_property
+#     def verified(self):
+#         '''A boolean indicating if this Sequence has been hand-verified.'''
+#         return bool(self.split and self.scansion)
+
+#     @verified.expression
+#     def verified(cls):
+#         '''A boolean indicating if this Sequence has been hand-verified.'''
+#         return and_(cls.split.isnot(None), cls.scansion.isnot(None))
+
+#     def correct(self, split=None, scansion=None, note=''):
+#         '''Save new attributes to the Sequence.'''
+#         self.split = split
+#         self.scansion = scansion
+#         self.note = note
+
+#     def update_is_odd(self):
+#         '''Populate Sequence.is_odd.'''
+#         test_syll = self.v_sequence.t_variation.test_syll1
+#         start = self.html.find('<')
+#         dots = [1 for i, j in enumerate(test_syll) if i <= start and j == '.']
+#         is_odd = sum(dots) % 2 == 0
+
+#         self.is_odd = is_odd
+
+#     def is_word_initial(self):
+#         ''''''
+#         vowels = [u'i', u'e', u'ä', u'y', u'ö', u'a', u'u', u'o']
+#         i = self.html.find('<')
+#         is_word_initial = not any(v in vowels for v in self.html[:i])
+
+#         return is_word_initial
+
+#     def is_word_final(self):
+#         ''''''
+#         vowels = [u'i', u'e', u'ä', u'y', u'ö', u'a', u'u', u'o']
+#         i = self.html.rfind('>')
+#         is_word_final = not any(v in vowels for v in self.html[i:])
+
+#         return is_word_final
+
+#     def is_heavy(self):
+#         ''''''
+#         vowels = [u'i', u'e', u'ä', u'y', u'ö', u'a', u'u', u'o']
+#         i = self.html.rfind('>')
+
+#         if self.is_word_final():
+#             return i != len(self.html) - 1
+
+#         return self.html[i + 2] not in vowels
+
+#     @property
+#     def orth(self):
+#         '''Return the lowercase orth of the variant.'''
+#         return self.v_sequence.orth
 
 
 # Database functions ----------------------------------------------------------
@@ -1025,31 +1319,6 @@ def apply_bulk_form(http_form):
 
     for form in forms.itervalues():
         apply_form(form, commit=False)
-
-    db.session.commit()
-
-
-def apply_sequence_form(http_form):
-    # Apply changes to multiple Sequence instances based on POST request
-    n = 2 if http_form.get('id_2') else 1
-    forms = {k: {} for k in range(1, n + 1)}
-    attrs = ['id', 'split', 'scansion', 'note']
-
-    for i in range(1, n + 1):
-        for attr in attrs:
-            try:
-                forms[i][attr] = http_form.get('%s_%s' % (attr, i))
-
-            except BadRequestKeyError:
-                pass
-
-    for form in forms.itervalues():
-        seq = Sequence.query.get(form['id'])
-        seq.correct(
-            split=form['split'],
-            scansion=form['scansion'],
-            note=form['note'],
-            )
 
     db.session.commit()
 
@@ -1321,157 +1590,83 @@ def logout_view():
 
 # Poems -----------------------------------------------------------------------
 
-def get_sequence_tables(query=Sequence.query.filter_by(verified=True)):
-    '''Generate table on Sequence statistics.'''
-    sequences1 = []
-    sequences2 = []
-    sequences3 = []
-    sequences4 = []
-
-    headers1 = ['', 'total', 'joined', 'split', 'unsure']       # all table
-    headers2 = ['', 'total', 'S', 'W', 'unsure']                # joined
-    headers3 = ['', 'total', 'S', 'W', 'SW', 'WS', 'unsure']    # split
-    headers4 = ['', 'total', 'S', 'W', 'unsure']                # unsure
-
-    diphthongs = ['', 'iu', 'iy', 'eu', 'ey', 'au', 'äy', 'ou', 'öy']
-
-    f = lambda n, t: '%s %s' % (
-        str(n),
-        '(' + str(round((float(n) / t) * 100.0, 2)) + '%)' if n else '',
-        )
-
-    for vv in diphthongs:
-
-        if vv:
-            seqs = query.filter_by(sequence=vv).distinct()
-
-        else:
-            seqs = query.distinct()
-            vv = '<i>all</i>'
-
-        total = seqs.count()
-        _join = seqs.filter_by(split='join')
-        join = _join.count()
-        join_s = _join.filter_by(scansion='S').count()
-        join_w = _join.filter_by(scansion='W').count()
-        join_unk = join - join_s - join_w
-        _split = seqs.filter_by(split='split')
-        split = _split.count()
-        split_s = _split.filter_by(scansion='S').count()
-        split_w = _split.filter_by(scansion='W').count()
-        split_sw = _split.filter_by(scansion='SW').count()
-        split_ws = _split.filter_by(scansion='WS').count()
-        split_unk = split - split_s - split_w - split_sw - split_ws
-        _unknown = seqs.filter_by(split='unknown')
-        unknown = unknown = total - split - join
-        unknown_s = _unknown.filter_by(scansion='S').count()
-        unknown_w = _unknown.filter_by(scansion='W').count()
-        unknown_unk = unknown - unknown_s - unknown_w
-
-        sequences1.append([
-            '<strong>' + vv.decode('utf-8') + '</strong>',
-            total,
-            f(join, total),
-            f(split, total),
-            f(unknown, total),
-            ])
-
-        sequences2.append([
-            '<strong>' + vv.decode('utf-8') + '</strong>',
-            join,
-            f(join_s, join),
-            f(join_w, join),
-            f(join_unk, join),
-            ])
-
-        sequences3.append([
-            '<strong>' + vv.decode('utf-8') + '</strong>',
-            split,
-            f(split_s, split),
-            f(split_w, split),
-            f(split_sw, split),
-            f(split_ws, split),
-            f(split_unk, split),
-            ])
-
-        sequences4.append([
-            '<strong>' + vv.decode('utf-8') + '</strong>',
-            unknown,
-            f(unknown_s, unknown),
-            f(unknown_w, unknown),
-            f(unknown_unk, unknown),
-            ])
-
-    table1 = tabulate(sequences1, headers1, tablefmt='html')
-    table2 = tabulate(sequences2, headers2, tablefmt='html')
-    table3 = tabulate(sequences3, headers3, tablefmt='html')
-    table4 = tabulate(sequences4, headers4, tablefmt='html')
-
-    return table1, table2, table3, table4
-
 
 @app.route('/poems', methods=['GET', ])
 @login_required
 def poems_view():
-    '''Present an index of poems.'''
-    poems = Poem.query.order_by(
-        Poem.poet,
-        Poem.ebook_number,
-        Poem.portion,
-        ).all()
+    '''Return the books of poetry to form a Table of Contents.'''
+    sections = (
+        Section.query.join(Book).join(Poet)
+        .order_by(Poet.surname, Section.id)
+        )
 
-    return render_template('poems.html', poems=poems, kw='poems')
+    return render_template('poems.html', sections=sections, kw='poems')
 
 
-@app.route('/poems/<id>', methods=['GET', 'POST'])
+@app.route('/poems/<id>', methods=['GET', ])
 @login_required
 def poem_view(id):
-    '''Present detail view of specified doc, composed of editable Tokens.'''
-    poem = Poem.query.get_or_404(id)
-    POEM = poem.query_poem()
+    '''Present a detail view of the book excerpt, composed of editable VV.'''
+    section = Section.query.get_or_404(id)
+    text = section.compose()
 
-    if request.method == 'POST':
-        poem.review_begun = True
-        apply_sequence_form(request.form)
-
-    return render_template('poem.html', poem=poem, POEM=POEM, kw='poem')
+    return render_template('poem.html', section=section, text=text, kw='poem')
 
 
-@app.route('/poems/update', methods=['GET', ])
+# an inelegant view to make the frontend faster
+@app.route('/poems/edit-sequence', methods=['POST', ])
 @login_required
-def poem_update_view():
-    '''Call update_poems().'''
-    update_poems()
+def poem_edit_view():
+    '''Update VV annotations.'''
+    n = 2 if request.form.get('id_2') else 1
+    forms = {k: {} for k in range(1, n + 1)}
+    attrs = ['id', 'split', 'scansion', 'note']
 
-    return redirect(url_for('poem_view', id=1))
+    for i in range(1, n + 1):
+        for attr in attrs:
+            try:
+                forms[i][attr] = request.form.get('%s_%s' % (attr, i))
 
+            except BadRequestKeyError as e:
+                print '********', e
 
-@app.route('/poems/numbers', methods=['GET', ])
-@app.route('/poems/<poet>-numbers', methods=['GET', ])
-def poem_numbers_view(poet=None):
-    if poet:
+    for form in forms.itervalues():
+        seq = VV.query.get(form['id'])
+        seq.correct(
+            split=form['split'],
+            scansion=form['scansion'],
+            note=form['note'],
+            )
 
-        try:
-            query = Sequence.query.join(Variation).join(Poem)
-            query = query.filter(Poem.poet == poet)
-            query = query.outerjoin(Sequence).filter_by(verified=True)
-            table1, table2, table3, table4 = get_sequence_tables(query=query)
+    db.session.commit()
 
-        except DataError:
-            abort(404)
+    variant = seq._variant
 
-    else:
-        table1, table2, table3, table4 = get_sequence_tables()
-
-    return render_template(
-        'sequence.html',
-        table1=table1,
-        table2=table2,
-        table3=table3,
-        table4=table4,
-        poet=poet or 'all',
-        kw='poem-numbers',
+    # welp
+    response = 'populatemodal(' + '%s,' * 6 % (
+        str(variant.id),
+        '"' + str(variant.sequences[0].id) + '"',
+        '"' + variant.sequences[0].html + '|safe' + '"',
+        '"' + str(variant.sequences[0].split) + '"',
+        '"' + str(variant.sequences[0].scansion) + '"',
+        '"' + variant.sequences[0].note + '|safe' + '"',
         )
+
+    try:
+        response += '%s,' * 5 + ');' % (
+            str(variant.sequences[1].id),
+            '"' + variant.sequences[1].html + '|safe' + '"',
+            '"' + str(variant.sequences[1].split) + '"',
+            '"' + str(variant.sequences[1].scansion) + '"',
+            '"' + variant.sequences[1].note + '|safe' + '"',
+            )
+
+    except IndexError:
+        response += '"",' * 5 + ');'
+
+    response += '' if variant.verified else ' unverified'
+
+    return response, 200
 
 
 # Jinja2 ----------------------------------------------------------------------
@@ -1505,12 +1700,13 @@ def js_safe(s):
 
     return s
 
+
 app.jinja_env.filters['stat'] = stat
 app.jinja_env.filters['goldclass'] = goldclass
 app.jinja_env.filters['variationclass'] = variationclass
 app.jinja_env.filters['js_safe'] = js_safe
 app.jinja_env.tests['token'] = lambda t: hasattr(t, 'syll1')
-app.jinja_env.tests['variation'] = lambda v: hasattr(v, 'sequences')
+app.jinja_env.tests['variant'] = lambda v: hasattr(v, 'token_id')
 
 
 # Pagination ------------------------------------------------------------------

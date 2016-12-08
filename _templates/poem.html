@@ -11,9 +11,23 @@
 </script>
 {% endblock %}
 
-{% macro _populate(v) -%}
-    {% set sequences = v.get_sequences() %}
-    populatemodal({{ sequences.0.id }}, '{{ sequences.0.html|safe }}', '{{ sequences.0.split }}', '{{ sequences.0.scansion }}', '{{ sequences.0.note|js_safe }}', {% if sequences|length > 1 %}'{{ sequences.1.id }}', '{{ sequences.1.html|safe }}', '{{ sequences.1.split }}', '{{ sequences.1.scansion }}', '{{ sequences.1.note|js_safe }}'{% else %}'', '', '', ''{% endif %});
+{% macro populate_variant_modal(v) -%}
+    populatemodal(
+        '{{ v.id }}',
+        {{ v.sequences.0.id }},
+        '{{ v.sequences.0.html|safe }}',
+        '{{ v.sequences.0.split }}',
+        '{{ v.sequences.0.scansion }}',
+        '{{ v.sequences.0.note|js_safe }}',
+        {% if sequences|length > 1 %}
+            '{{ v.sequences.1.id }}',
+            '{{ v.sequences.1.html|safe }}',
+            '{{ v.sequences.1.split }}',
+            '{{ v.sequences.1.scansion }}',
+            '{{ v.sequences.1.note|js_safe }}'
+        {% else %}
+            '', '', '', ''
+        {% endif %});
 {%- endmacro %}
 
 {% block body %}
@@ -23,7 +37,7 @@
         <div class='modal-content'>
             <div class='modal-body'>
                 <button type='button' class='close' data-dismiss='modal' aria-label='Close'><span aria-hidden='true'>&times;</span></button>
-                <form class='doc-tokens' method='POST'>
+                <form class='doc-tokens' method='POST' onsubmit="return submitForm()">
                     <div class='container-fluid sequences'>
                         <br>
                         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
@@ -33,7 +47,8 @@
                             <div class='divide'></div>
                             {% endif %}
                             <input type='hidden' name='id_{{ loop.index }}' id='id_{{ loop.index }}' value=''>
-                            <div id='html_{{ loop.index }}' class='variation-orth'></div>
+                            <input type='hidden' id='variant_id' value=''>
+                            <div id='html_{{ loop.index }}' class='col-xs-12 variation-orth'></div>
                             <div class='row'>
                                 <div class='col-xs-1'></div>
                                 <div class='col-xs-9 col-sm-3 seq-attr'>
@@ -53,7 +68,7 @@
                                 <div class='col-xs-4 col-sm-3 seq-attr'>
                                     <input type='radio' name='scansion_{{ loop.index }}' id='S_{{ loop.index }}' value='S'> S<br>
                                     <input type='radio' name='scansion_{{ loop.index }}' id='SW_{{ loop.index }}' value='SW'> SW<br>
-                                    <input type='radio' name='scansion_{{ loop.index }}' id='UNK_{{ loop.index }}' value='UNK'> unsure<br>
+                                    <input type='radio' name='scansion_{{ loop.index }}' id='UNK_{{ loop.index }}' value='unknown'> unsure<br>
                                 </div>
                                 <div class='col-xs-5 col-sm-3 seq-attr'>
                                     <input type='radio' name='scansion_{{ loop.index }}' id='W_{{ loop.index }}' value='W'> W<br>
@@ -88,15 +103,15 @@
 <br>
 <br>
 <div style='width: 60%; margin: auto;'>
-    <div class='poem-title center'>{{ poem.title }}</div>
+    <div class='poem-title center'>{{ section._book.title }}</div>
     <br>
-    <div class='poem-poet center'>by {{ poem.poet }}</div>
+    <div class='poem-poet center'>by {{ section._book._poet.surname }}</div>
 </div>
 <br>
 <div class='poem-text container'>   
-{% for v in POEM %}
-    {% if v is variation %}
-    <a data-toggle='modal' data-target='#modal' onclick="{{ _populate(v) }}" class='variation {{ v|variationclass }}'> {{ v.display() }} </a>
+{% for v in text %}
+    {% if v is variant %}
+    <a data-toggle='modal' data-target='#modal' onclick="{{ populate_variant_modal(v) }}" class='variation {{ v|variationclass }}' id='{{ v.id }}'> {{ v.orth }} </a>
     {% else %}
     <span>{{ v|safe }}</span>
     {% endif %}
@@ -106,64 +121,85 @@
 
 {% block footer %}
 <script>
-    function populatemodal(id1, html1, split1, scansion1, note1, id2, html2, split2, scansion2, note2) {
+    function populatemodal(variant_id, id1, html1, split1, scansion1, note1, id2, html2, split2, scansion2, note2) {
         $('.sequences').find('input[type=radio]:checked').removeAttr('checked');
+        $('#variant_id').val(variant_id);
         $('#id_1').val(id1);
         $('#html_1').html(html1);
         $('#note_1').text(note1.replace(/&#13;&#10;/g, '\r\n').replace(/&#40;/g, '(').replace(/&#41;/g, ')').replace(/&#34;/g, '"').replace(/&#39;/g, "'"));
         if (split1 == 'split') {
-            $('#split_1').prop('checked', true)
+            $('#split_1').prop('checked', true);
         } else if (split1 == 'join') {
-            $('#join_1').prop('checked', true)
+            $('#join_1').prop('checked', true);
         } else if (split1 == 'unknown') {
-            $('#unknown_1').prop('checked', true)
-        };
+            $('#unknown_1').prop('checked', true);
+        }
         if (scansion1 == 'S') {
-            $('#S_1').prop('checked', true)
+            $('#S_1').prop('checked', true);
         } else if (scansion1 == 'W') {
-            $('#W_1').prop('checked', true)
+            $('#W_1').prop('checked', true);
         } else if (scansion1 == 'SW') {
-            $('#SW_1').prop('checked', true)
+            $('#SW_1').prop('checked', true);
         } else if (scansion1 == 'WS') {
-            $('#WS_1').prop('checked', true)
-        } else if (scansion1 == 'UNK') {
-            $('#UNK_1').prop('checked', true)
-        };
-        if (id2 != '') {
+            $('#WS_1').prop('checked', true);
+        } else if (scansion1 == 'unknown') {
+            $('#UNK_1').prop('checked', true);
+        }
+        if (id2 !== '') {
             $('#id_2').val(id2);
             $('#html_2').html(html2);
             $('#note_2').text(note2.replace(/&#13;&#10;/g, '\r\n').replace(/&#40;/g, '(').replace(/&#41;/g, ')').replace(/&#34;/g, '"').replace(/&#39;/g, "'"));
-            $('.sequence-2').show()
+            $('.sequence-2').show();
             $('.sequence-2 :input').attr('disabled', false);
 
             if (split2 == 'split') {
-                $('#split_2').prop('checked', true)
+                $('#split_2').prop('checked', true);
             } else if (split2 == 'join') {
-                $('#join_2').prop('checked', true)
+                $('#join_2').prop('checked', true);
             } else if (split2 == 'unknown') {
-                $('#unknown_2').prop('checked', true)
-            };
+                $('#unknown_2').prop('checked', true);
+            }
 
             if (scansion2 == 'S') {
-                $('#S_2').prop('checked', true)
+                $('#S_2').prop('checked', true);
             } else if (scansion2 == 'W') {
-                $('#W_2').prop('checked', true)
+                $('#W_2').prop('checked', true);
             } else if (scansion2 == 'SW') {
-                $('#SW_2').prop('checked', true)
+                $('#SW_2').prop('checked', true);
             } else if (scansion2 == 'WS') {
-                $('#WS_2').prop('checked', true)
-            } else if (scansion2 == 'UNK') {
-                $('#UNK_2').prop('checked', true)
-            };
+                $('#WS_2').prop('checked', true);
+            } else if (scansion2 == 'unknown') {
+                $('#UNK_2').prop('checked', true);
+            }
         } else {
             $('#html_2').html(html2);
             $('.sequence-2 :input').attr('disabled', true);
-            $('.sequence-2').hide()
-        };
-    };
-    $.ajax({
-        type: 'GET',
-        url: "{{ url_for('poem_update_view') }}",
-    });
+            $('.sequence-2').hide();
+        }
+    }
+    function submitForm(event) {
+        $.post(
+            "{{ url_for('poem_edit_view') }}",
+            $('form.doc-tokens').serialize(),
+            function(response) {
+                // get variant
+                $variant = $('#' + $('#variant_id').val());
+
+                // turn the variant's highlight blue if the variant is verified
+                if (response.indexOf('unverified') === -1) {
+                    $variant.attr('class', 'variation variation-verified');
+                }
+
+                // re-populate the variant's modal values
+                $variant.attr('onclick', response);
+
+                // close modal
+                $('#modal').modal('hide');
+                }
+            ).fail( function() {
+                alert('Something went awry! This annotation was not saved. Please tell Naomi.');
+            });
+        return false;
+    }
 </script>
 {% endblock %}

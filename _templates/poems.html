@@ -4,17 +4,17 @@
 <div class='description container'>
     <br>
     {% set prev = '' %}
-    {% for p in poems %}
-    {% if prev != p.ebook_number %}
+    {% for section in sections %}
+    {% if not prev or prev._book != section._book %}
     {% if prev %}</div></div>{% endif %}
-    <span style='text-transform: lowercase;'><strong>{{ p.title }}</strong> by <strong>{{ p.poet_surname }}</strong>&nbsp;&nbsp;<span class='freq'>{{ p.get_sequence_count() }}</span></span>
+    <span style='text-transform: lowercase;'><strong>{{ section._book.title }}</strong> by <strong>{{ section._book._poet.surname }}</strong>&nbsp;&nbsp;<span class='freq'>{{ section._book.sequences.count() }}</span></span>
     <br>
     <div class='row' style='margin-bottom: 10px;'>
         <div class='col-xs-1'></div>
         <div class='col-xs-11'>
     {% endif %}
-    <span><a href="{{ url_for('poem_view', id=p.id) }}" style='padding: 2px 6px; margin: -2px -6px;' class='{% if p.reviewed %}good{% elif p.review_begun %}in-progress{% endif %}'><u>{{ p.portion }}</u></a>&nbsp;&nbsp;</span>
-    {% set prev = p.ebook_number %}
+    <span><a href="{{ url_for('poem_view', id=section.id) }}" style='padding: 2px 6px; margin: -2px -6px;' class='section-{{ section.status }}'><u>{{ section.section }}</u></a>&nbsp;&nbsp;</span>
+    {% set prev = section %}
     {% endfor %}
 </div>
 {% endblock %}

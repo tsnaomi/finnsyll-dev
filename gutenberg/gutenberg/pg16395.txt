@@ -559,7 +559,9 @@ Mut varmaan Ilkan neuvo tää
 Viel' elää kansan suussa:
 Kauniimpi orjan elämää
 On kuolo hirsipuussa.
-<NEW PAGE>
+
+
+
 Hannu Krankka.
 
 
@@ -1007,7 +1009,9 @@ Voi, kuinka kurjaksi kaikki muuttuu,
 Ja parahimmatki turmeltuu!
 Kyll' aikaans' syystäkin nyt jo suuttuu,
 Kun linnun laulukin huonontuu!
-<NEW PAGE>
+
+
+
 Vanhus.
 
 
@@ -1548,7 +1552,9 @@ Menneeksi Sannan kuullen:
 Sen etähällä luullen,
 Ja tiedä viel' ei kuollessaan,
 Kuink' eli likell' onneaan."
-<NEW PAGE>
+
+
+
 Laulumme.
 
 
@@ -2009,7 +2015,9 @@ Mut virran yli vaahtoovan
 Mä hurjin voimin soudan
 Ja toisen kullan kauniimman
 Mä tuolta puolen noudan.
-<NEW PAGE>
+
+
+
 Heräämätön.
 
 

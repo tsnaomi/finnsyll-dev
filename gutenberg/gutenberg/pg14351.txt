@@ -498,7 +498,9 @@ Sorja Selma aidan taa
 saapuu aina illoin,
 päiväpalkan Antti saa
 suudelmissa silloin.
-<NEW PAGE>
+
+
+
 MARJAMAANI.
 
 Mansikkahan kesä-aamull' läksin,
@@ -1015,7 +1017,9 @@ Voi kun et paistanut päivyt silloin,
 kaikki nyt toisin oisi,
 mullakin oisi nyt puhtahat purjeet,
 jäljellä ihanne oisi!
-<NEW PAGE>
+
+
+
 AUER JA USMA.
 
 Ei päivyen auer ja yöhyen usma
@@ -1506,7 +1510,9 @@ jouset kaikki jäntehessä
 suun suloksi lännen sulhon,
 kaikki tapparat tanassa
 pään menoksi merisen miehen!
-<NEW PAGE>
+
+
+
 V.
 
 Saapui kansa Auran suulle, poikki Pohjan tiestä,
@@ -1989,7 +1995,9 @@ Mutta miekan urho se heitti jälleen
 tähtiparvein taa sinitaivahalle,
 heitti kansalleen valon viittojaksi,
     soihduksi yössä.
-<NEW PAGE>
+
+
+
 IX.
 
     _Ja on kuin ilma uusi
@@ -2520,7 +2528,9 @@ Te seisotte keskellä keväimen?
 kuin kaislikko mennehen kesäinen,
 joka lahden rannassa säilyi
 yli talven ja tuiskujen.
-<NEW PAGE>
+
+
+
 VÄINÄMÖISEN PALAUS.
 
 »Oi joutuos Väinämö vanha luo kaihovan kansasi taas,
@@ -3071,7 +3081,9 @@ tahdon luoda luonnon onnen
 oman onneni heraksi!»
   Näin se vannoi vanhin seppo,
 vannoi ruhtinasvalansa.
-<NEW PAGE>
+
+
+
 II.
 
 Kimposi kipunat yössä,
@@ -3503,7 +3515,9 @@ toista puolta polttaa, kun jäätää jo toista.
 
 Metsä oli pimeä ja tie sumuvyössä.
 Ääneti tuhkaan me tuijotimme yössä.
-<NEW PAGE>
+
+
+
 PIHLAJAN ALLA.
 
 --»Miks äkkiä vaikenit, impyein,
@@ -3993,7 +4007,9 @@ Oi, sinä impeni samettisielu,
 kaunoni kaurihintunteinen,
 kauvanko säilyt, kauvanko päilyt,
 syöttinä silmien ahnaiden!
-<NEW PAGE>
+
+
+
 ERÄÄLLE YSTÄVÄLLENI.
 
 Niin, yksinäisyys, surun ystävä
@@ -4514,7 +4530,9 @@ Minä kuivasin silmäni, neiti
 puri huulensa punaisiks,
 minä kumarsin kohteliaasti
 ja neiti niiasi, niks.
-<NEW PAGE>
+
+
+
 10.
 
 Oi, suljehan silmäsi sirkkusein
@@ -5016,7 +5034,9 @@ Sen sieltä ilmi loihdin ma silmin ja korvin,
 sen veisaan ma virsin ja toitotan torvin
 ja tulla sen täytyvi, aamuni sen,
 kun valvon ja rukoilen.
-<NEW PAGE>
+
+
+
 TÄLLÄPÄ POJALL' ON--
 
 Tälläpä pojall' on kulta jo tietty
@@ -5535,7 +5555,9 @@ Hiljaa tuuli illan henki,
 hiljaa lauloi loiske veen,
 ja he kuiskas kumpainenki
 hyvää yötä toisilleen.
-<NEW PAGE>
+
+
+
 KULJIN KERRAN LÄPI HONKAHOLVIN--
 
 Kuljin kerran läpi honkaholvin,
