@@ -67,7 +67,22 @@ def add_poet_and_book(fn, fp):
 
 def add_sections(Book, text):
     '''Add Section objects for Book.sections.'''
-    def divide_text(text, n=500):
+    # divide the book into sections
+    sections = _divide_text(text)
+
+    for i, section_text in enumerate(sections, start=1):
+
+        # add Section
+        Section = app.Section(section=i, book_id=Book.id)
+        app.db.session.add(Section)
+        app.db.session.commit()
+
+        # tokenize text
+        Section.text = _tokenize_text(section_text, Section)
+        app.db.session.commit()
+
+
+def _divide_text(text, n=500):
         '''Divide the book of poetry into sections of ~n lines.'''
         new_poem = r'(\n[A-ZÄÖ0-9\. ]+\n)'
         poems = re.split(new_poem, text)
@@ -93,22 +108,8 @@ def add_sections(Book, text):
 
         return sections
 
-    # divide the book into sections
-    sections = divide_text(text)
 
-    for i, section_text in enumerate(sections, start=1):
-
-        # add Section
-        Section = app.Section(section=i, book_id=Book.id)
-        app.db.session.add(Section)
-        app.db.session.commit()
-
-        # tokenize text
-        Section.text = _tokenize_text(section_text, Section)
-        app.db.session.commit()
-
-
-def _tokenize_text(section_text, Section):
+def _tokenize_text(section_text, Section, add_objects=True):
     '''Tokenize text for Section.text'''
     tokenized_text = []
     string = ''
@@ -155,18 +156,24 @@ def _tokenize_text(section_text, Section):
                 tokenized_text.append(string)
                 string = ''
 
-                # add Variant to db and tokenized_text
-                Variant = add_variant(word, Section)
-                tokenized_text.append(Variant.id)
+                if add_objects:
 
-                # add Sequences
-                add_sequences(sequences, word, Variant)
+                    # add Variant to db and tokenized_text
+                    Variant = add_variant(word, Section)
+                    tokenized_text.append(Variant.id)
+
+                    # add Sequences
+                    add_sequences(sequences, word, Variant)
+
+                else:
+                    tokenized_text.append(None)
 
             else:
                 string += word
 
-        tokenized_text.append(string)  # I ARE DUMBASS
         string += '</div>'
+
+    tokenized_text.append(string)  # WHOOPS
 
     return tokenized_text
 
@@ -299,9 +306,57 @@ def fix_html_umlaut_bug():
     app.db.session.commit()
 
 
+def fix_final_text_bug():
+    '''Add the missing section-final strings to each section.'''
+    for dirpath, dirname, filenames in os.walk('gutenberg/gutenberg'):
+
+        for fn in filenames[1:]:
+
+            with open(dirpath + '/' + fn, 'r') as f:
+                f = list(f)
+
+            header, text = f[:4], f[4:]
+            header = ''.join(header).replace('\r', '')
+            text = '\n'.join(re.split(  # too many blank lines...
+                r'\r\n',
+                re.sub(r'[^A-Z]\r\n\r\n\r\n', '\r\n\r\n', ''.join(text)),
+                ))
+
+            # get Poet
+            surname = re.search(
+                r'Author:.* ([A-Za-zÄÖäö]+)\n',
+                header,
+                ).group(1)
+            Poet = app.Poet.query.filter_by(surname=surname).one()
+
+            # get Book and section texts
+            title = re.search(r'Title: (.+)\n', header).group(1)
+            Book = app.Book.query.filter_by(title=title, poet_id=Poet.id).one()
+            sections = _divide_text(text)
+
+            for i, section_text in enumerate(sections, start=1):
+
+                # get Section
+                Section = app.Section.query.filter_by(
+                    section=i,
+                    book_id=Book.id,
+                    ).one()
+
+                # extract and save final the section-final text string
+                tokenized_text = _tokenize_text(section_text, Section, False)
+                final_text = tokenized_text[-1]
+
+                if final_text and len(Section.text) != len(tokenized_text):
+                    text = Section.text + [final_text, ]
+                    Section.text = text
+
+            app.db.session.commit()
+
+
 if __name__ == '__main__':
     print datetime.utcnow()
     # extract_gutenberg()
     # populate_line()
     # fix_html_umlaut_bug()
+    fix_final_text_bug()
     print datetime.utcnow()
