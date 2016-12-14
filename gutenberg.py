@@ -358,5 +358,5 @@ if __name__ == '__main__':
     # extract_gutenberg()
     # populate_line()
     # fix_html_umlaut_bug()
-    fix_final_text_bug()
+    # fix_final_text_bug()
     print datetime.utcnow()
