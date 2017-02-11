@@ -1131,15 +1131,6 @@ def syllabify_tokens():
 
 
 @manager.command
-def update_poems():
-    '''Update the reviewed status of each Poem object.'''
-    for poem in Poem.query.all():
-        poem.update_review()
-
-    db.session.commit()
-
-
-@manager.command
 def update_performance():
     '''Calculate average precision, recall, f1, and accuracy.'''
     for with_loanwords in (True, False):
