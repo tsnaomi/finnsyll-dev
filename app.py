@@ -24,7 +24,7 @@ from flask.ext.seasurf import SeaSurf
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.exceptions import BadRequestKeyError
 
@@ -1226,13 +1226,11 @@ def token_view(kw, page):
     if kw == 'bad':
         # excludes non-nativized words, compound segmentation errors, cases
         # of consonant gradation, etc.
-        tokens = (
-            get_bad_tokens().filter_by(is_loanword=False)
-            .filter(Token.test_base == Token.gold_base)
-            .filter(~(Token.note.contains('[')))  # e.g., '[colloquialism]'
-            .filter(~(Token.note.contains('?')))
-            .order_by(Token.note)
-            )
+        tokens = get_bad_tokens().filter_by(is_loanword=False).filter(and_(
+            Token.test_base == Token.gold_base,  # segmenter errors
+            ~(Token.note.contains('[')),  # e.g., '[case stem]' tag
+            ~(Token.note.contains('?')),  # in need of revision
+            )).order_by(Token.note)
 
     elif kw == 'loans':
         # retrieve non-nativized loanwords and words marked as foreign
