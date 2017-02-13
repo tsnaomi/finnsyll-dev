@@ -24,7 +24,7 @@ from flask.ext.seasurf import SeaSurf
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.script import Manager
 from flask.ext.bcrypt import Bcrypt
-from sqlalchemy import or_, and_
+from sqlalchemy import or_
 from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.exceptions import BadRequestKeyError
 
@@ -246,15 +246,6 @@ class Token(db.Model):
     # to updating the database to accommodate variation in test syllabifcations
     # (this is likely safe to delete now)
     verified = db.Column(db.Boolean, default=False)
-
-    # # DELETE!
-    # # a one-to-many relationship with the Variation table (many Variations per
-    # # one Token)
-    # variations = db.relationship(
-    #     'Variation',
-    #     backref='t_variation',
-    #     lazy='dynamic',
-    #     )
 
     # a one-to-many relationship with the Variant table (many Variants per
     # Token)
@@ -811,269 +802,6 @@ class VV(db.Model):
         self._variant._section.update_status()
 
 
-# # DELETE!
-# class Poem(db.Model):
-#     __tablename__ = 'Poem'
-
-#     id = db.Column(db.Integer, primary_key=True)
-
-#     # the title of the poem
-#     title = db.Column(db.String(80, convert_unicode=True), default='')
-
-#     # the name of the poet
-#     poet = db.Column(db.Enum(
-#         u'Erkko',        # J. H. Erkko
-#         u'Hellaakoski',  # Aaro Hellaakoski
-#         u'Kaatra',       # Kössi Kaatra
-#         u'Kailas',       # Uuno Kailas
-#         u'Koskenniemi',  # V. A. Koskenniemi
-#         u'Kramsu',       # Kaarlo Kramsu
-#         u'Leino',        # Eino Leino
-#         u'Lönnrot',      # Elias Lönnrot
-#         u'Siljo',        # Juhani Siljo
-#         name='POET',
-#         convert_unicode=True,
-#         ))
-
-#     # each book of poetry is split into portions of roughly 1600 lines,
-#     # manually spread across several Poem objects
-#     portion = db.Column(db.Integer, default=1)
-
-#     # the poem's Gutenberg ebook number
-#     ebook_number = db.Column(db.Integer)
-
-#     # the poem's release date
-#     date_released = db.Column(db.DateTime)
-
-#     # the date the poem was last updated on Gutenberg, if different from the
-#     # the relase date
-#     last_updated = db.Column(db.DateTime)
-
-#     # the poem as a tokenized lists, incl. Variation IDs and strings of words
-#     tokenized_poem = db.Column(db.PickleType)
-
-#     # a boolean indicating if all of the poem's variations have been reviewed
-#     reviewed = db.Column(db.Boolean, default=False)
-
-#     # a one-to-many relationship with the Variation table (many Variations per
-#     # Poem)
-#     variations = db.relationship(
-#         'Variation',
-#         backref='p_variation',
-#         lazy='dynamic',
-#         )
-
-#     # the number of sequences associated with this poetry ebook
-#     sequence_count = db.Column(db.Integer)
-
-#     # a boolean indicating if review has begun for this poem
-#     review_begun = db.Column(db.Boolean, default=False)
-
-#     def __init__(self, **kwargs):
-#         for attr, value in kwargs.iteritems():
-#             if hasattr(self, attr):
-#                 setattr(self, attr, value)
-
-#     def __repr__(self):
-#         return '%s by %s' % (self.title, self.poet)
-
-#     def __unicode__(self):
-#         return self.__repr__()
-
-#     @property
-#     def ebook(self):
-#         '''The poem/book of poems' Gutenberg identifier.'''
-#         return 'EBook #%s' % self.ebook_number
-
-#     @property
-#     def poet_surname(self):
-#         '''Return the poet's surname.'''
-#         return self.poet.split()[-1]
-
-#     def query_poem(self):
-#         '''Return a list of Variations and words as they appear in the poem.'''
-#         variations = {v.id: v for v in self.variations}
-#         poem = [variations.get(w, w) for w in self.tokenized_poem]
-
-#         return poem
-
-#     def update_review(self):
-#         '''Set reviewed to True if all of the variations have been verified.'''
-#         reviewed = all(variation.verified for variation in self.variations)
-#         self.reviewed = reviewed
-
-#     def get_sequence_count(self):
-#         '''Return a formatted sequence count.'''
-#         return format(self.sequence_count, ',d')
-
-#     def get_sequences(self):
-#         ''' '''
-#         return [s for v in self.variations for s in v.sequences]
-
-
-# # DELETE!
-# class Variation(db.Model):
-#     __tablename__ = 'Variation'
-
-#     id = db.Column(db.Integer, primary_key=True)
-
-#     # a one-to-many relationship with the Token table (many Variations per
-#     # Token)
-#     token_id = db.Column(db.Integer, db.ForeignKey('Token.id'))
-
-#     # a one-to-many relationship with the Poem table (many Variations per
-#     # Poem)
-#     poem_id = db.Column(db.Integer, db.ForeignKey('Poem.id'))
-
-#     # a one-to-many relationship with the Sequence table (many Sequences per
-#     # Variation)
-#     sequences = db.relationship(
-#         'Sequence',
-#         backref='v_sequence',
-#         lazy='dynamic',
-#         )
-
-#     def __init__(self, token, poem):
-#         self.token_id = token
-#         self.poem_id = poem
-
-#     def __repr__(self):
-#         return 'Variation %s' % self.id
-
-#     def __unicode__(self):
-#         return self.__repr__()
-
-#     @property
-#     def verified(self):
-#         '''A boolean indicating if this Variation has been hand-verified.'''
-#         return all(seq.verified for seq in self.sequences)
-
-#     def display(self):
-#         '''A string represenation of this Variation.'''
-#         return self.t_variation.orth.lower()
-
-#     def get_sequences(self):
-#         '''Return a list of related Sequence objects.'''
-#         return [seq for seq in self.sequences]
-
-#     @property
-#     def orth(self):
-#         '''Return the lowercase orth of the variant.'''
-#         return self.t_variation.orth.lower()
-
-
-# # DELETE!
-# class Sequence(db.Model):
-#     __tablename__ = 'Sequence'
-
-#     id = db.Column(db.Integer, primary_key=True)
-
-#     # a one-to-many relationship with the Variation table (many Sequences per
-#     # one Variation)
-#     variation_id = db.Column(db.Integer, db.ForeignKey('Variation.id'))
-
-#     # the sequence of vowels under consideration
-#     sequence = db.Column(db.String(10, convert_unicode=True), default='')
-
-#     # the html representation of the related token, highlighting the sequence
-#     html = db.Column(db.String(80, convert_unicode=True), default='')
-
-#     # # the starting index of the vowel sequence in the token
-#     # index = db.Column(db.Integer)
-
-#     # # the right environment of the vowel sequence
-#     # right = db.Column(db.Enum(
-#     #     '#', 'V', 'CV', 'CC+V', 'C+#',
-#     #     name='RIGHT',
-#     #     ))
-
-#     # an enum indicating if this sequence splits or joins
-#     split = db.Column(db.Enum('split', 'join', 'unknown', name='SPLIT'))
-
-#     # the scansion or metric precision of this sequence:
-#     # S - strong, W - weak, UNK - unknown
-#     scansion = db.Column(db.Enum(
-#         'S', 'W', 'SW', 'WS', 'SS', 'WW', 'UNK',
-#         name='SCANSION',
-#         ))
-
-#     # a boolean indicating if the sequence begins in an odd syllable
-#     is_odd = db.Column(db.Boolean, default=None)
-
-#     # a note field to jot down notes about this sequence
-#     note = db.Column(db.Text, default='')
-
-#     def __init__(self, variation, sequence, **kwargs):
-#         self.variation_id = variation
-#         self.sequence = sequence
-
-#         for attr, value in kwargs.iteritems():
-#             if hasattr(self, attr):
-#                 setattr(self, attr, value)
-
-#     def __repr__(self):
-#         return self.html.replace('<br>', '{').replace('</br>', '}')
-
-#     def __unicode__(self):
-#         return self.__repr__()
-
-#     @hybrid_property
-#     def verified(self):
-#         '''A boolean indicating if this Sequence has been hand-verified.'''
-#         return bool(self.split and self.scansion)
-
-#     @verified.expression
-#     def verified(cls):
-#         '''A boolean indicating if this Sequence has been hand-verified.'''
-#         return and_(cls.split.isnot(None), cls.scansion.isnot(None))
-
-#     def correct(self, split=None, scansion=None, note=''):
-#         '''Save new attributes to the Sequence.'''
-#         self.split = split
-#         self.scansion = scansion
-#         self.note = note
-
-#     def update_is_odd(self):
-#         '''Populate Sequence.is_odd.'''
-#         test_syll = self.v_sequence.t_variation.test_syll1
-#         start = self.html.find('<')
-#         dots = [1 for i, j in enumerate(test_syll) if i <= start and j == '.']
-#         is_odd = sum(dots) % 2 == 0
-
-#         self.is_odd = is_odd
-
-#     def is_word_initial(self):
-#         ''''''
-#         vowels = [u'i', u'e', u'ä', u'y', u'ö', u'a', u'u', u'o']
-#         i = self.html.find('<')
-#         is_word_initial = not any(v in vowels for v in self.html[:i])
-
-#         return is_word_initial
-
-#     def is_word_final(self):
-#         ''''''
-#         vowels = [u'i', u'e', u'ä', u'y', u'ö', u'a', u'u', u'o']
-#         i = self.html.rfind('>')
-#         is_word_final = not any(v in vowels for v in self.html[i:])
-
-#         return is_word_final
-
-#     def is_heavy(self):
-#         ''''''
-#         vowels = [u'i', u'e', u'ä', u'y', u'ö', u'a', u'u', u'o']
-#         i = self.html.rfind('>')
-
-#         if self.is_word_final():
-#             return i != len(self.html) - 1
-
-#         return self.html[i + 2] not in vowels
-
-#     @property
-#     def orth(self):
-#         '''Return the lowercase orth of the variant.'''
-#         return self.v_sequence.orth
-
-
 # Database functions ----------------------------------------------------------
 
 def find_token(orth):
@@ -1225,14 +953,27 @@ def get_unverified_tokens():
     return Token.query.filter_by(is_aamulehti=True, is_gold=None)
 
 
-def get_notes():
-    '''Return all of the tokens that contain notes.'''
-    return Token.query.filter(Token.note != '').order_by(Token.freq.desc())
-
-
 def get_variation():
     '''Return tokens with alternative test or gold syllabifications.'''
     return Token.query.filter_by(is_aamulehti=True).filter(Token.is_ambiguous)
+
+
+def get_loanwords():
+    '''Return non-nativized or flagged loanwords.'''
+    return get_gold_tokens().filter(or_(
+        Token.is_loanword == True),  # noqa non-nativized loanwords
+        Token.note.contains('[foreign')  # expicitly marked as foreign
+        )
+
+
+def get_consonant_gradation():
+    '''Return tokens that exhibit consonant gradation.'''
+    return get_gold_tokens().filter(Token.note.contains('[k-deletion'))
+
+
+def get_notes():
+    '''Return all of the tokens that contain notes.'''
+    return get_gold_tokens().filter(Token.note != '').order_by(Token.note)
 
 
 # View helpers ----------------------------------------------------------------
@@ -1393,23 +1134,6 @@ def rules_view():
     return render_template('rules.html', kw='rules')
 
 
-@app.route('/notes', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/notes/page/<int:page>', methods=['GET', 'POST'])
-@login_required
-def notes_view(page):
-    '''List all tokens that contain notes.'''
-    if request.method == 'POST':
-        apply_form(request.form)
-
-    tokens = get_notes()
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='notes',
-        )
-
-
 @app.route('/doc/<id>', methods=['GET', 'POST'])
 @login_required
 def doc_view(id):
@@ -1479,37 +1203,30 @@ def search_view():
 def token_view(kw, page):
     '''List all keyword-relevant Tokens and process corrections.'''
     if request.method == 'POST':
-
-        if kw == 'bad':
-            apply_form(request.form)
-
-        elif kw == 'variation':
-            apply_bulk_form(request.form)
+        apply_form(request.form)
 
     if kw == 'bad':
-        # excludes non-nativized words and errors caused by the
-        # compound segmenter, /k/-deletions, etc.
+        # excludes non-nativized words, compound segmentation errors, cases
+        # of consonant gradation, etc.
         tokens = (
-            Token.query.filter_by(
-                is_gold=False,
-                is_loanword=False,
-                is_ambiguous=False,
-                )
-            .filter(~(Token.note.contains('[')))  # e.g., '[k-deletion]'
+            get_bad_tokens().filter_by(is_loanword=False)
             .filter(Token.test_base == Token.gold_base)
+            .filter(~(Token.note.contains('[')))  # e.g., '[colloquialism]'
+            .filter(~(Token.note.contains('?')))
+            .order_by(Token.note)
             )
 
-    elif kw == 'foreign':
-        # retrieve non-nativized loanwords
-        tokens = Token.query.filter_by(is_loanword=True)
+    elif kw == 'loans':
+        # retrieve non-nativized loanwords and words marked as foreign
+        tokens = get_loanwords()
 
-    elif kw == 'consonant-gradation':
+    elif kw == 'gradation':
         # retrieve tokens that exhibit consonant gradation
-        tokens = get_gold_tokens().filter(Token.note.contains('k-deletion'))
+        tokens = get_consonant_gradation()
 
-    elif kw == 'variation':
-        # retrieve bad tokens that exhibit variation
-        tokens = get_variation().filter_by(is_gold=False)
+    elif kw == 'notes':
+        # retrieve tokens that contain any notes
+        tokens = get_notes()
 
     else:
         abort(404)
