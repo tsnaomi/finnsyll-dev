@@ -1127,6 +1127,24 @@ def main_view():
     return render_template('main.html', kw='main', P1=P1, P2=P2)
 
 
+@app.route('/syllabify', methods=['GET', 'POST'])
+@login_required
+def syllabify_view():
+    '''Allow users to specify an input to syllabify.'''
+    word, results = '', []
+
+    if request.method == 'POST' and request.form.get('word'):
+        word = request.form['word'].encode('utf-8')
+        results = FinnSyll.syllabify(word)
+
+    return render_template(
+        'syllabify.html',
+        kw='syllabify',
+        word=word,
+        results=results,
+        )
+
+
 @app.route('/rules', methods=['GET', ])
 @login_required
 def rules_view():

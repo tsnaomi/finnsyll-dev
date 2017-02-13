@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block head %}
+<link href='//fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
+{% endblock %}
+
+{% block body %}
+<br>
+<br>
+<br>
+<div>
+    <form class='search center' method='POST'>
+        <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
+        <input type='text' name='word' class='search clear' placeholder="type a word to syllabify..." {% if word %}value='{{ word }}'{% endif %}> 
+        <div class='visible-xs visible-sm height'></div>
+        <input type='submit' class='search clear' value='syllabify' style='width: 140px'>
+        <br>
+        <br>
+        <br>
+        {% for syll, rules in results %}
+        <div style='margin-bottom: 10px;'>
+            <span style='margin-right: 10px'>{{ syll }}</span>
+            <span><i>{{ rules }}</i></span>
+        </div>
+        {% endfor %}
+    </form>
+</div>
+{% endblock %}
