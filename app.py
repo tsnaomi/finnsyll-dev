@@ -1260,25 +1260,6 @@ def token_view(kw, page):
         )
 
 
-@app.route('/lemmas', defaults={'page': 1}, methods=['GET', 'POST'])
-@app.route('/lemmas/page/<int:page>', methods=['GET', 'POST'])
-@login_required
-def lemma_view(page):
-    '''List all unverified unseen lemmas and process corrections.'''
-    if request.method == 'POST':
-        apply_bulk_form(request.form)
-
-    tokens = get_unseen_lemmas()
-    tokens, pagination = paginate(page, tokens)
-
-    return render_template(
-        'tokens.html',
-        tokens=tokens,
-        kw='lemmas',
-        pagination=pagination,
-        )
-
-
 @app.route('/enter', methods=['GET', 'POST'])
 def login_view():
     '''Sign in current user.'''
