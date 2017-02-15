@@ -11,6 +11,8 @@
         {% if kw == 'bad' %}
         This page lists words that have <i>imperfect</i> precision and recall.<br>
         This list excludes errors from loanwords, compound segmentation, consonant gradation, etc.
+        {% elif kw == 'uncertain' %}
+        This page lists words with notes containing questions.
         {% elif kw == 'loans' %}
         This page lists <i>loanwords</i> that are either non-nativized or have been marked as loanwords.
         {% elif kw == 'gradation' %}
@@ -23,7 +25,7 @@
     </div>
     {% endif %}
     <div class='tokens'>
-        {% if kw == 'bad' or kw == 'notes' %} <!-- bad and notes -->
+        {% if display_note %} <!-- bad, notes, etc. -->
         <div class='row hidden-xs hidden-sm'>
             <span class='attr-label col-md-3'>orth</span>
             <span class='attr-label col-md-3'>test</span>
@@ -68,8 +70,6 @@
         <div class='divide'></div>
         <br>
         {% endfor %}
-
-
         {% else %}
         {{ tokenify(tokens) }}
         {% endif %}

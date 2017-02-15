@@ -1220,6 +1220,8 @@ def search_view():
 @login_required
 def token_view(kw, page):
     '''List all keyword-relevant Tokens and process corrections.'''
+    display_note = True
+
     if request.method == 'POST':
         apply_form(request.form)
 
@@ -1227,18 +1229,26 @@ def token_view(kw, page):
         # excludes non-nativized words, compound segmentation errors, cases
         # of consonant gradation, etc.
         tokens = get_bad_tokens().filter_by(is_loanword=False).filter(and_(
-            Token.test_base == Token.gold_base,  # segmenter errors
-            ~(Token.note.contains('[')),  # e.g., '[case stem]' tag
-            ~(Token.note.contains('?')),  # in need of revision
+            Token.test_base == Token.gold_base,  # excl. segmenter errors
+            ~(Token.note.contains('[')),  # excl. tags, e.g., '[case stem]'
+            ~(Token.note.contains('?')),  # excl. in need of revision
             )).order_by(Token.note)
+
+    elif kw == 'uncertain':
+        # retrieve words with uncertain gold syllabifications
+        tokens = get_bad_tokens().filter(
+            Token.note.contains('?')).order_by(Token.note)
+        display_note
 
     elif kw == 'loans':
         # retrieve non-nativized loanwords and words marked as foreign
         tokens = get_loanwords()
+        display_note = False
 
     elif kw == 'gradation':
         # retrieve tokens that exhibit consonant gradation
         tokens = get_consonant_gradation()
+        display_note = False
 
     elif kw == 'notes':
         # retrieve tokens that contain any notes
@@ -1253,6 +1263,7 @@ def token_view(kw, page):
     return render_template(
         'tokens.html',
         tokens=tokens,
+        display_note=display_note,
         kw=kw,
         pagination=pagination,
         count=count,
