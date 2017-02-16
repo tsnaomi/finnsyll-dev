@@ -12,10 +12,10 @@
             <ul class='nav navbar-nav'>
                 <!-- main -->
                 <li><a href="{{ url_for('main_view') }}"><span class="{% if kw == 'main' %}highlight{% endif %}">Main</span></a></li>
-                <!-- syllabify -->
-                <li><a href="{{ url_for('syllabify_view') }}"><span class="{% if kw == 'syllabify' %}highlight{% endif %}">Syllabify</span></a></li>
                 <!-- rules -->
                 <li><a href="{{ url_for('rules_view') }}"><span class="{% if kw == 'rules' %}highlight{% endif %}">Rules</span></a></li>
+                <!-- syllabify -->
+                <li><a href="{{ url_for('syllabify_view') }}"><span class="{% if kw == 'syllabify' %}highlight{% endif %}">Syllabify</span></a></li>
                 <!-- search -->
                 <li><a href="{{ url_for('search_view') }}"><span class="{% if kw == 'search' %}highlight{% endif %}">Search</span></a></li>
                 <!-- tokens -->
