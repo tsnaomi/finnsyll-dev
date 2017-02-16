@@ -1236,9 +1236,10 @@ def token_view(kw, page):
 
     elif kw == 'uncertain':
         # retrieve words with uncertain gold syllabifications
-        tokens = get_bad_tokens().filter(
-            Token.note.contains('?')).order_by(Token.note)
-        display_note
+        tokens = get_bad_tokens().filter(or_(
+            Token.note.contains('?'),
+            Token.note.contains('bad'),
+            )).order_by(Token.note)
 
     elif kw == 'loans':
         # retrieve non-nativized loanwords and words marked as foreign
