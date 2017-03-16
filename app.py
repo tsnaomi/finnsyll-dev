@@ -971,6 +971,13 @@ def get_consonant_gradation():
     return get_gold_tokens().filter(Token.note.contains('[k-deletion'))
 
 
+def get_t4_deviants():
+    '''Return tokens that have iu/iy word-medial sequences.'''
+    pattern = r'[aäoöuyie]+[^= -aäoöuyie]+i(u|y)[^= -aäoöuyie]+[aäoöuyie]+'
+
+    return get_gold_tokens().filter(Token.gold_base.op('~')(pattern))
+
+
 def get_notes():
     '''Return all of the tokens that contain notes.'''
     return get_gold_tokens().filter(Token.note != '').order_by(Token.note)
@@ -1055,7 +1062,7 @@ def apply_bulk_form(http_form):
     db.session.commit()
 
 
-def perform_search(find, search_type):
+def perform_search(find, search_type):  # noqa
     '''Perform query from search box.'''
     try:
         # strip periods
@@ -1077,7 +1084,7 @@ def perform_search(find, search_type):
     if query or rules:
         # if an asterisk is present, only search amongst gold tokens
         if '*' in find:
-            results = Token.query.filter(Token.is_gold.isnot(None))
+            results = get_gold_tokens()
 
         # otherwise, still limit search to Aamulehti tokens
         else:
@@ -1096,11 +1103,14 @@ def perform_search(find, search_type):
 
         # case-insensitive search
         else:
-
             if search_type == 'contains':
                 query = '%' + query + '%'
 
             results = results.filter(Token.orth.ilike(query))
+
+    elif '*' == find:
+        # return gold tokens
+        results = get_gold_tokens().order_by(Token.freq)
 
     else:
         # don't return anything if it is an invalid search
@@ -1220,7 +1230,7 @@ def search_view():
 @login_required
 def token_view(kw, page):
     '''List all keyword-relevant Tokens and process corrections.'''
-    display_note = True
+    display_note, description = True, ''
 
     if request.method == 'POST':
         apply_form(request.form)
@@ -1231,29 +1241,27 @@ def token_view(kw, page):
         tokens = get_bad_tokens().filter_by(is_loanword=False).filter(and_(
             Token.test_base == Token.gold_base,  # excl. segmenter errors
             ~(Token.note.contains('[')),  # excl. tags, e.g., '[case stem]'
-            ~(Token.note.contains('?')),  # excl. in need of revision
             )).order_by(Token.note)
+        description = (
+            'This pages list words that have <i>imperfect</i> precision and '
+            'recall, excluding errors from loanwords, compound segmentation, '
+            'consonant gradation, etc.'
+            )
 
-    elif kw == 'uncertain':
-        # retrieve words with uncertain gold syllabifications
-        tokens = get_bad_tokens().filter(or_(
-            Token.note.contains('?'),
-            Token.note.contains('bad'),
-            )).order_by(Token.note)
-
-    elif kw == 'loans':
-        # retrieve non-nativized loanwords and words marked as foreign
-        tokens = get_loanwords()
-        display_note = False
-
-    elif kw == 'gradation':
-        # retrieve tokens that exhibit consonant gradation
-        tokens = get_consonant_gradation()
-        display_note = False
+    elif kw == 'issues':
+        # retrieve tokens that might deviate from T4's current implementation
+        tokens = get_t4_deviants()
+        description = (
+            'This pages list words with word-medial <i>iu</i> and <i>iy</i> '
+            'sequences. <i>Can they join word-medially?</i><br>'
+            'Perhaps these sequences can only join in the first, second, and '
+            'final syllables? (What about <i>sibeliuksen</i>? See below.)'
+            )
 
     elif kw == 'notes':
         # retrieve tokens that contain any notes
         tokens = get_notes()
+        description = 'This pages lists words containing <i>notes</i>.'
 
     else:
         abort(404)
@@ -1265,10 +1273,10 @@ def token_view(kw, page):
         'tokens.html',
         tokens=tokens,
         display_note=display_note,
+        description=description,
         kw=kw,
         pagination=pagination,
         count=count,
-        description=True,
         )
 
 

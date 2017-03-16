@@ -6,24 +6,11 @@
 <br> 
 
 <div class='container'>
-    {% if description %}
     <div class='description'>
-        {% if kw == 'bad' %}
-        This page lists words that have <i>imperfect</i> precision and recall.<br>
-        This list excludes errors from loanwords, compound segmentation, consonant gradation, etc.
-        {% elif kw == 'uncertain' %}
-        This page lists words with <i>uncertain</i> gold syllabifications.
-        {% elif kw == 'loans' %}
-        This page lists <i>loanwords</i> that are either non-nativized or have been marked as loanwords.
-        {% elif kw == 'gradation' %}
-        This pages lists words that have been noted to exhibit <i>consonant gradation</i>.
-        {% elif kw == 'notes' %}
-        This pages lists words that contain <i>notes</i>.
-        {% endif %}
+        {{ description|safe }}
         <br>
         <i>{{ count }} matches</i>
     </div>
-    {% endif %}
     <div class='tokens'>
         {% if display_note %} <!-- bad, notes, etc. -->
         <div class='row hidden-xs hidden-sm'>
