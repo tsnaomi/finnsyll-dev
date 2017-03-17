@@ -971,11 +971,19 @@ def get_consonant_gradation():
     return get_gold_tokens().filter(Token.note.contains('[k-deletion'))
 
 
-def get_t4_deviants():
+def get_t4_issues():
     '''Return tokens that have iu/iy word-medial sequences.'''
     pattern = r'[aäoöuyie]+[^= -aäoöuyie]+i(u|y)[^= -aäoöuyie]+[aäoöuyie]+'
 
     return get_gold_tokens().filter(Token.gold_base.op('~')(pattern))
+
+
+def get_gold_t4_variation():
+    '''Return gold tokens that display T4 variation.'''
+    return get_gold_tokens().filter(or_(
+        Token.rules1.contains('T4'),
+        Token.rules2.contains('T4'),
+        ))
 
 
 def get_notes():
@@ -1243,16 +1251,21 @@ def token_view(kw, page):
             ~(Token.note.contains('[')),  # excl. tags, e.g., '[case stem]'
             )).order_by(Token.note)
         description = (
-            'This pages list words that have <i>imperfect</i> precision and '
+            'This page lists words that have <i>imperfect</i> precision and '
             'recall, excluding errors from loanwords, compound segmentation, '
             'consonant gradation, etc.'
             )
 
+    elif kw == 'variation':
+        # retrive tokens that exhibit T4 variation
+        tokens = get_gold_t4_variation()
+        description = 'This page lists words that display T4 variation.'
+
     elif kw == 'issues':
         # retrieve tokens that might deviate from T4's current implementation
-        tokens = get_t4_deviants()
+        tokens = get_t4_issues()
         description = (
-            'This pages list words with word-medial <i>iu</i> and <i>iy</i> '
+            'This page list words with word-medial <i>iu</i> and <i>iy</i> '
             'sequences. <i>Can they join word-medially?</i><br>'
             'Perhaps these sequences can only join in the first, second, and '
             'final syllables? (What about <i>sibeliuksen</i>? See below.)'
@@ -1261,7 +1274,7 @@ def token_view(kw, page):
     elif kw == 'notes':
         # retrieve tokens that contain any notes
         tokens = get_notes()
-        description = 'This pages lists words containing <i>notes</i>.'
+        description = 'This page lists words containing <i>notes</i>.'
 
     else:
         abort(404)
