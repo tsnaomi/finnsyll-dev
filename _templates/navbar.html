@@ -23,8 +23,6 @@
                     <a role='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'><span class="{% if kw in 'bad unverified consonant-gradation foreign' %}highlight{% endif %}">Tokens</span> &#8623;</a>
                     <ul class='dropdown-menu'>
                         <li><a href="{{ url_for('token_view', kw='bad') }}"><span class="{% if kw == 'bad' %}highlight{% endif %}">Bad</span></a></li>
-                        <li><a href="{{ url_for('token_view', kw='variation') }}"><span class="{% if kw == 'variation' %}highlight{% endif %}">T4 Variation</span></a></li>
-                        <li><a href="{{ url_for('token_view', kw='issues') }}"><span class="{% if kw == 'issues' %}highlight{% endif %}">T4 Issues</span></a></li>
                         <li><a href="{{ url_for('token_view', kw='notes') }}"><span class="{% if kw == 'notes' %}highlight{% endif %}">Notes</span></a></li>
                     </ul>
                 </li>

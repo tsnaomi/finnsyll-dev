@@ -162,7 +162,7 @@ class Test(Table):
         row.insert(9, '>')
         row.append(token.lemma)
         row.append(token.gold_base if token.is_complex else '')
-        row.append(token.test_base.decode('utf-8') if token.is_split else '')
+        row.append(token.test_base if token.is_split else '')
 
         return row
 
