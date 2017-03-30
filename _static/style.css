@@ -97,8 +97,12 @@
         background-color: #00FF7F; /* green */
     }
 
-    .OK:hover {
+    .OK:hover, {
         color: #00FF7F; /* green */
+    }
+
+    .data-frame a:hover {
+        color: #00e672; /* slightly darker green */
     }
 
     input.clear,
@@ -410,6 +414,11 @@
 
     .float-left {
         float: left;
+    }
+
+    .data-frame {
+        font-size: 30px;
+        margin: 20px 10px 40px;
     }
 
 /* media queries ----------------------------------------------------------- */

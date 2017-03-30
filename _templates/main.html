@@ -3,7 +3,8 @@
 {% block body %}
 <div class='description container'>
     <br class='hidden-xs hidden-sm'>
-    <br><b>{{ P2.verified | stat }}</b> / <b>{{ P1.total | stat }}</b> word forms verified from the Aamulehti corpus
+    <div class='data-frame'>[ <a href="{{ url_for('static', filename='data/data-frame.csv') }}" download><b>data frame</b></a> ]</div>
+    <!-- <br> --><b>{{ P2.verified | stat }}</b> / <b>{{ P1.total | stat }}</b> word forms verified from the Aamulehti corpus
     <br>
     <br><b>{{ P2.correct | stat }}</b> / <b>{{ P2.verified | stat }}</b> word forms correctly syllabified
     <br><b>{{ P2.acc | stat }}</b>% accuracy (<b>{{ P2.simplex_acc | stat }}</b>% excl. compounds)
