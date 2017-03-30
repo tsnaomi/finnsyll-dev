@@ -10,13 +10,13 @@
 <br>
 <div>
     <form class='search center' method='POST'>
-        <i>Note: This syllabifier is out of date!</i>
+        <i>Note: This syllabifier is under maintenance!</i>
         <br>
         <br>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
-        <input type='text' name='word' class='search clear' placeholder="type a word to syllabify..." {% if word %}value='{{ word }}'{% endif %}> 
+        <input type='text' name='word' class='search clear' placeholder="type a word to syllabify..." {% if word %}value='{{ word }}'{% endif %} disabled> 
         <div class='visible-xs visible-sm height'></div>
-        <input type='submit' class='search clear' value='syllabify' style='width: 140px'>
+        <input type='submit' class='search clear' value='syllabify' style='width: 140px; color: #c7c7c7' disabled>
         <br>
         <br>
         <br>
