@@ -1,48 +1,88 @@
 # coding=utf-8
 
-import codecs
 import csv
+import re
 
 from datetime import datetime
 
 from app import Token
+from syllabifier import _FinnSyll
 
 
-def token_yield():
-    '''Yield tokens from the database.'''
-    count = Token.query.count()
-    start = 0
-    end = x = 1000
-
-    while start + x < count:
-        for token in Token.query.order_by(
-                Token.is_gold,
-                Token.orth,
-                ).slice(start, end):
-            yield token
-
-        start = end
-        end += x
-
-    for token in Token.query.order_by(Token.orth).slice(start, count):
-        yield token
+def encode(u):
+    '''Replace umlauts and convert "u" to a byte string.'''
+    return u.replace(u'ä', u'{').replace(u'ö', u'|').encode('utf-8')
 
 
-def generate_data_frame(filename='./_static/data/data-frame.csv'):
+def get_lemma_info(lemma):
+    '''Get the syllabification, vowels, and weights for "lemma".'''
+    info = []
+
+    for lemma_syll in _FinnSyll.syllabify(lemma):
+        # split the lemma into syllables and word breaks
+        # e.g., 'ram.saun mm' > ['ram', 'saun', ' ', 'mm']
+        syllables = re.split(r'( |-|_)|\.', lemma_syll, flags=re.I | re.U)
+        syllables = [s for s in syllables if s is not None]
+
+        count = 0
+        vowels = ''
+        weights = ''
+        trail = ''
+
+        for syll in syllables:
+
+            try:
+                # get the first vowel in the syllable
+                vowels += re.search(
+                    ur'([ieaouäöy]{1})',
+                    syll,
+                    flags=re.I | re.U,
+                    ).group(1)
+
+                # get the weight of the syllable (light or heavy)
+                weights += 'L' if re.match(
+                    ur'(^|[^ieaouäöy]+)[ieaouäöy]{1}$',
+                    syll,
+                    flags=re.I | re.U,
+                    ) else 'H'
+
+                # update the syllable count
+                count += 1
+
+            except (AttributeError, IndexError):
+
+                # if syll is a word break (e.g., a space or hyphen)
+                if syll in ' _-':
+                    vowels += ' '
+                    weights += ' '
+
+                # if syll is a vowel-less syllable (e.g., the acronym 'MM')
+                else:
+                    trail = ' *'
+
+        info.extend((
+            encode(lemma_syll),                 # lemma syllabification
+            str(count) + trail,                 # syllable count
+            encode(vowels).upper() + trail,     # vowels
+            weights + trail,                    # weights
+            ))
+
+    info += ('', ) * (16 - len(info))  # fill out empty columns
+
+    return info
+
+
+def generate_data_frame(filename='./_static/data/aamulehti-1999.csv'):
     '''Generate the data frame!'''
-
-    def encode(u):
-        return u.encode('utf-8')
-
     data = [[
         # Aamulehti details
-        'orth', 'lemma', 'freq', 'pos', 'msd',
+        'orth', 'freq', 'pos', 'msd', 'lemma',
 
-        # # number of syllables in lemma
-        # 'sylls_in_lemma',
-
-        # # weights and vowel quality for lemma
-        # 'lemma_vowels',
+        # lemma syllabifications, syllable counts, vowel qualities, and weights
+        'lemma1', 'count1', 'vowels1', 'weights1',
+        'lemma2', 'count2', 'vowels2', 'weights2',
+        'lemma3', 'count3', 'vowels3', 'weights3',
+        'lemma4', 'count4', 'vowels4', 'weights4',
 
         # syllabifications
         'syll1', 'syll2', 'syll3', 'syll4',
@@ -59,28 +99,23 @@ def generate_data_frame(filename='./_static/data/data-frame.csv'):
         'gold1', 'gold2', 'gold3',
         ], ]
 
-    for t in token_yield():
+    # add gold rows
+    for t in Token.query.filter(Token.is_gold.isnot(None)) \
+            .filter_by(is_aamulehti=True) \
+            .order_by(Token.is_gold.desc(), Token.orth) \
+            .yield_per(1000):
 
-        # ask for forgiveness
-        try:
-            is_gold = int(t.is_gold)
-
-        except TypeError:
-            is_gold = ''
-
+        # create row
         data.append([
             # Aamulehti details
             encode(t.orth.lower()),
-            encode(t.readable_lemma()),
             t.freq,
             t.pos.lower(),
             t.msd.lower(),
+            encode(t.lemma.lower()),
 
-            # # number of syllables in lemma
-            # t.get_sylls_in_lemma(),
-
-            # # weights and vowel quality for lemmas
-            # t.get_lemma_vowels(),
+            # lemma syllabifications, syllable counts, vowel qualities, etc.
+            ] + get_lemma_info(t.lemma.lower()) + [
 
             # syllabifications
             encode(t.test_syll1),
@@ -89,7 +124,7 @@ def generate_data_frame(filename='./_static/data/data-frame.csv'):
             encode(t.test_syll4),
 
             # is_gold
-            is_gold,
+            int(t.is_gold),
 
             # k-stem
             '' if t.is_gold is None else 1 if '[k-deletion' in t.note else 0,
@@ -100,8 +135,32 @@ def generate_data_frame(filename='./_static/data/data-frame.csv'):
             encode(t.syll3),
             ])
 
+    # add non-gold rows
+    for t in Token.query.filter_by(is_gold=None, is_aamulehti=True) \
+            .order_by(Token.orth) \
+            .yield_per(1000):
+
+        # create row
+        data.append([
+            # Aamulehti details
+            encode(t.orth.lower()),
+            t.freq,
+            t.pos.lower(),
+            t.msd.lower(),
+            encode(t.lemma.lower()),
+
+            # lemma syllabifications, syllable counts, vowel qualities, etc.
+            ] + get_lemma_info(t.lemma.lower()) + [
+
+            # syllabifications
+            encode(t.test_syll1),
+            encode(t.test_syll2),
+            encode(t.test_syll3),
+            encode(t.test_syll4),
+            ])
+
+    # write data frame to file
     with open(filename, 'wb') as f:
-        f.write(codecs.BOM_UTF8)
         writer = csv.writer(f, delimiter=',')
         writer.writerows(data)
 

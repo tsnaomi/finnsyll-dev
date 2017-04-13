@@ -293,23 +293,12 @@ class Token(db.Model):
 
     def readable_lemma(self):
         '''Return a readable form of the lemma.'''
-        return self.lemma.replace('_', ' ').lower()
+        # return self.lemma.replace('_', ' ').lower()
+        return self.lemma.lower()
 
     def is_lemma(self):
         '''Return True if the word is in its citation form, else False.'''
         return self.orth.lower() == self.readable_lemma().lower()
-
-    def get_sylls_in_lemma():
-        '''Return the number of syllables in the token's lemma.
-
-        If the lemma contains variant syllabifications, return the number of
-        syllables in the most preferred variant.
-        '''
-        pass
-
-    def get_lemma_vowels():
-        '''Return the weights and vowel quality for the token's lemma.'''
-        pass
 
     # Syllabification methods -------------------------------------------------
 
@@ -325,10 +314,8 @@ class Token(db.Model):
         syllabifications += [('', '') for i in range(n)]
 
         for i, (test_syll, rules) in enumerate(syllabifications, start=1):
-            rules = rules.translate(None, 'abcdefg')
-
-            setattr(self, 'test_syll' + str(i), test_syll)
-            setattr(self, 'rules' + str(i), rules)
+            setattr(self, 'test_syll%i' % i, test_syll)
+            setattr(self, 'rules%i' % i, rules)
 
         if self.syll1:
             self.update_gold()
@@ -339,14 +326,14 @@ class Token(db.Model):
 
     def test_sylls(self):
         '''Return a set of all of the Token's test syllabifications.'''
-        test_sylls = [getattr(self, 'test_syll%s' % n) for n in range(1, 9)]
+        test_sylls = [getattr(self, 'test_syll%i' % n) for n in range(1, 9)]
         test_sylls = set(filter(None, test_sylls))
 
         return test_sylls
 
     def sylls(self):
         '''Return a set of all of the Token's correct syllabifications.'''
-        sylls = [getattr(self, 'syll%s' % n) for n in range(1, 9)]
+        sylls = [getattr(self, 'syll%i' % n) for n in range(1, 9)]
         sylls = set(filter(None, sylls))
 
         return sylls
