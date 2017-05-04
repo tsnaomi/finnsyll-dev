@@ -29,7 +29,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from werkzeug.exceptions import BadRequestKeyError
 
 # local
-from syllabifier import FinnSyll
+from syllabifier import FinnSyll, StressedFinnSyll
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
 app.config.from_pyfile('config.py')
@@ -1152,7 +1152,7 @@ def syllabify_view():
 
     if request.method == 'POST' and request.form.get('word'):
         word = request.form['word']
-        results = FinnSyll.syllabify(word)
+        results = StressedFinnSyll.syllabify(word)
 
     return render_template(
         'syllabify.html',

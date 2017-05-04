@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import csv
-import re
 
 from datetime import datetime
 
@@ -9,65 +8,43 @@ from app import Token
 from syllabifier import _FinnSyll
 
 
+def timestamp():
+    '''Return current UTC time in HH:MM format.'''
+    print datetime.utcnow().strftime('%I:%M')
+
+
 def encode(u):
     '''Replace umlauts and convert "u" to a byte string.'''
-    return u.replace(u'ä', u'{').replace(u'ö', u'|').encode('utf-8')
+    return u.replace(u'ä', u'{').replace(u'ö', u'|').replace(u'Ä', u'{') \
+        .replace(u'Ö', u'|').encode('utf-8')
 
 
-def get_lemma_info(lemma):
-    '''Get the syllabification, vowels, and weights for "lemma".'''
+def get_syll_count(word):
+    '''Return the number of syllables in "word".'''
+    return word.count('.') + word.count('-') + word.count(' ') \
+        + word.count('_') + 1
+
+
+def get_info(word):
+    '''Get the syllabification, vowels, and weights for "word".'''
     info = []
 
-    for lemma_syll in _FinnSyll.syllabify(lemma):
-        # split the lemma into syllables and word breaks
-        # e.g., 'ram.saun mm' > ['ram', 'saun', ' ', 'mm']
-        syllables = re.split(r'( |-|_)|\.', lemma_syll, flags=re.I | re.U)
-        syllables = [s for s in syllables if s is not None]
+    annotations = _FinnSyll.annotate(word)
+    tail = '*' if annotations[0][1].endswith('*') else ''
 
-        count = 0
-        vowels = ''
-        weights = ''
-        trail = ''
+    for variant in annotations:
+        syllabification = variant[0]
+        count = get_syll_count(syllabification)
 
-        for syll in syllables:
+        info.extend([
+            encode(syllabification),    # syllabification
+            str(count) + tail,          # syllable count
+            variant[1],                 # stresses
+            encode(variant[3]),         # vowels qualities
+            variant[2],                 # weights
+            ])
 
-            try:
-                # get the first vowel in the syllable
-                vowels += re.search(
-                    ur'([ieaouäöy]{1})',
-                    syll,
-                    flags=re.I | re.U,
-                    ).group(1)
-
-                # get the weight of the syllable (light or heavy)
-                weights += 'L' if re.match(
-                    ur'(^|[^ieaouäöy]+)[ieaouäöy]{1}$',
-                    syll,
-                    flags=re.I | re.U,
-                    ) else 'H'
-
-                # update the syllable count
-                count += 1
-
-            except (AttributeError, IndexError):
-
-                # if syll is a word break (e.g., a space or hyphen)
-                if syll in ' _-':
-                    vowels += ' '
-                    weights += ' '
-
-                # if syll is a vowel-less syllable (e.g., the acronym 'MM')
-                else:
-                    trail = ' *'
-
-        info.extend((
-            encode(lemma_syll),                 # lemma syllabification
-            str(count) + trail,                 # syllable count
-            encode(vowels).upper() + trail,     # vowels
-            weights + trail,                    # weights
-            ))
-
-    info += ('', ) * (16 - len(info))  # fill out empty columns
+    info += ('', ) * (20 - len(info))  # fill out empty columns
 
     return info
 
@@ -78,14 +55,19 @@ def generate_data_frame(filename='./_static/data/aamulehti-1999.csv'):
         # Aamulehti details
         'orth', 'freq', 'pos', 'msd', 'lemma',
 
-        # lemma syllabifications, syllable counts, vowel qualities, and weights
-        'lemma1', 'count1', 'vowels1', 'weights1',
-        'lemma2', 'count2', 'vowels2', 'weights2',
-        'lemma3', 'count3', 'vowels3', 'weights3',
-        'lemma4', 'count4', 'vowels4', 'weights4',
+        # lemma syllabifications, syllable counts, stresses, vowel qualities,
+        # and weights
+        'P:1-lemma', 'C:1-lemma', 'S:1-lemma', 'V:1-lemma', 'W:1-lemma',
+        'P:2-lemma', 'C:2-lemma', 'S:2-lemma', 'V:2-lemma', 'W:2-lemma',
+        'P:3-lemma', 'C:3-lemma', 'S:3-lemma', 'V:3-lemma', 'W:3-lemma',
+        'P:4-lemma', 'C:4-lemma', 'S:4-lemma', 'V:4-lemma', 'W:4-lemma',
 
-        # syllabifications
-        'syll1', 'syll2', 'syll3', 'syll4',
+        # orth syllabifications, syllable counts, stresses, vowel qualities,
+        # and weights
+        'P:1', 'C:1', 'S:1', 'V:1', 'W:1',
+        'P:2', 'C:2', 'S:2', 'V:2', 'W:2',
+        'P:3', 'C:3', 'S:3', 'V:3', 'W:3',
+        'P:4', 'C:4', 'S:4', 'V:4', 'W:4',
 
         # a boolean indicating whether the syllabifications are accurate
         # (for gold standard rows only)
@@ -114,14 +96,11 @@ def generate_data_frame(filename='./_static/data/aamulehti-1999.csv'):
             t.msd.lower(),
             encode(t.lemma.lower()),
 
-            # lemma syllabifications, syllable counts, vowel qualities, etc.
-            ] + get_lemma_info(t.lemma.lower()) + [
+            # lemma syllabifications, syllable counts, weights, etc.
+            ] + get_info(t.lemma.lower())
 
-            # syllabifications
-            encode(t.test_syll1),
-            encode(t.test_syll2),
-            encode(t.test_syll3),
-            encode(t.test_syll4),
+            # orth syllabifications, syllable counts, weights, etc.
+            + get_info(t.orth.lower()) + [
 
             # is_gold
             int(t.is_gold),
@@ -149,15 +128,11 @@ def generate_data_frame(filename='./_static/data/aamulehti-1999.csv'):
             t.msd.lower(),
             encode(t.lemma.lower()),
 
-            # lemma syllabifications, syllable counts, vowel qualities, etc.
-            ] + get_lemma_info(t.lemma.lower()) + [
+            # lemma syllabifications, syllable counts, weights, etc.
+            ] + get_info(t.lemma.lower())
 
-            # syllabifications
-            encode(t.test_syll1),
-            encode(t.test_syll2),
-            encode(t.test_syll3),
-            encode(t.test_syll4),
-            ])
+            # orth syllabifications, syllable counts, weights, etc.
+            + get_info(t.orth.lower()))
 
     # write data frame to file
     with open(filename, 'wb') as f:
@@ -166,8 +141,8 @@ def generate_data_frame(filename='./_static/data/aamulehti-1999.csv'):
 
 
 if __name__ == '__main__':
-    print datetime.utcnow().strftime('%I:%M')
+    timestamp()
 
     generate_data_frame()
 
-    print datetime.utcnow().strftime('%I:%M')
+    timestamp()
