@@ -11,7 +11,7 @@
 <div>
     <form class='search center' method='POST'>
         <!-- <i>Note: This syllabifier is under maintenance!</i> -->
-        <br>
+        <!-- <br> -->
         <br>
         <input type='hidden' name='_csrf_token' value='{{ csrf_token() }}'>
         <input type='text' name='word' class='search clear' placeholder="type a word to syllabify..." {% if word %}value='{{ word }}'{% endif %}> 
