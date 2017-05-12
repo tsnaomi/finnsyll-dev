@@ -19,10 +19,14 @@ def encode(u):
         .replace(u'Ö', u'|').encode('utf-8')
 
 
-def get_syll_count(word):
-    '''Return the number of syllables in "word".'''
-    return word.count('.') + word.count('-') + word.count(' ') \
-        + word.count('_') + 1
+def get_syll_count(word, vowelless_syll=False):
+    '''Return the number of syllables in "word" as a string.'''
+    count = sum(word.count(i) for i in ('.', '-', ' ', '_'))
+
+    if not vowelless_syll:
+        return str(count + 1)
+
+    return str(count) + vowelless_syll
 
 
 def get_info(word):
@@ -30,18 +34,17 @@ def get_info(word):
     info = []
 
     annotations = _FinnSyll.annotate(word)
-    tail = '*' if annotations[0][1].endswith('*') else ''
+    vowelless_syll = '*' if '*' in annotations[0][1] else ''
 
-    for variant in annotations:
-        syllabification = variant[0]
-        count = get_syll_count(syllabification)
+    for syll, stress, weights, vowels in annotations:
+        count = get_syll_count(syll, vowelless_syll)
 
         info.extend([
-            encode(syllabification),    # syllabification
-            str(count) + tail,          # syllable count
-            variant[1],                 # stresses
-            encode(variant[3]),         # vowels qualities
-            variant[2],                 # weights
+            encode(syll),       # syllabification
+            count,              # syllable count
+            stress,             # stresses
+            encode(vowels),     # vowels qualities
+            weights,            # weights
             ])
 
     info += ('', ) * (20 - len(info))  # fill out empty columns
