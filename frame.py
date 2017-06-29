@@ -29,6 +29,15 @@ def get_syll_count(word, vowelless_syll=False):
     return str(count) + vowelless_syll
 
 
+def get_compound_deets(word):
+    '''Return the number of constituent words in "word".'''
+    split = _FinnSyll.split(word)
+    word_count = sum(split.count(i) for i in ('=', '-', ' ', '_')) + 1
+    split = '' if word == split else encode(split)
+
+    return [split, word_count]
+
+
 def get_info(word):
     '''Get the syllabification, vowels, and weights for "word".'''
     info = []
@@ -52,7 +61,7 @@ def get_info(word):
     return info
 
 
-def generate_data_frame(filename='./_static/data/aamulehti-1999.csv'):
+def generate_data_frame(filename='./_static/data/aamulehti-1999-test.csv'):
     '''Generate the data frame!'''
     data = [[
         # Aamulehti details
@@ -71,6 +80,12 @@ def generate_data_frame(filename='./_static/data/aamulehti-1999.csv'):
         'P:2', 'C:2', 'S:2', 'V:2', 'W:2',
         'P:3', 'C:3', 'S:3', 'V:3', 'W:3',
         'P:4', 'C:4', 'S:4', 'V:4', 'W:4',
+
+        # the compound split (if any)
+        'split',
+
+        # the number of constituent words in the orth
+        'word-count',
 
         # a boolean indicating whether the syllabifications are accurate
         # (for gold standard rows only)
@@ -103,7 +118,10 @@ def generate_data_frame(filename='./_static/data/aamulehti-1999.csv'):
             ] + get_info(t.lemma.lower())
 
             # orth syllabifications, syllable counts, weights, etc.
-            + get_info(t.orth.lower()) + [
+            + get_info(t.orth.lower())
+
+            # the compound split (if any) and the number of constituent words
+            + get_compound_deets(t.orth.lower()) + [
 
             # is_gold
             int(t.is_gold),
@@ -135,7 +153,10 @@ def generate_data_frame(filename='./_static/data/aamulehti-1999.csv'):
             ] + get_info(t.lemma.lower())
 
             # orth syllabifications, syllable counts, weights, etc.
-            + get_info(t.orth.lower()))
+            + get_info(t.orth.lower())
+
+            # the compound split (if any) and the number of constituent words
+            + get_compound_deets(t.orth.lower()))
 
     # write data frame to file
     with open(filename, 'wb') as f:
