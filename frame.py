@@ -8,9 +8,56 @@ from app import Token
 from syllabifier import _FinnSyll
 
 
-def timestamp():
-    '''Return current UTC time in HH:MM format.'''
-    print datetime.utcnow().strftime('%I:%M')
+# annotation functions --------------------------------------------------------
+
+def get_annotations(word):
+    '''Get the syllabification, vowels, and weights for "word".'''
+    row = []
+    annotations = _FinnSyll.annotate(word)
+
+    for syll, stress, weights, vowels in annotations:
+        row.extend([
+            encode(syll),               # syllabification
+            get_syll_count(stress),     # syllable count
+            stress,                     # stresses
+            encode(vowels),             # vowels qualities
+            weights,                    # weights
+            ])
+
+    row += ('', ) * (20 - len(row))  # fill out empty columns
+    row = get_compound_info(word, stress) + row  # prepend compound info
+
+    return row
+
+
+def get_compound_info(word, stress):
+    '''Return "word"'s compound split and its number of constituent words.'''
+    split = _FinnSyll.split(word)
+    split = '' if word == split else encode(split)
+
+    word_count = str(stress.count('P'))
+
+    if '*' in stress:
+        word_count += '*'
+
+    return [split, word_count]
+
+
+def get_syll_count(stress):
+    '''Return the number of syllables in an expression's final word.'''
+    try:
+        stress = stress[stress.rindex('P'):]
+
+        # if the final word is a vowel-less syllable...
+        if '*' in stress:
+            return '0*'
+
+        # if the final word is kosher...
+        return len(stress)
+
+    # if the entire expression in a vowel-less syllable...
+    except ValueError:
+        return '0*'
 
 
 def encode(u):
@@ -19,73 +66,63 @@ def encode(u):
         .replace(u'Ö', u'|').encode('utf-8')
 
 
-def get_syll_count(word, vowelless_syll=False):
-    '''Return the number of syllables in "word" as a string.'''
-    count = sum(word.count(i) for i in ('.', '-', ' ', '_'))
+# data frame generation -------------------------------------------------------
 
-    if not vowelless_syll:
-        return str(count + 1)
-
-    return str(count) + vowelless_syll
-
-
-def get_compound_deets(word):
-    '''Return the number of constituent words in "word".'''
-    split = _FinnSyll.split(word)
-    word_count = sum(split.count(i) for i in ('=', '-', ' ', '_')) + 1
-    split = '' if word == split else encode(split)
-
-    return [split, word_count]
-
-
-def get_info(word):
-    '''Get the syllabification, vowels, and weights for "word".'''
-    info = []
-
-    annotations = _FinnSyll.annotate(word)
-    vowelless_syll = '*' if '*' in annotations[0][1] else ''
-
-    for syll, stress, weights, vowels in annotations:
-        count = get_syll_count(syll, vowelless_syll)
-
-        info.extend([
-            encode(syll),       # syllabification
-            count,              # syllable count
-            stress,             # stresses
-            encode(vowels),     # vowels qualities
-            weights,            # weights
-            ])
-
-    info += ('', ) * (20 - len(info))  # fill out empty columns
-
-    return info
-
-
-def generate_data_frame(filename='./_static/data/aamulehti-1999-test.csv'):
+def generate_data_frame(filename='./_static/data/aamulehti-1999.csv'):
     '''Generate the data frame!'''
-    data = [[
-        # Aamulehti details
-        'orth', 'freq', 'pos', 'msd', 'lemma',
+
+    # write data frame to file
+    with open(filename, 'wb') as f:
+        writer = csv.writer(f, delimiter=',')
+
+        # add the header row with column titles
+        writer.writerow(get_headers())
+
+        # add gold rows
+        for t in Token.query.filter(Token.is_gold.isnot(None)) \
+                .filter_by(is_aamulehti=True) \
+                .order_by(Token.is_gold.desc(), Token.orth) \
+                .yield_per(1000):
+            writer.writerow(get_gold_row(t))
+
+        # add non-gold rows
+        for t in Token.query.filter_by(is_gold=None, is_aamulehti=True) \
+                .order_by(Token.orth) \
+                .yield_per(1000):
+            writer.writerow(get_row(t))
+
+
+def get_headers():
+    '''Return column headers.'''
+    return [
+        # Aamulehti details (word, freq, pos, msd, lemma)
+        'word', 'freq', 'pos', 'msd', 'lemma',
+
+        # the lemma's compound split (if any)
+        'lem-split',
+
+        # the lemma's word count
+        'lem-WC',
 
         # lemma syllabifications, syllable counts, stresses, vowel qualities,
         # and weights
-        'P:1-lemma', 'C:1-lemma', 'S:1-lemma', 'V:1-lemma', 'W:1-lemma',
-        'P:2-lemma', 'C:2-lemma', 'S:2-lemma', 'V:2-lemma', 'W:2-lemma',
-        'P:3-lemma', 'C:3-lemma', 'S:3-lemma', 'V:3-lemma', 'W:3-lemma',
-        'P:4-lemma', 'C:4-lemma', 'S:4-lemma', 'V:4-lemma', 'W:4-lemma',
+        'lem-P1', 'lem-C1', 'lem-S1', 'lem-V1', 'lem-W1',
+        'lem-P2', 'lem-C2', 'lem-S2', 'lem-V2', 'lem-W2',
+        'lem-P3', 'lem-C3', 'lem-S3', 'lem-V3', 'lem-W3',
+        'lem-P4', 'lem-C4', 'lem-S4', 'lem-V4', 'lem-W4',
+
+        # the word's compound split (if any)
+        'split',
+
+        # the word's word count
+        'WC',
 
         # orth syllabifications, syllable counts, stresses, vowel qualities,
         # and weights
-        'P:1', 'C:1', 'S:1', 'V:1', 'W:1',
-        'P:2', 'C:2', 'S:2', 'V:2', 'W:2',
-        'P:3', 'C:3', 'S:3', 'V:3', 'W:3',
-        'P:4', 'C:4', 'S:4', 'V:4', 'W:4',
-
-        # the compound split (if any)
-        'split',
-
-        # the number of constituent words in the orth
-        'word-count',
+        'P1', 'C1', 'S1', 'V1', 'W1',
+        'P2', 'C2', 'S2', 'V2', 'W2',
+        'P3', 'C3', 'S3', 'V3', 'W3',
+        'P4', 'C4', 'S4', 'V4', 'W4',
 
         # a boolean indicating whether the syllabifications are accurate
         # (for gold standard rows only)
@@ -96,72 +133,49 @@ def generate_data_frame(filename='./_static/data/aamulehti-1999-test.csv'):
         'k-stem',
 
         # gold standard syllabification (for gold standard rows only)
-        'gold1', 'gold2', 'gold3',
-        ], ]
+        'gold1', 'gold2', 'gold3'
+        ]
 
-    # add gold rows
-    for t in Token.query.filter(Token.is_gold.isnot(None)) \
-            .filter_by(is_aamulehti=True) \
-            .order_by(Token.is_gold.desc(), Token.orth) \
-            .yield_per(1000):
 
-        # create row
-        data.append([
-            # Aamulehti details
-            encode(t.orth.lower()),
-            t.freq,
-            t.pos.lower(),
-            t.msd.lower(),
-            encode(t.lemma.lower()),
+def get_gold_row(tok):
+    '''Return the token's annotations, plus its gold standard details.'''
+    return get_row(tok) + [
+        # is-gold
+        int(tok.is_gold),
 
-            # lemma syllabifications, syllable counts, weights, etc.
-            ] + get_info(t.lemma.lower())
+        # k-stem
+        '' if tok.is_gold is None else 1 if '[k-deletion' in tok.note else 0,
 
-            # orth syllabifications, syllable counts, weights, etc.
-            + get_info(t.orth.lower())
+        # gold standard syllabifications
+        encode(tok.syll1),
+        encode(tok.syll2),
+        encode(tok.syll3),
+        ]
 
-            # the compound split (if any) and the number of constituent words
-            + get_compound_deets(t.orth.lower()) + [
 
-            # is_gold
-            int(t.is_gold),
+def get_row(tok):
+    '''Return the token's annotations.'''
+    return ([
+        # Aamulehti details (word, freq, pos, msd, lemma)
+        encode(tok.orth.lower()),
+        tok.freq,
+        tok.pos.lower(),
+        tok.msd.lower(),
+        encode(tok.lemma.lower()),
 
-            # k-stem
-            '' if t.is_gold is None else 1 if '[k-deletion' in t.note else 0,
+        # the lemma's compound split, syllabifications, counts, weights, etc.
+        ] + get_annotations(tok.lemma.lower())
 
-            # gold standard syllabifications
-            encode(t.syll1),
-            encode(t.syll2),
-            encode(t.syll3),
-            ])
+        # the word's compound split, syllabifications, counts, weights, etc.
+        + get_annotations(tok.orth.lower())
+        )
 
-    # add non-gold rows
-    for t in Token.query.filter_by(is_gold=None, is_aamulehti=True) \
-            .order_by(Token.orth) \
-            .yield_per(1000):
 
-        # create row
-        data.append([
-            # Aamulehti details
-            encode(t.orth.lower()),
-            t.freq,
-            t.pos.lower(),
-            t.msd.lower(),
-            encode(t.lemma.lower()),
+# misc. -----------------------------------------------------------------------
 
-            # lemma syllabifications, syllable counts, weights, etc.
-            ] + get_info(t.lemma.lower())
-
-            # orth syllabifications, syllable counts, weights, etc.
-            + get_info(t.orth.lower())
-
-            # the compound split (if any) and the number of constituent words
-            + get_compound_deets(t.orth.lower()))
-
-    # write data frame to file
-    with open(filename, 'wb') as f:
-        writer = csv.writer(f, delimiter=',')
-        writer.writerows(data)
+def timestamp():
+    '''Return current UTC time in HH:MM format.'''
+    print datetime.utcnow().strftime('%I:%M')
 
 
 if __name__ == '__main__':
