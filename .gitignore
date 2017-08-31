@@ -5,7 +5,7 @@ _static/data/aamulehti-1999.csv
 
 # on the server
 error.log
-.finnsyll-dev-env
+finnsyll-dev-env
 
 # on Naomi's laptop
 notes.txt
