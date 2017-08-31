@@ -1,10 +1,14 @@
 *.pyc
 
-nohup.out
-notes.txt
-
+# this file is too large to pull or push from GitHub
 _static/data/aamulehti-1999.csv
 
+# on the server
+error.log
+.finnsyll-dev-env
+
+# on Naomi's laptop
+notes.txt
 _latex/
 aamulehti-1999/
 records/
