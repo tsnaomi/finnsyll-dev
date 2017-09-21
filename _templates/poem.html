@@ -15,13 +15,13 @@
     populatemodal(
         '{{ v.id }}',
         {{ v.sequences.0.id }},
-        '{{ v.sequences.0.html|safe }}',
+        '{{ v.sequences.0.html }}',
         '{{ v.sequences.0.split }}',
         '{{ v.sequences.0.scansion }}',
         '{{ v.sequences.0.note|js_safe }}',
         {% if sequences|length > 1 %}
             '{{ v.sequences.1.id }}',
-            '{{ v.sequences.1.html|safe }}',
+            '{{ v.sequences.1.html }}',
             '{{ v.sequences.1.split }}',
             '{{ v.sequences.1.scansion }}',
             '{{ v.sequences.1.note|js_safe }}'

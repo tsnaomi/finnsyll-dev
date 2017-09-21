@@ -1366,19 +1366,19 @@ def poem_edit_view():
     response = 'populatemodal(' + '%s,' * 6 % (
         str(variant.id),
         '"' + str(variant.sequences[0].id) + '"',
-        '"' + variant.sequences[0].html + '|safe' + '"',
+        '"' + variant.sequences[0].html + '"',
         '"' + str(variant.sequences[0].split) + '"',
         '"' + str(variant.sequences[0].scansion) + '"',
-        '"' + variant.sequences[0].note + '|safe' + '"',
+        '"' + variant.sequences[0].note + '"',
         )
 
     try:
         response += '%s,' * 5 + ');' % (
             str(variant.sequences[1].id),
-            '"' + variant.sequences[1].html + '|safe' + '"',
+            '"' + variant.sequences[1].html + '"',
             '"' + str(variant.sequences[1].split) + '"',
             '"' + str(variant.sequences[1].scansion) + '"',
-            '"' + variant.sequences[1].note + '|safe' + '"',
+            '"' + variant.sequences[1].note + '"',
             )
 
     except IndexError:

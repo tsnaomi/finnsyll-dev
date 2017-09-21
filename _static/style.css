@@ -97,8 +97,8 @@
         background-color: #00FF7F; /* green */
     }
 
-    .OK:hover, {
-        color: #00FF7F; /* green */
+    .OK:hover {
+        color: #00FF7F !important; /* green */
     }
 
     .data-frame a:hover {
