@@ -7,9 +7,9 @@ config.py
 _static/data/aamulehti-1999.csv
 
 # on the server
+*.sh
 error.log
 finnsyll-dev-env
-restart.sh
 
 # on Naomi's laptop
 notes.txt
