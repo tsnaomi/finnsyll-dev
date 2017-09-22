@@ -10,7 +10,7 @@ _static/data/aamulehti-1999.csv
 # on the server
 stop.sh
 start.sh
-retart.sh
+restart.sh
 error.log
 finnsyll-dev-env
 
