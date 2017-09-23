@@ -1,6 +1,6 @@
 {   # LOCAL ATTEMP
 
-    # back up the metric-gold database
+    # back up the finnsyll database
     fn="$(pwd)/pg_backups/finnsyll-$(date +%d%b%Y-%H:%M)"
     pg_dump finnsyll > $fn
 
@@ -9,7 +9,7 @@
 
 } || {  # SERVER ATTEMPT
 
-    # back up the metric-gold database
+    # back up the finnsyll database
     fn="~/finnsyll-dev/pg_backups/finnsyll-$(date +%d%b%Y-%H:%M)"
     pg_dump finnsyll > $fn
 
