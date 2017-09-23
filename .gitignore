@@ -1,16 +1,16 @@
 *.pyc
+*.sh
 
 # ignore config files both locally and on the server
 config.py
-pg_backups/*
+
+# ignore database backups both locally and on the server
+pg_backups/
 
 # this file is too large to pull or push from GitHub
 _static/data/aamulehti-1999.csv
 
 # on the server
-stop.sh
-start.sh
-restart.sh
 error.log
 finnsyll-dev-env
 
