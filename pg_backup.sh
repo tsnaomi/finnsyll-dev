@@ -4,7 +4,7 @@
     find "$(pwd)/pg_backups" -mtime +10 -exec rm {} \;
 
     # back up the metric-gold database
-    fn="$(pwd)/pg_backups/finnsyll-dev-$(date +%d%b%Y-%H:%M)"
+    fn="$(pwd)/pg_backups/finnsyll-$(date +%d%b%Y-%H:%M)"
     pg_dump metric-gold > $fn
 
 } || {  # SERVER ATTEMPT
@@ -13,7 +13,7 @@
     find "~/finnsyll-dev/pg_backups" -mtime +10 -exec rm {} \;
 
     # back up the metric-gold database
-    fn="~/finnsyll-dev//pg_backups/finnsyll-dev-$(date +%d%b%Y-%H:%M)"
+    fn="~/finnsyll-dev//pg_backups/finnsyll-$(date +%d%b%Y-%H:%M)"
     pg_dump metric-gold > $fn
 
 }
