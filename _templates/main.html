@@ -3,7 +3,11 @@
 {% block body %}
 <div class='description container'>
     <br class='hidden-xs hidden-sm'>
-    <div class='data-frame'>[ <a href="{{ url_for('static', filename='data/aamulehti-1999.csv') }}" download><b>data frame</b></a> ]</div>
+    <div>
+        <span class='data-frame'>[ <a href="{{ url_for('static', filename='data/aamulehti-1999.csv') }}" download><b>data frame</b></a> ]</span>
+        <span class='data-frame'>[ <a href="#" id='poetry-csv'><b>poetry</b></a> ]</span>
+    </div>
+    <br>
     <b>{{ P2.verified | stat }}</b> / <b>{{ P1.total | stat }}</b> word forms verified from the Aamulehti corpus
     <br>
     <br><b>{{ P2.correct | stat }}</b> / <b>{{ P2.verified | stat }}</b> word forms correctly syllabified
@@ -18,4 +22,20 @@
     <br class='hidden-xs'>These 22,192 word instances reduce to <b>6,002</b> unique word forms,
     <br class='hidden-xs'><b>2,355</b> of which also appear in the Aamulehti corpus.
 </div>
+
+<script>
+    $('#poetry-csv').on('click', function(e) {
+        e.preventDefault();
+        $('html, a').css('cursor', 'progress');
+        $.get('/poems-csv', function() {
+            // yea!
+            window.location.href = '_static/data/poetry.csv'
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            // nay!
+            alert('Sorry, something went awry!\n\nError: ' + errorThrown)
+        }).always(function() {
+            $('html, a').css('cursor', 'auto');
+        })
+    })
+</script>
 {% endblock %}3

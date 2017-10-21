@@ -1,6 +1,7 @@
 # coding=utf-8
 
 # standard library
+import csv
 import re
 
 from datetime import datetime
@@ -30,6 +31,7 @@ from werkzeug.exceptions import BadRequestKeyError
 
 # local
 from syllabifier import FinnSyll, StressedFinnSyll
+from utilities import encode
 
 app = Flask(__name__, static_folder='_static', template_folder='_templates')
 app.config.from_pyfile('config.py')
@@ -1310,7 +1312,6 @@ def logout_view():
 
 # Poems -----------------------------------------------------------------------
 
-
 @app.route('/poems', methods=['GET', ])
 @login_required
 def poems_view():
@@ -1387,6 +1388,70 @@ def poem_edit_view():
     response += '' if variant.verified else ' unverified'
 
     return response, 200
+
+
+@app.route('/poems-csv', methods=['GET', ])
+@login_required
+def poems_csv_view():
+    '''Generate the poetry csv for download.'''
+    try:
+        filename = '_static/data/poetry.csv'
+
+        # write the poetry data to file
+        with open(filename, 'wb') as f:
+            writer = csv.writer(f, delimiter=',')
+
+            # add the header row with column titles
+            writer.writerow([
+                'poet',
+                'sequence',
+                'word',
+                'split',
+                'joined',
+                'unknown',
+                'scansion',
+                'is_heavy',
+                'primary_stress',
+                'line',
+                ])
+
+            # add rows
+            for vv in VV.query.filter_by(verified=True):
+                writer.writerow([
+                    # poet
+                    encode(vv._poet.surname),
+
+                    # sequence
+                    encode(vv.sequence),
+
+                    # word
+                    encode(vv._variant._token.orth),
+
+                    # is_joined
+                    1 if vv.split == 'split' else 0,
+
+                    # is_split
+                    1 if vv.split == 'join' else 0,
+
+                    # is_unsure
+                    1 if vv.split == 'unknown' else 0,
+
+                    # scansion
+                    vv.scansion,
+
+                    # sb.follows
+                    1 if vv.is_heavy else 0,
+
+                    # is_word_initial
+                    1 if vv.is_stressed else 0,
+
+                    # the line of poetry in which the sequence appears
+                    encode(re.sub(r'^\s+', '', vv.line)),
+                ])
+            return 'Success!', 200
+
+    except Exception as response:
+        return response, 500
 
 
 # Jinja2 ----------------------------------------------------------------------

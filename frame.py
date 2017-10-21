@@ -6,6 +6,7 @@ from datetime import datetime
 
 from app import Token
 from syllabifier import _FinnSyll
+from utilities import encode
 
 
 # annotation functions --------------------------------------------------------
@@ -58,12 +59,6 @@ def get_syll_count(stress):
     # if the entire expression in a vowel-less syllable...
     except ValueError:
         return '0*'
-
-
-def encode(u):
-    '''Replace umlauts and convert "u" to a byte string.'''
-    return u.replace(u'ä', u'{').replace(u'ö', u'|').replace(u'Ä', u'{') \
-        .replace(u'Ö', u'|').encode('utf-8')
 
 
 # data frame generation -------------------------------------------------------
